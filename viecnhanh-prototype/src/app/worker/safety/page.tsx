@@ -131,7 +131,7 @@ function Certificate({ onSave, saved }: { onSave: () => void; saved: boolean }) 
     <div ref={ref} className="ink rounded-[28px] p-6 text-center">
       <Icon name="award-01" size={40} solid className="mx-auto" />
       <p className="mt-3">
-        <span className="inline-flex items-center gap-1.5 font-mono text-[11px] tracking-[0.14em] px-2.5 py-1 rounded-full border border-current/25 uppercase">
+        <span className="inline-flex items-center gap-1.5 font-mono text-[12px] tracking-[0.14em] px-2.5 py-1 rounded-full border border-current/25 uppercase">
           安全教育修了 · Verified
         </span>
       </p>

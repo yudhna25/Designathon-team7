@@ -7,7 +7,7 @@ import { BellLink, Screen, TopBar } from "@/components/worker/Shell";
 import { JobPass } from "@/components/worker/Pass";
 import { PeersTile } from "@/components/worker/Bento";
 import { JobRow, Section } from "@/components/worker/JobRow";
-import { CITIES, JOBS, PEERS, distanceKm, type Job } from "@/lib/data";
+import { CITIES, JOBS, PEERS, distanceKm, type Job, KEY_JOB_ID } from "@/lib/data";
 import { takeHome } from "@/lib/pay";
 import { fitOf, scoreMatch, type Match } from "@/lib/scoring";
 import { isClosed, loginThenReturn, useApp, useNow, useViewer } from "@/lib/store";
@@ -53,7 +53,7 @@ function JobList() {
   const all = useMemo(() => JOBS.map((j) => ({ j, m: scoreMatch(p, j, s.config.weights) })), [p, s.config.weights]);
   // Guests see every job (no visa to check yet), key client first, then by take-home.
   const legal = guest
-    ? [...all].sort((a, b) => Number(!!b.j.contractMonths) - Number(!!a.j.contractMonths) || takeHome(b.j, true).net - takeHome(a.j, true).net)
+    ? [...all].sort((a, b) => Number(b.j.id === KEY_JOB_ID) - Number(a.j.id === KEY_JOB_ID) || takeHome(b.j, true).net - takeHome(a.j, true).net)
     : all.filter((r) => r.m.gate.pass).sort((a, b) => b.m.total - a.m.total);
   const mine = s.apps.filter((a) => a.candidateId === "me");
   const applied = new Set(mine.filter((a) => !isClosed(a, s) || a.status === "approved").map((a) => a.jobId));
@@ -90,16 +90,16 @@ function JobList() {
 
   return (
     <Screen>
-      <TopBar title={guest ? t("Việc làm tại Aichi", "愛知県の求人") : t("Việc phù hợp với bạn", "あなたに合う求人")} sub={guest ? t("Đúng tay nghề · lương thực nhận rõ ràng", "スキルに合う · 手取りが明確") : t(`Chào ${p.name.split(" ").slice(-2).join(" ")} · ${CITIES[p.city].vi}, Aichi`, `こんにちは、${p.name.split(" ").slice(-2).join(" ")}さん · 愛知県${CITIES[p.city].ja}`)} right={guest ? <button className="btn btn-primary btn-sm pressable" onClick={() => router.push(loginThenReturn("/worker/jobs"))}>{t("Đăng nhập", "ログイン")}</button> : <BellLink />} />
+      <TopBar title={guest ? t("Việc làm tại Aichi", "愛知県の求人") : t("Việc phù hợp với bạn", "あなたに合う求人")} sub={guest ? t("Lương thực nhận rõ ràng", "手取りが明確") : t(`Chào ${p.name.split(" ").slice(-2).join(" ")} · ${CITIES[p.city].vi}, Aichi`, `こんにちは、${p.name.split(" ").slice(-2).join(" ")}さん · 愛知県${CITIES[p.city].ja}`)} right={guest ? undefined : <BellLink />} />
       <div className="px-5 lg:px-0 pb-6">
         {guest && (
-          <section className="pass relative rounded-[26px] p-5 text-white mb-4" aria-labelledby="guest-h">
-            <div className="relative">
-              <p className="t-sm text-[#DCE3FC]">{t("Miễn phí cho người lao động", "労働者は無料")}</p>
-              <h2 id="guest-h" className="text-[22px] font-semibold tracking-[-0.025em] mt-1 leading-tight">{t("Đăng nhập bằng Zalo để xem việc hợp tay nghề của bạn", "Zaloでログインして、あなたのスキルに合う求人を見る")}</h2>
-              <p className="t-sm text-[#DCE3FC] mt-2">{t("3 câu hỏi · AI kiểm visa và chấm mức phù hợp · ứng tuyển, HR trả lời trong 24h.", "3つの質問 · AIが在留資格と適合度を確認 · 応募後24時間以内に回答")}</p>
-              <button className="btn btn-lg pressable mt-4 bg-white text-[#1B22A7] font-semibold w-full sm:w-auto" onClick={() => router.push(loginThenReturn("/worker/jobs"))}>{t("Đăng nhập · 30 giây", "ログイン · 30秒")}</button>
+          <section className="mb-4 flex items-center gap-3 rounded-[20px] border border-[#4260E6]/25 bg-brand-soft p-4" aria-labelledby="guest-h">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-surface text-brand"><Icon name="stars-01" solid size={20} /></span>
+            <div className="min-w-0 flex-1">
+              <h2 id="guest-h" className="font-semibold leading-snug">{t("Xem việc hợp tay nghề của bạn", "あなたのスキルに合う求人を見る")}</h2>
+              <p className="t-sm text-muted">{t("Đăng nhập Zalo · 3 câu hỏi · miễn phí", "Zaloでログイン · 3つの質問 · 無料")}</p>
             </div>
+            <button className="btn btn-primary btn-sm pressable shrink-0" onClick={() => router.push(loginThenReturn("/worker/jobs"))}>{t("Đăng nhập", "ログイン")}</button>
           </section>
         )}
         <form className="lg:hidden flex items-center gap-2 rounded-full border border-[var(--c-input-border)] bg-surface pl-4 pr-1 h-12 focus-within:ring-2 focus-within:ring-[var(--color-border-accent-solid)]" role="search" onSubmit={(e) => e.preventDefault()}>
@@ -113,7 +113,7 @@ function JobList() {
           {FILTERS.filter((f) => !guest || (f.id !== "great" && f.id !== "near")).map((f) => {
             const active = on.includes(f.id);
             return (
-              <button key={f.id} className="chip pressable !h-7 !px-3 !gap-1 t-sm shrink-0" aria-pressed={active} onClick={() => setOn((x) => (active ? x.filter((y) => y !== f.id) : [...x, f.id]))}>
+              <button key={f.id} className="chip pressable !h-10 !px-4 !gap-1 t-sm shrink-0" aria-pressed={active} onClick={() => setOn((x) => (active ? x.filter((y) => y !== f.id) : [...x, f.id]))}>
                 {active && <Icon name="check" size={14} />}{t(f.label, f.ja)}
               </button>
             );

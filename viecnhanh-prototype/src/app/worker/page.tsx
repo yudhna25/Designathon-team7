@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Button, FitBadge, Icon, Logo, Sheet } from "@/components/ui";
+import { Button, FitBadge, Icon, Logo, Sheet, KintraMark } from "@/components/ui";
 import { useApp, takeNext } from "@/lib/store";
 import { gsap, useGSAP, useReveal } from "@/lib/motion";
 
@@ -70,27 +70,29 @@ function Hero() {
     <div className="hidden lg:flex relative ink overflow-hidden flex-col justify-between p-12 min-h-dvh">
       <Link href="/hub" aria-label="Trang giới thiệu" className="text-[var(--color-content-on-accent)]"><Logo inverse /></Link>
       <div className="grid place-items-center"><HeroArt /></div>
-      <p className="text-[56px] leading-[1] font-semibold tracking-[-0.05em] max-w-[560px]" data-reveal>
-        Đúng visa. Đúng tay nghề.<br /><span className="muted-ink">Có kết quả trong 24 giờ.</span>
+      {/* One phrase per line, never broken mid-phrase; size follows the column width. */}
+      <p className="text-[clamp(36px,3.4vw,56px)] leading-[1.04] font-semibold tracking-[-0.045em]" data-reveal>
+        <span className="block whitespace-nowrap">Đúng visa.</span>
+        <span className="block whitespace-nowrap">Đúng tay nghề.</span>
+        <span className="block whitespace-nowrap muted-ink">Có kết quả trong 24 giờ.</span>
       </p>
     </div>
   );
 }
 
-/** Product-story illustration: a match ring orbited by the 3 promises. */
+/** Brand moment: the KINTRA Step K, with the 3 promises in a row underneath (never on top of the mark). */
 function HeroArt({ compact }: { compact?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   useGSAP(
     () => {
-      gsap.from(".orb", { scale: 0.6, autoAlpha: 0, stagger: 0.12, duration: 1, ease: "back.out(1.6)", delay: 0.2 });
-      gsap.to(".orb", { y: (i) => (i % 2 ? 6 : -6), duration: 2.4, ease: "sine.inOut", yoyo: true, repeat: -1, stagger: 0.3 });
+      gsap.from(".orb", { y: 14, autoAlpha: 0, stagger: 0.1, duration: 0.9, ease: "expo.out", delay: 0.2 });
     },
     { scope: ref },
   );
   if (compact)
     return (
       <div ref={ref} className="flex items-center gap-4" aria-hidden>
-        <div className="orb grid size-[120px] shrink-0 place-items-center rounded-full ink shadow-[var(--shadow-bottom-2)] text-center"><span><Icon name="check-verified" solid size={28} className="mx-auto" /><span className="block t-sm font-semibold mt-1 leading-tight">Rất<br />phù hợp</span></span></div>
+        <div className="orb grid size-[96px] shrink-0 place-items-center rounded-[28px] bg-brand-soft"><KintraMark size={64} /></div>
         <div className="grid gap-2 min-w-0">
           <Pill icon="check-verified">Visa đúng ngành</Pill>
           <Pill icon="coins-hand">¥221.526 thực nhận</Pill>
@@ -99,13 +101,17 @@ function HeroArt({ compact }: { compact?: boolean }) {
       </div>
     );
   return (
-    <div ref={ref} className="relative mx-auto h-[380px] w-[520px]" aria-hidden>
-      <div className="orb absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-surface text-fg p-3 shadow-[var(--shadow-bottom-3)]">
-        <div className="grid size-[220px] place-items-center rounded-full bg-brand-soft text-brand text-center"><span><Icon name="check-verified" solid size={48} className="mx-auto" /><span className="block t-h4 mt-2">Rất phù hợp</span><span className="block t-sm mt-1"><FitBadge level="great" label="Tiện CNC · 3 năm" /></span></span></div>
+    <div ref={ref} className="grid justify-items-center gap-10" aria-hidden>
+      <div className="orb grid place-items-center">
+        <KintraMark size={200} mono="#fff" />
+        <p className="mt-6 text-[40px] font-extrabold tracking-[0.22em] leading-none text-white">KINTRA</p>
+        <p className="mt-3 t-sm tracking-[0.08em] muted-ink">Your skills. Your next move.</p>
       </div>
-      <Pill className="absolute left-2 top-10" icon="check-verified">Visa đúng ngành</Pill>
-      <Pill className="absolute right-0 top-[150px]" icon="coins-hand">¥221.526 thực nhận</Pill>
-      <Pill className="absolute left-10 bottom-8" icon="clock">HR trả lời ≤ 24h</Pill>
+      <div className="flex flex-wrap justify-center gap-3 max-w-[560px]">
+        <Pill icon="check-verified">Visa đúng ngành</Pill>
+        <Pill icon="coins-hand">¥221.526 thực nhận</Pill>
+        <Pill icon="clock">HR trả lời ≤ 24h</Pill>
+      </div>
     </div>
   );
 }

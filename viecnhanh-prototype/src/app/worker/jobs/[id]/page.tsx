@@ -76,7 +76,7 @@ function JobDetail() {
             </div>
             <div className="shrink-0 md:text-right">
               {guest ? <span className="badge badge-md bg-brand-soft text-brand">{t("Đang tuyển", "募集中")}</span> : <FitBadge level={fit} size="lg" label={ja ? FIT_JA[fit] : undefined} />}
-              <p className="t-sm text-muted mt-2">{fromFit ? t(`AI chấm lại: ${FIT_VI[fromFit]} → ${FIT_VI[fit]}`, `AI再評価：${FIT_JA[fromFit]} → ${FIT_JA[fit]}`) : t("AI chấm từ hồ sơ của bạn", "あなたのプロフィールからAIが評価")}</p>
+              <p className="t-sm text-muted mt-2">{fromFit ? t(`AI chấm lại: ${FIT_VI[fromFit]} → ${FIT_VI[fit]}`, `AI再評価：${FIT_JA[fromFit]} → ${FIT_JA[fit]}`) : guest ? t("Đăng nhập để AI chấm mức phù hợp", "ログインするとAIが適合度を評価") : t("AI chấm từ hồ sơ của bạn", "あなたのプロフィールからAIが評価")}</p>
             </div>
           </div>
           <div className="mt-5 grid grid-cols-2 md:grid-cols-3 gap-2" role="list" aria-label={t("Thông tin chính", "主な情報")}>
@@ -88,7 +88,7 @@ function JobDetail() {
             <div role="listitem" className="rounded-2xl bg-subtle p-3 min-w-0">
               <p className="t-sm text-muted">{t("Địa điểm", "勤務地")}</p>
               <p className="font-semibold mt-1">{city(job.city)}</p>
-              <p className="t-sm text-muted truncate">~{Math.round(distanceKm(p.city, job.city))} km</p>
+              <p className="t-sm text-muted truncate">{guest ? "Aichi" : t(`cách ~${Math.round(distanceKm(p.city, job.city))} km`, `約${Math.round(distanceKm(p.city, job.city))}km`)}</p>
             </div>
             <button role="listitem" className="rounded-2xl bg-subtle p-3 min-w-0 text-left pressable" onClick={() => setSheet("path")} aria-label={t(`Bắt đầu sớm nhất ${fmtDate(start.date)}, dự kiến. Xem lộ trình`, `最短開始 ${fmtDate(start.date)}（予定）。流れを見る`)}>
               <p className="t-sm text-muted">{t("Bắt đầu sớm nhất", "最短開始")}</p>

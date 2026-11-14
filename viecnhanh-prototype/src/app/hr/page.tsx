@@ -149,9 +149,9 @@ export default function HRCandidates() {
                       {eligible.has(a.id) && <input type="checkbox" className="size-5 accent-[var(--color-bg-accent-solid)]" checked={sel.includes(a.id)} onChange={() => toggle(a.id)} aria-label={`${lang === "ja" ? "選択" : "Select"} ${p.name}`} />}
                     </td>
                     <td className="py-3 px-3">
-                      <Link href={`/hr/candidates/${a.id}`} className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                      <Link href={`/hr/candidates/${a.id}`} className="flex items-center gap-3 min-w-[200px]" onClick={(e) => e.stopPropagation()}>
                         <Avatar name={p.name} size={36} src={SHOWCASE.avatars[a.candidateId]} />
-                        <span><b className="block text-fg">{p.name}{a.candidateId === "me" && <span className="badge ml-2 align-middle">Demo</span>}{a.flagged && <span className="badge badge-dash ml-2 align-middle">{lang === "ja" ? "条件未達で応募" : "Applied below fit"}</span>}</b><span className="t-sm text-muted">{t.nationality[p.nationality]}</span></span>
+                        <span><b className="block text-fg whitespace-nowrap">{p.name}{a.candidateId === "me" && <span className="badge ml-2 align-middle">Demo</span>}{a.flagged && <span className="badge badge-dash ml-2 align-middle">{lang === "ja" ? "条件未達で応募" : "Applied below fit"}</span>}</b><span className="t-sm text-muted">{t.nationality[p.nationality]}</span></span>
                       </Link>
                     </td>
                     <td className="py-3 px-3 w-[190px]"><div className="pr-2"><FitPill fit={fitOf(m, s.config.threshold)} label={fitWord(m)} /><div className="flex items-center gap-2 mt-1.5"><Meter value={m.total} label={`${p.name} · ${t.th.match}`} className="flex-1" /><span className="t-sm tnum text-muted w-9 text-right">{m.total}%</span></div></div></td>
