@@ -12,7 +12,7 @@ import { Icon } from "../ui";
 import { FlightPath } from "./FlightPath";
 
 /** Wallet-style job pass: take-home pay is always the biggest thing on screen. */
-export function JobPass({ job, p, m, fit, now, applied, active }: { job: Job; p: Profile; m: Match; fit: Fit; now: number; applied?: boolean; active?: boolean }) {
+export function JobPass({ job, p, m, fit, now, applied, active, guest }: { job: Job; p: Profile; m: Match; fit: Fit; now: number; applied?: boolean; active?: boolean; guest?: boolean }) {
   const router = useRouter();
   const net = takeHome(job, p.relocate).net;
   const start = fmtDate(earliestStart(p, now + 864e5).date); // HR answers within 24h
@@ -45,7 +45,7 @@ export function JobPass({ job, p, m, fit, now, applied, active }: { job: Job; p:
             {job.verified ? "KINTRA đã xác minh" : "Đang xác minh"}
           </p>
         </div>
-        <span className="shrink-0 rounded-full bg-white/15 px-2.5 py-1.5 t-sm font-bold">{m.gate.pass ? FIT_VI[fit] : "Không hợp visa"}</span>
+        <span className="shrink-0 rounded-full bg-white/15 px-2.5 py-1.5 t-sm font-bold">{guest ? "Đang tuyển" : m.gate.pass ? FIT_VI[fit] : "Không hợp visa"}</span>
       </div>
       <h2 className="text-[20px] leading-tight font-semibold tracking-[-0.025em] mt-3" style={vtTitle}>{job.title}</h2>
       <p className="mt-3">

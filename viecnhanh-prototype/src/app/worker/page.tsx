@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Button, FitBadge, Icon, Logo, Sheet } from "@/components/ui";
-import { useApp } from "@/lib/store";
+import { useApp, takeNext } from "@/lib/store";
 import { gsap, useGSAP, useReveal } from "@/lib/motion";
 
 type Method = "zalo" | "line" | "phone";
@@ -18,7 +18,7 @@ export default function Login() {
   const done = (method: Method, name: string) => {
     login(method, name);
     setSheet(null);
-    router.push(profile ? "/worker/applications" : "/worker/onboarding");
+    router.push(profile ? takeNext("/worker/jobs") : "/worker/onboarding");
   };
 
   return (
@@ -36,7 +36,7 @@ export default function Login() {
             <p className="t-eyebrow mb-3">Lần đăng nhập thứ {logins}</p>
             <h1 className="t-h2">Chào mừng trở lại, {profile.name.split(" ").slice(-2).join(" ")}</h1>
             <p className="t-lg text-muted mt-3 mb-8">Hồ sơ của bạn đã được lưu. Xem trạng thái hoặc tìm thêm việc.</p>
-            <Button size="lg" block iconRight="arrow-right" onClick={() => { login(auth.method, auth.name); router.push("/worker/applications"); }}>Vào trang của tôi</Button>
+            <Button size="lg" block iconRight="arrow-right" onClick={() => { login(auth.method, auth.name); router.push(takeNext("/worker/applications")); }}>Vào trang của tôi</Button>
             <Button size="lg" block variant="flat" className="mt-2" onClick={() => useApp.getState().logout()}>Đăng nhập tài khoản khác</Button>
           </div>
         ) : (

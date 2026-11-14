@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-// No role picker: the preloader plays, then the worker lands on login. HR and Zalo OA stay reachable from the Demo panel.
+// Preloader, then straight into the jobs. Login is optional until the worker wants to apply.
 export default function Home() {
-  redirect("/worker");
+  redirect("/worker/jobs");
 }

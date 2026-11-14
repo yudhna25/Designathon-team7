@@ -15,7 +15,7 @@ import { SHOWCASE } from "@/lib/showcase";
 import { SHIFT_VI } from "@/lib/labels";
 import { FIT_VI, fitOf, matchChips, matchGuidance, scoreMatch, suggestImprovements } from "@/lib/scoring";
 import { takeHome, yen } from "@/lib/pay";
-import { deadlineOf, fmtLeft, isClosed, simNow, useApp, useNow } from "@/lib/store";
+import { deadlineOf, fmtLeft, isClosed, loginThenReturn, simNow, useApp, useNow, useViewer } from "@/lib/store";
 import { gsap, resolveViewTransition, useGSAP } from "@/lib/motion";
 
 export default function Page() {
@@ -29,16 +29,16 @@ function JobDetail() {
   const s = useApp();
   const job = jobById(id);
   const [sheet, setSheet] = useState<null | "apply" | "anyway" | "path">(null);
-  const [dorm, setDorm] = useState(() => (job ? job.dorm !== null && (s.profile?.relocate ?? false) : false));
+  const [dorm, setDorm] = useState(() => (job ? job.dorm !== null && (s.profile?.relocate ?? true) : false));
   useEffect(() => {
-    setDorm(job ? job.dorm !== null && (s.profile?.relocate ?? false) : false);
+    setDorm(job ? job.dorm !== null && (s.profile?.relocate ?? true) : false);
   }, [job?.id, s.profile?.relocate]);
   useEffect(() => {
     resolveViewTransition();
   }, [id]);
   if (!job) return <div className="p-8"><p>Không tìm thấy việc này.</p><Link className="underline" href="/worker/jobs">Về danh sách</Link></div>;
 
-  const p = s.profile!;
+  const { p, guest } = useViewer();
   const m = scoreMatch(p, job, s.config.weights);
   const fit = fitOf(m, s.config.threshold);
   const can = fit === "great";
@@ -69,8 +69,8 @@ function JobDetail() {
               </div>
             </div>
             <div className="shrink-0 md:text-right">
-              <FitBadge level={fit} size="lg" />
-              <p className="t-sm text-muted mt-2">{fromFit ? `AI chấm lại: ${FIT_VI[fromFit]} → ${FIT_VI[fit]}` : "AI chấm từ hồ sơ của bạn"}</p>
+              {guest ? <span className="badge badge-md bg-brand-soft text-brand">Đang tuyển</span> : <FitBadge level={fit} size="lg" />}
+              <p className="t-sm text-muted mt-2">{guest ? "Đăng nhập để AI chấm mức phù hợp" : fromFit ? `AI chấm lại: ${FIT_VI[fromFit]} → ${FIT_VI[fit]}` : "AI chấm từ hồ sơ của bạn"}</p>
             </div>
           </div>
           <div className="mt-5 grid grid-cols-2 md:grid-cols-3 gap-2" role="list" aria-label="Thông tin chính">
@@ -99,6 +99,14 @@ function JobDetail() {
         </nav>
 
         {/* ZEN AI Kit · AIInsightCard */}
+        {guest ? (
+          <section id="ly-do" className="card p-6 scroll-mt-16 bg-brand-soft" aria-labelledby="why-h">
+            <span className="badge badge-solid"><Icon name="stars-01" size={14} solid />AI gợi ý</span>
+            <h2 id="why-h" className="t-h4 mt-3">Việc này có hợp với bạn không?</h2>
+            <p className="text-muted mt-1">Đăng nhập bằng Zalo, trả lời 3 câu. AI kiểm visa, chấm mức phù hợp và cho biết bạn còn thiếu gì.</p>
+            <Button className="mt-4" icon="stars-01" onClick={() => router.push(loginThenReturn(`/worker/jobs/${job.id}`))}>Đăng nhập để xem mức phù hợp</Button>
+          </section>
+        ) : (
         <section id="ly-do" className="card p-6 scroll-mt-16" data-reveal aria-labelledby="why-h">
           <div className="flex items-center gap-2 mb-3">
             <span className="badge badge-solid"><Icon name="stars-01" size={14} solid />AI gợi ý</span>
@@ -124,6 +132,7 @@ function JobDetail() {
             <div className="pt-4"><ScoreBreakdown m={m} /></div>
           </details>
         </section>
+        )}
 
         <div id="luong" className="scroll-mt-16" data-reveal><PayCard key={job.id} job={job} relocate={p.relocate} dorm={dorm} onDormChange={setDorm} /></div>
 
@@ -186,7 +195,9 @@ function JobDetail() {
       {/* Sticky decision bar */}
       <div className="fixed lg:sticky bottom-0 inset-x-0 z-20 lg:mt-4 bg-[color-mix(in_oklab,var(--color-bg-canvas)_92%,transparent)] backdrop-blur-xl border-t border-hair">
         <div className="px-5 lg:px-8 py-3 safe-b max-w-[1180px] lg:pb-4 lg:pr-[352px]">
-          {invited ? (
+          {guest ? (
+            <Button size="lg" block icon="lock-01" onClick={() => router.push(loginThenReturn(`/worker/jobs/${job.id}`))}>Đăng nhập để ứng tuyển · miễn phí</Button>
+          ) : invited ? (
             <Button size="lg" block icon="calendar" onClick={() => router.push("/worker/applications")}>Xem lời mời phỏng vấn</Button>
           ) : mine ? (
             <Button size="lg" block variant="secondary" icon="file-check" onClick={() => router.push("/worker/applications")}>Đã ứng tuyển · xem trạng thái</Button>

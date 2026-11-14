@@ -10,7 +10,8 @@ import { JobRow, Section } from "@/components/worker/JobRow";
 import { CITIES, JOBS, PEERS, VISAS, distanceKm, type Job } from "@/lib/data";
 import { takeHome } from "@/lib/pay";
 import { fitOf, scoreMatch, type Match } from "@/lib/scoring";
-import { isClosed, useApp, useNow } from "@/lib/store";
+import { isClosed, loginThenReturn, useApp, useNow, useViewer } from "@/lib/store";
+import { useRouter } from "next/navigation";
 
 /** Home = full-width list with a right rail (page.tsx). Detail = full width, no narrow list beside it. */
 export default function JobsLayout({ children }: { children: ReactNode }) {
@@ -39,7 +40,8 @@ const NEAR_KM = 15;
 function JobList() {
   const params = useSearchParams();
   const s = useApp();
-  const p = s.profile!;
+  const { p, guest } = useViewer();
+  const router = useRouter();
   const now = useNow(60000);
   const [q, setQ] = useState("");
   const [on, setOn] = useState<FilterId[]>([]);
@@ -47,8 +49,11 @@ function JobList() {
   const rescored = params.get("rescored");
 
   const all = useMemo(() => JOBS.map((j) => ({ j, m: scoreMatch(p, j, s.config.weights) })), [p, s.config.weights]);
-  const legal = all.filter((r) => r.m.gate.pass).sort((a, b) => b.m.total - a.m.total);
-  const hidden = all.filter((r) => !r.m.gate.pass);
+  // Guests see every job (no visa to check yet), key client first, then by take-home.
+  const legal = guest
+    ? [...all].sort((a, b) => Number(!!b.j.contractMonths) - Number(!!a.j.contractMonths) || takeHome(b.j, true).net - takeHome(a.j, true).net)
+    : all.filter((r) => r.m.gate.pass).sort((a, b) => b.m.total - a.m.total);
+  const hidden = guest ? [] : all.filter((r) => !r.m.gate.pass);
   const mine = s.apps.filter((a) => a.candidateId === "me");
   const applied = new Set(mine.filter((a) => !isClosed(a, s) || a.status === "approved").map((a) => a.jobId));
   const fit = (m: Match) => fitOf(m, s.config.threshold);
@@ -70,9 +75,9 @@ function JobList() {
   const top = legal[0];
   const used = new Set<string>(top ? [top.j.id] : []);
   const take = (pred: (r: (typeof legal)[number]) => boolean) => legal.filter((r) => !used.has(r.j.id) && pred(r)).map((r) => (used.add(r.j.id), r));
-  const best = take((r) => fit(r.m) === "great");
+  const best = guest ? [] : take((r) => fit(r.m) === "great");
   const withPeers = take((r) => !!PEERS[r.j.id]);
-  const nearby = take((r) => near(r.j));
+  const nearby = guest ? [] : take((r) => near(r.j));
   const fresh = take((r) => !!r.j.isNewPlant);
   const rest = take(() => true);
   const okCount = legal.filter((r) => fit(r.m) === "great").length;
@@ -80,14 +85,24 @@ function JobList() {
 
   const row = (r: (typeof legal)[number]) => (
     <div key={r.j.id} className={rescored === r.j.id ? "rounded-[26px] ring-4 ring-[var(--color-border-accent-solid)]" : ""}>
-      <JobRow job={r.j} p={p} fit={fit(r.m)} now={now} applied={applied.has(r.j.id)} />
+      <JobRow job={r.j} p={p} fit={fit(r.m)} now={now} applied={applied.has(r.j.id)} guest={guest} />
     </div>
   );
 
   return (
     <Screen>
-      <TopBar title="Việc phù hợp với bạn" sub={`Chào ${p.name.split(" ").slice(-2).join(" ")} · ${CITIES[p.city].vi}, Aichi`} right={<BellLink />} />
+      <TopBar title={guest ? "Việc làm tại Aichi" : "Việc phù hợp với bạn"} sub={guest ? "Đúng tay nghề · lương thực nhận rõ ràng" : `Chào ${p.name.split(" ").slice(-2).join(" ")} · ${CITIES[p.city].vi}, Aichi`} right={guest ? <button className="btn btn-primary btn-sm pressable" onClick={() => router.push(loginThenReturn("/worker/jobs"))}>Đăng nhập</button> : <BellLink />} />
       <div className="px-5 lg:px-0 lg:pl-1 pb-6">
+        {guest && (
+          <section className="pass relative rounded-[26px] p-5 text-white mb-4" aria-labelledby="guest-h">
+            <div className="relative">
+              <p className="t-sm text-[#DCE3FC]">Miễn phí cho người lao động</p>
+              <h2 id="guest-h" className="text-[22px] font-semibold tracking-[-0.025em] mt-1 leading-tight">Đăng nhập bằng Zalo để xem việc hợp tay nghề của bạn</h2>
+              <p className="t-sm text-[#DCE3FC] mt-2">3 câu hỏi · AI kiểm visa và chấm mức phù hợp · ứng tuyển, HR trả lời trong 24h.</p>
+              <button className="btn btn-lg pressable mt-4 bg-white text-[#1B22A7] font-semibold w-full sm:w-auto" onClick={() => router.push(loginThenReturn("/worker/jobs"))}>Đăng nhập · 30 giây</button>
+            </div>
+          </section>
+        )}
         <form className="flex items-center gap-2 rounded-full border border-[var(--c-input-border)] bg-surface pl-4 pr-1.5 h-14 focus-within:ring-2 focus-within:ring-[var(--color-border-accent-solid)]" role="search" onSubmit={(e) => e.preventDefault()}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted shrink-0" aria-hidden><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" strokeLinecap="round" /></svg>
           <label htmlFor="job-q" className="sr-only">Tìm việc</label>
@@ -96,7 +111,7 @@ function JobList() {
         </form>
 
         <div className="-mx-5 lg:mx-0 px-5 lg:px-0 mt-3 flex gap-2 overflow-x-auto lg:flex-wrap lg:overflow-visible no-scrollbar" role="group" aria-label="Lọc nhanh">
-          {FILTERS.map((f) => {
+          {FILTERS.filter((f) => !guest || (f.id !== "great" && f.id !== "near")).map((f) => {
             const active = on.includes(f.id);
             return (
               <button key={f.id} className="chip pressable !h-10 t-sm shrink-0" aria-pressed={active} onClick={() => setOn((x) => (active ? x.filter((y) => y !== f.id) : [...x, f.id]))}>
@@ -105,7 +120,7 @@ function JobList() {
             );
           })}
         </div>
-        <p className="t-sm text-muted mt-3">{legal.length} việc đúng ngành visa · {okCount} rất phù hợp</p>
+        <p className="t-sm text-muted mt-3">{guest ? `${legal.length} việc đang tuyển ở Aichi` : `${legal.length} việc đúng ngành visa · ${okCount} rất phù hợp`}</p>
 
         {searching ? (
           <Section title="Kết quả" count={matches.length}>
@@ -125,8 +140,8 @@ function JobList() {
           </section>
         ) : (
           <>
-            <Section title="Việc phù hợp nhất với bạn">
-              <JobPass job={top.j} p={p} m={top.m} fit={fit(top.m)} now={now} applied={applied.has(top.j.id)} />
+            <Section title={guest ? "Việc nổi bật" : "Việc phù hợp nhất với bạn"}>
+              <JobPass job={top.j} p={p} m={top.m} fit={fit(top.m)} now={now} applied={applied.has(top.j.id)} guest={guest} />
               {best.map(row)}
             </Section>
             {(withPeers.length > 0 || peerJob) && (

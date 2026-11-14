@@ -22,7 +22,7 @@ export function CompanyLogo({ job, size = 48 }: { job: Job; size?: number }) {
 }
 
 /** Compact TopCV-style job row: scan 4–5 per phone screen. Take-home stays the biggest number on the card. */
-export function JobRow({ job, p, fit, now, applied }: { job: Job; p: Profile; fit: Fit; now: number; applied?: boolean }) {
+export function JobRow({ job, p, fit, now, applied, guest }: { job: Job; p: Profile; fit: Fit; now: number; applied?: boolean; guest?: boolean }) {
   const saved = useApp((s) => s.saved.includes(job.id));
   const toggleSave = useApp((s) => s.toggleSave);
   const pay = takeHome(job, p.relocate);
@@ -36,7 +36,7 @@ export function JobRow({ job, p, fit, now, applied }: { job: Job; p: Profile; fi
         </h3>
         <p className="t-sm text-muted truncate">
           {job.company}
-          {fit === "great" && <span className="text-brand font-semibold"> · {FIT_VI.great}</span>}
+          {!guest && fit === "great" && <span className="text-brand font-semibold"> · {FIT_VI.great}</span>}
           {applied && <span className="font-semibold text-fg"> · Đã ứng tuyển</span>}
         </p>
         <p className="mt-1.5 flex items-baseline gap-1">

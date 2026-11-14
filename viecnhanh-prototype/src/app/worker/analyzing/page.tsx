@@ -7,7 +7,7 @@ import { AIThinking } from "@/components/worker/Blocks";
 import { CERTS, CITIES, JLPT, JOBS, SKILLS, VISAS, type SkillId } from "@/lib/data";
 import { takeHome, yen } from "@/lib/pay";
 import { fitOf, scoreMatch } from "@/lib/scoring";
-import { useApp } from "@/lib/store";
+import { useApp, takeNext } from "@/lib/store";
 import { enter, useGSAP } from "@/lib/motion";
 
 export default function Analyzing() {
@@ -95,7 +95,7 @@ export default function Analyzing() {
 
       <div className="fixed bottom-0 inset-x-0 z-20 bg-[color-mix(in_oklab,var(--color-bg-canvas)_90%,transparent)] backdrop-blur-xl border-t border-hair">
         <div className="mx-auto max-w-[640px] px-5 md:px-0 pt-3 safe-b">
-          <Button size="lg" block disabled={!done} onClick={() => router.push("/worker/jobs")} iconRight="arrow-right">{done ? "Xem tất cả việc" : "Đang chấm điểm…"}</Button>
+          <Button size="lg" block disabled={!done} onClick={() => router.push(takeNext("/worker/jobs"))} iconRight="arrow-right">{done ? "Xem tất cả việc" : "Đang chấm điểm…"}</Button>
         </div>
       </div>
     </div>

@@ -390,6 +390,21 @@ export const DEMO_PROFILE: Profile = {
   currentCompany: "Kariya Parts",
 };
 
+// Browsing without login: a neutral profile so take-home and start dates can be shown. Never scored or shown as a person.
+export const GUEST_PROFILE: Profile = {
+  name: "Khách",
+  nationality: "VN",
+  visa: "ssw1_mfg",
+  cardExpiry: "2099-12-31",
+  skills: {},
+  certs: [],
+  jlpt: 0,
+  availableInDays: 0,
+  city: "nagoya",
+  relocate: true,
+  province: "",
+};
+
 // Other applicants for HR view. hoursAgo is relative to first app load.
 export type SeedCandidate = {
   id: string;

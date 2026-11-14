@@ -6,7 +6,7 @@ import { Screen, TopBar } from "@/components/worker/Shell";
 import { AIThinking } from "@/components/worker/Blocks";
 import { jobById } from "@/lib/data";
 import { SUGGESTED, answer, type Answer } from "@/lib/ask";
-import { useApp, useNow } from "@/lib/store";
+import { useNow, useViewer } from "@/lib/store";
 
 const THINK = [
   { title: "Đọc câu hỏi của bạn", sub: "Tiếng Việt, có dấu hoặc không dấu" },
@@ -15,13 +15,12 @@ const THINK = [
 
 /** AI Q&A: ask in Vietnamese, answers cite specific jobs. */
 export default function Ask() {
-  const p = useApp((s) => s.profile);
+  const { p } = useViewer();
   const now = useNow(60000);
   const [q, setQ] = useState("");
   const [log, setLog] = useState<Answer[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [listening, setListening] = useState(false);
-  if (!p) return null;
 
   const ask = (text: string) => {
     const t = text.trim();

@@ -3,16 +3,24 @@ import Link from "next/link";
 import { Icon } from "@/components/ui";
 import { CITIES, JLPT, SKILLS, START_OPTIONS, VISAS, type SkillId } from "@/lib/data";
 import { fmtDate, legalPath } from "@/lib/start";
-import { useApp, useNow } from "@/lib/store";
+import { useNow, useViewer } from "@/lib/store";
 
 /** Desktop right rail on the jobs home: what the AI understood, the assistant, and the road to day one. */
 export default function JobsIndex() {
-  const p = useApp((s) => s.profile)!;
+  const { p, guest } = useViewer();
   const now = useNow(60000);
   const start = START_OPTIONS.find((o) => o.days === p.availableInDays);
   const steps = legalPath(p, now + 864e5);
   return (
     <div className="grid gap-4 lg:sticky lg:top-6">
+      {guest ? (
+        <section className="card p-5">
+          <p className="t-eyebrow mb-3 flex items-center gap-2"><Icon name="stars-01" solid size={16} />AI hiểu bạn</p>
+          <h2 className="t-sub">Chưa đăng nhập</h2>
+          <p className="t-sm text-muted mt-1">Đăng nhập bằng Zalo, trả lời 3 câu để AI chấm mức phù hợp cho từng việc.</p>
+          <Link href="/worker" className="btn btn-primary btn-sm pressable mt-4 w-full">Đăng nhập</Link>
+        </section>
+      ) : (
       <section className="card p-5">
         <p className="t-eyebrow mb-3 flex items-center gap-2"><Icon name="stars-01" solid size={16} />AI hiểu bạn</p>
         <h2 className="t-sub">{p.name}</h2>
@@ -25,6 +33,7 @@ export default function JobsIndex() {
         </dl>
         <Link href="/worker/profile" className="btn btn-tertiary btn-sm pressable mt-4 w-full"><Icon name="edit-02" size={16} />Sửa hồ sơ</Link>
       </section>
+      )}
 
       <Link href="/worker/ask" className="card-flat p-5 pressable block bg-brand-soft">
         <p className="font-semibold flex items-center gap-2"><Icon name="stars-01" solid size={18} />Trợ lý AI của bạn</p>
@@ -34,7 +43,7 @@ export default function JobsIndex() {
 
       <section className="card p-5" aria-labelledby="road-h">
         <h2 id="road-h" className="t-sub">Lộ trình đến ngày đi làm</h2>
-        <p className="t-sm text-muted">{VISAS[p.visa].short} · các mốc là dự kiến</p>
+        <p className="t-sm text-muted">{guest ? "Ví dụ với visa Kỹ năng đặc định 1" : VISAS[p.visa].short} · các mốc là dự kiến</p>
         <ol className="mt-4 grid gap-3">
           {steps.map((st, i) => (
             <li key={st.key} className="flex gap-3">
