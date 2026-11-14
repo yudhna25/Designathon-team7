@@ -244,15 +244,16 @@ export function InlineNote({ icon = "info-circle", children, tone = "neutral" }:
 // ---- Fit level (words, not %) ------------------------------------------------
 export type FitLevel = "great" | "possible" | "not";
 const FIT_TEXT: Record<FitLevel, string> = { great: "Rất phù hợp", possible: "Có thể phù hợp", not: "Chưa phù hợp" };
-export function FitBadge({ level, size = "md", label }: { level: FitLevel; size?: "md" | "lg"; label?: string }) {
+export function FitBadge({ level, size = "md", label }: { level: FitLevel; size?: "xs" | "sm" | "md" | "lg"; label?: string }) {
   const n = level === "great" ? 3 : level === "possible" ? 2 : 1;
   const tone = level === "great" ? "ink" : level === "possible" ? "bg-brand-soft text-brand" : "bg-surface text-muted border border-dashed border-line";
+  const box = size === "lg" ? "h-11 pl-3 pr-4 gap-2 t-base" : size === "sm" ? "h-6 pl-2 pr-2.5 gap-1.5 text-[11px] leading-none" : size === "xs" ? "h-4 pl-1 pr-1.5 gap-1 text-[11px] leading-none" : "h-8 pl-2.5 pr-3 gap-2 t-sm";
   return (
-    <span className={`inline-flex items-center gap-2 rounded-full font-semibold whitespace-nowrap ${tone} ${size === "lg" ? "h-11 pl-3 pr-4 t-base" : "h-8 pl-2.5 pr-3 t-sm"}`}>
-      <Icon name={level === "great" ? "check-verified" : level === "possible" ? "trend-up-01" : "info-circle"} size={size === "lg" ? 20 : 16} solid={level === "great"} />
+    <span className={`inline-flex items-center rounded-full font-semibold whitespace-nowrap ${tone} ${box}`}>
+      <Icon name={level === "great" ? "check-verified" : level === "possible" ? "trend-up-01" : "info-circle"} size={size === "lg" ? 20 : size === "sm" ? 14 : size === "xs" ? 11 : 16} solid={level === "great"} />
       {label ?? FIT_TEXT[level]}
       <span className="flex gap-0.5" aria-hidden>
-        {[0, 1, 2].map((i) => <i key={i} className={`block w-1.5 rounded-full ${size === "lg" ? "h-3.5" : "h-3"} ${i < n ? "bg-current" : "bg-current opacity-25"}`} />)}
+        {[0, 1, 2].map((i) => <i key={i} className={`block rounded-full ${size === "lg" ? "w-1.5 h-3.5" : size === "sm" ? "w-1 h-2.5" : size === "xs" ? "w-[3px] h-1.5" : "w-1.5 h-3"} ${i < n ? "bg-current" : "bg-current opacity-25"}`} />)}
       </span>
     </span>
   );

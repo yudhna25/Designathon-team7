@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "../styles/zen-tokens.css";
+/* Chat Kit phong cách Zalo — chép nguyên từ ZEN-KAIZ-DS (nhánh claude/zalo-ui-template), sinh từ design-tokens/palette-zalo.json */
+@import "../styles/palette-zalo.css";
 
 /* ViệcNhanh palette (ZEN template "Việc Nhanh"): Bold Blue primary, Light Blue secondary,
    Soft White canvas, Jet Black text. Wired into ZEN accent tokens; html has data-emphasis="brand". */
@@ -214,4 +216,39 @@ select.input { background-image: linear-gradient(45deg, transparent 50%, current
 
 @media (prefers-reduced-motion: reduce) {
   :root:not([data-motion="slow"]) { --motion-instant: 0s; --motion-fast: 0s; --motion-base: 0s; --motion-slow: 0s; --motion-slower: 0s; }
+}
+
+/* Zalo OA (mô phỏng): thanh tiến trình không xác định khi "Đang đánh giá…" */
+@keyframes oa-indeterminate { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
+
+/* QC tương phản: viền chip/input/thẻ ở nền tối và toggle chưa bật quá mờ (dưới 3:1 cho thành phần UI). */
+[data-theme="dark"] {
+  --c-chip-primary-border: color-mix(in oklab, var(--color-content-neutral-strongest) 26%, transparent);
+  --c-chip-primary-border-hover: color-mix(in oklab, var(--color-content-neutral-strongest) 40%, transparent);
+  --c-input-border: color-mix(in oklab, var(--color-content-neutral-strongest) 22%, transparent);
+  --c-input-border-hover: color-mix(in oklab, var(--color-content-neutral-strongest) 36%, transparent);
+  --color-border-container-subtle: color-mix(in oklab, var(--color-content-neutral-strongest) 13%, transparent);
+}
+.toggle { background: var(--color-content-neutral-light); }
+.toggle[aria-checked="true"] { background: var(--c-toggle-bar-bg-selected); }
+
+/* Zalo OA (mô phỏng) · Chat Kit ZEN: nối các token chat vào component của prototype.
+   Biến ở :root tự resolve tại :root, nên phải khai lại trong scope để nút/badge đổi sang dải zalo-blue. */
+[data-chat-theme="zalo"] {
+  --c-button-primary-bg: var(--color-bg-accent-solid);
+  --c-button-primary-bg-hover: var(--color-bg-accent-solid-hover);
+  --c-button-primary-bg-pressed: var(--color-bg-accent-solid-pressed);
+  --c-button-primary-fg: var(--color-content-on-accent);
+  --brand-soft: var(--color-bg-accent-subtle);
+  --color-focus-accent-solid: var(--color-bg-accent-solid);
+}
+/* QC tương phản nền tối: nền chat tối hơn surface, viền bong bóng rõ hơn (Chat Kit gốc dùng canvas + border pale). */
+[data-theme="dark"] [data-chat-theme="zalo"] {
+  --chat-canvas: color-mix(in oklab, var(--color-bg-canvas) 45%, #000);
+  --chat-bubble-in-border: color-mix(in oklab, var(--color-content-neutral-strongest) 13%, transparent);
+}
+/* Chấm "đang soạn tin" (Chat Kit) — nhảy 3px rồi về, 3 chấm lệch pha 120ms */
+@keyframes zen-typing {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-3px); opacity: 1; }
 }
