@@ -33,3 +33,9 @@ Running notes from the visual-direction brainstorm. Mockups: `.superpowers/brain
 - Spec written: `docs/superpowers/specs/2026-11-14-m4-ui-improvement-design.md`.
 - Main gaps found: M3 market event (3-month trial, 300 workers week 1) not in UI; M2 6-feedback answers not visible (tiered verification sheet needed); M4 "when one party fails" + 3 business metrics missing; team note "mini-app" → frame entry as Zalo Mini App.
 - Identity guardrail (M2 spirit): brand blue, take-home pay always the biggest number — applies to whichever direction wins the vote.
+
+## Locked (14/11 late)
+- UI direction LOCKED: **Bento + Thẻ** (Top 1 Ví + Bento, v8). Spec §6 updated.
+- UX reframed: problem = few connections → can't quickly find legal work; HMW adds "know exactly when they can start"; key feature "Build Trust by People" via Zalo OA. Spec §1 updated with proposals: 2 trust sources, opt-in "người hỏi được" (no contact scraping), "Bắt đầu sớm nhất" date on card.
+- Repo: github.com/yudhna25/Designathon-team7 (private). Teammate owns Zalo OA flow on `feat/zalo-oa-flow`.
+- Team confirmed the 4 §1 proposals; start-date rule = HR approval + 7d docs + 45d ISA review (ISA stats ~41–64d for SSW1).
