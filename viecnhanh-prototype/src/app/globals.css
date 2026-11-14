@@ -187,10 +187,12 @@ body {
 .chip[aria-pressed="true"], .chip[aria-checked="true"] { background: var(--c-chip-primary-bg-selected); color: var(--c-chip-primary-fg-selected); border-color: transparent; }
 
 /* ---------- Segmented ---------- */
-.seg { display: flex; gap: 4px; padding: 4px; border-radius: var(--radius-full); background: var(--color-bg-neutral-subtle); position: relative; isolation: isolate; }
-.seg > button { flex: 1; height: var(--segmented-md-h); border-radius: var(--radius-full); font-weight: 500; color: var(--color-content-neutral-base); position: relative; z-index: 1; transition: color var(--motion-fast) var(--ease-standard); white-space: nowrap; padding: 0 12px; }
+.seg { display: flex; gap: 4px; padding: 4px; border-radius: var(--radius-full); background: var(--color-bg-neutral-subtle); border: 1px solid var(--c-input-border); position: relative; isolation: isolate; }
+.seg > button { flex: 1; height: var(--segmented-md-h); border-radius: var(--radius-full); font-weight: 600; color: var(--color-content-neutral-strongest); position: relative; z-index: 1; transition: color var(--motion-fast) var(--ease-standard); white-space: nowrap; padding: 0 12px; }
 .seg > button[aria-pressed="true"], .seg > button[aria-selected="true"] { color: var(--color-content-neutral-strongest); }
-.seg .seg-thumb { position: absolute; z-index: 0; top: 4px; bottom: 4px; border-radius: var(--radius-full); background: var(--color-bg-surface); box-shadow: var(--shadow-bottom-1); transition: left var(--motion-slow) var(--ease-emphasized), width var(--motion-slow) var(--ease-emphasized); }
+.seg > button:not([aria-pressed="true"]):hover { background: color-mix(in oklab, var(--color-bg-surface) 60%, transparent); }
+.seg > button[aria-pressed="true"] { color: #fff; }
+.seg .seg-thumb { position: absolute; z-index: 0; top: 4px; bottom: 4px; border-radius: var(--radius-full); background: #1B22A7; box-shadow: var(--shadow-bottom-1); transition: left var(--motion-slow) var(--ease-emphasized), width var(--motion-slow) var(--ease-emphasized); }
 
 /* ---------- Inputs ---------- */
 .field { display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); }
