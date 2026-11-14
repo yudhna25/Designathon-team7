@@ -96,3 +96,14 @@ assert.equal(hireProgress(HIRE_PLAN, 2).filled, 160);
 assert.equal(hireProgress(HIRE_PLAN, 2).pct, 53);
 assert.equal(needsBatch(300, 20), true); assert.equal(needsBatch(10, 20), false);
 console.log("M4 HR checks OK");
+
+// --- M4: AI Q&A assistant ---
+import { answer } from "../src/lib/ask";
+assert.ok(answer("đổi công ty mất bao lâu", p).a.includes("dự kiến"), "start-date answers stay estimates");
+assert.equal(answer("xyz", p).cites.length, 0, "unknown questions cite nothing");
+assert.ok(answer("Có người Việt nào làm ở Mikawa không?", p).cites.includes("mikawa-cnc"));
+assert.ok(answer("Việc nào lương thực nhận trên ¥200k?", p).cites.every((id) => takeHome(jobById(id)!, p.relocate).net > 200000), "pay answer cites only jobs above 200k");
+assert.match(answer("Trong lúc chờ có ứng lương được không?", p).a, /ngày công/, "wage-advance follow-up is not routed to the pay answer");
+assert.ok(answer("Việc nào lương thực nhận trên ¥200k?", p).cites.every((id) => scoreMatch(p, jobById(id)!).gate.pass), "assistant never suggests jobs the visa forbids");
+assert.ok(answer("Việc nào có ký túc xá?", p).cites.every((id) => scoreMatch(p, jobById(id)!).gate.pass), "dorm answer respects the visa gate too");
+console.log("M4 ask checks OK");

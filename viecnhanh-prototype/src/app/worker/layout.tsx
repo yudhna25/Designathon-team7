@@ -6,7 +6,7 @@ import { BottomNav, SideNav, StatusNotifier } from "@/components/worker/Shell";
 
 // Routes that run full-screen (no nav): auth, onboarding, AI analysis, focused task flows.
 const BARE = ["/worker/onboarding", "/worker/analyzing"];
-const NO_BOTTOM_NAV = ["/worker/jobs/", "/worker/improve", "/worker/safety"];
+const NO_BOTTOM_NAV = ["/worker/jobs/", "/worker/improve", "/worker/safety", "/worker/ask"];
 
 export default function WorkerLayout({ children }: { children: ReactNode }) {
   const ready = useHydrated();

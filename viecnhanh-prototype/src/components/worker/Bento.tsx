@@ -77,6 +77,11 @@ export function Bento({ job, p, chips, fit, app }: { job: Job; p: Profile; chips
           <p className="font-semibold mt-1 flex items-center gap-1.5"><Icon name="check-verified" solid size={18} />Đủ điều kiện ứng tuyển</p>
         </section>
       )}
+      <Link href="/worker/ask" className="col-span-2 card-flat p-4 pressable flex items-center gap-3">
+        <Icon name="stars-01" solid />
+        <span className="flex-1"><b className="block">Hỏi trợ lý AI</b><span className="t-sm text-muted">“Việc nào lương thực nhận trên ¥200k?”</span></span>
+        <Icon name="chevron-right-01" />
+      </Link>
     </div>
   );
 }
