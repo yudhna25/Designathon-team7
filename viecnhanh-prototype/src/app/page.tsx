@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRef } from "react";
-import { Icon, Logo } from "@/components/ui";
+import { Icon, KintraMark, Logo } from "@/components/ui";
 import { enter, gsap, SplitText, useGSAP } from "@/lib/motion";
 
 const PILLARS = [
@@ -24,6 +24,16 @@ export default function Home() {
       enter("[data-hero]", { y: 20 }, { stagger: 0.08, duration: 0.9, delay: 0.35 });
       enter(".entry", { y: 40 }, { stagger: 0.1, duration: 1, delay: 0.5 });
       enter(".flow-step", { x: -12 }, { stagger: 0.05, duration: 0.6, delay: 0.7 });
+      gsap.from(".flow-arrow", { scaleX: 0, transformOrigin: "0% 50%", duration: 0.4, stagger: 0.07, delay: 0.95, ease: "power2.out" });
+      // Stats count up from zero, keeping their prefix/suffix and Vietnamese thousands dots.
+      gsap.utils.toArray<HTMLElement>(".stat-num").forEach((el, i) => {
+        const raw = el.textContent ?? "";
+        const m = raw.match(/[\d.]+/);
+        if (!m) return;
+        const target = Number(m[0].replace(/\./g, ""));
+        const o = { v: 0 };
+        gsap.to(o, { v: target, duration: 1.4, delay: 0.6 + i * 0.12, ease: "power3.out", onUpdate: () => { el.textContent = raw.replace(m[0], Math.round(o.v).toLocaleString("vi-VN")); }, onComplete: () => { el.textContent = raw; } });
+      });
       // Below-the-fold: reveal on scroll without ScrollTrigger (keeps bundle small).
       const io = new IntersectionObserver((entries) => {
         for (const e of entries) if (e.isIntersecting) { gsap.to(e.target, { y: 0, autoAlpha: 1, duration: 0.9, clearProps: "transform,opacity,visibility" }); io.unobserve(e.target); }
@@ -44,7 +54,7 @@ export default function Home() {
       <main className="mx-auto max-w-[1280px] px-5 md:px-10">
         <section className="pt-8 md:pt-16 pb-12 md:pb-20 grid lg:grid-cols-12 gap-10">
           <div className="lg:col-span-7">
-            <p className="t-eyebrow mb-6" data-hero>Prototype · Milestone 2 · Aichi, Japan</p>
+            <p className="t-eyebrow mb-6 flex items-center gap-2" data-hero><KintraMark size={16} />KINTRA · Your skills. Your next move.</p>
             <h1 className="hero-line text-[44px] leading-[1.02] md:text-[76px] md:leading-[0.98] font-semibold tracking-[-0.055em]">
               Việc đúng tay nghề.<br />
               <span className="text-faint">HR trả lời trong</span>{" "}
@@ -56,6 +66,7 @@ export default function Home() {
             </p>
           </div>
           <div className="lg:col-span-5 lg:pt-14 grid gap-4 content-start" data-hero>
+            <ShowPass />
             <Stat k="~60.000" v="lao động Việt ở Aichi, nhóm lớn nhất (24%)" />
             <Stat k="~2 tháng" v="không có lương khi đổi việc, phải vay bạn hoặc quẹt thẻ" />
             <Stat k="25–35%" v="phí agency nhà máy đang trả trên mỗi giờ lương" />
@@ -75,7 +86,7 @@ export default function Home() {
             href="/hr"
             eyebrow="Vai 2 · Desktop"
             title="HR nhà máy"
-            desc="Mikawa Precision mở nhà máy mới ở Toyota-shi, cần 120 người. Duyệt ứng viên đã qua visa, quyết định trong 24h."
+            desc="Mikawa Precision mở nhà máy mới ở Toyota-shi, cần 300 người trong tuần đầu. Duyệt ứng viên đã qua visa, quyết định trong 24h."
             cta="Mở dashboard HR"
             icon="monitor-01"
             dark
@@ -91,7 +102,7 @@ export default function Home() {
             {FLOW.map((s, i) => (
               <li key={s} className="flow-step flex items-center gap-2">
                 <span className="badge badge-md badge-outline"><span className="mono text-faint">{String(i + 1).padStart(2, "0")}</span>{s}</span>
-                {i < FLOW.length - 1 && <Icon name="arrow-narrow-right" size={16} className="text-faint" />}
+                {i < FLOW.length - 1 && <Icon name="arrow-narrow-right" size={16} className="flow-arrow text-faint" />}
               </li>
             ))}
           </ol>
@@ -127,7 +138,7 @@ export default function Home() {
 function Stat({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex items-baseline gap-5 hair-b pb-4">
-      <span className="t-h2 tnum w-[150px] shrink-0">{k}</span>
+      <span className="stat-num t-h2 tnum w-[150px] shrink-0">{k}</span>
       <span className="text-muted">{v}</span>
     </div>
   );
@@ -138,7 +149,7 @@ function Entry({ href, eyebrow, title, desc, cta, icon, dark }: { href: string; 
     <Link href={href} className={`entry group relative overflow-hidden rounded-[32px] p-7 md:p-10 min-h-[320px] flex flex-col justify-between pressable focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-accent-solid)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-canvas)] ${dark ? "ink" : "card"}`}>
       <div className="flex items-start justify-between">
         <span className={`t-eyebrow ${dark ? "!text-[color:var(--color-content-on-dark-overlay-base)]" : ""}`}>{eyebrow}</span>
-        <span className={`grid size-12 place-items-center rounded-full transition-transform duration-[var(--motion-slow)] [transition-timing-function:var(--ease-spring)] group-hover:rotate-[-45deg] ${dark ? "bg-[var(--color-bg-inverse-solid)] text-[var(--color-content-neutral-strongest)]" : "ink"}`}>
+        <span data-magnetic className={`grid size-12 place-items-center rounded-full transition-transform duration-[var(--motion-slow)] [transition-timing-function:var(--ease-spring)] group-hover:rotate-[-45deg] ${dark ? "bg-[var(--color-bg-inverse-solid)] text-[var(--color-content-neutral-strongest)]" : "ink"}`}>
           <Icon name="arrow-right" />
         </span>
       </div>
@@ -149,5 +160,23 @@ function Entry({ href, eyebrow, title, desc, cta, icon, dark }: { href: string; 
         <span className="mt-6 inline-flex items-center gap-2 font-semibold underline underline-offset-[6px] decoration-1">{cta}</span>
       </div>
     </Link>
+  );
+}
+
+/** Showcase pass on the landing: tilts with the pointer (MotionLayer) and rolls its LED number in. Demo data. */
+function ShowPass() {
+  return (
+    <div className="pass relative rounded-[26px] p-5 text-white mb-2" aria-label="Ví dụ thẻ việc: Vận hành máy tiện CNC, Mikawa Precision, thực nhận ¥221.526 mỗi tháng">
+      <div className="relative">
+        <div className="flex items-start justify-between gap-3">
+          <p className="t-sm font-semibold">Mikawa Precision<span className="block font-normal text-[#DCE3FC]">KINTRA đã xác minh</span></p>
+          <span className="rounded-full bg-white/15 px-2.5 py-1.5 t-sm font-bold">Rất phù hợp</span>
+        </div>
+        <p className="text-[20px] font-semibold tracking-[-0.025em] mt-3">Vận hành máy tiện CNC</p>
+        <p className="led text-[44px] leading-none mt-3" aria-hidden>¥221.526</p>
+        <p className="t-sm text-[#DCE3FC] mt-1.5">thực nhận mỗi tháng · ước tính</p>
+        <p className="mt-3 inline-flex rounded-full bg-white/15 px-3 py-1.5 t-sm font-semibold">Bắt đầu sớm nhất: 07/01/2027 · dự kiến</p>
+      </div>
+    </div>
   );
 }

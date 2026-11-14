@@ -62,16 +62,19 @@ export function resolveViewTransition() {
 export function withViewTransition(fn: () => void, opts?: { asyncRoute?: boolean }) {
   if (typeof document === "undefined") { fn(); return; }
   const quiet = window.matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.dataset.motion === "off";
-  const doc = document as Document & { startViewTransition?: (cb: () => void | Promise<void>) => void };
+  type VT = { ready: Promise<void>; finished: Promise<void>; updateCallbackDone: Promise<void> };
+  const doc = document as Document & { startViewTransition?: (cb: () => void | Promise<void>) => VT };
+  // A newer transition skips the older one; that rejection is expected, not an error.
+  const quietly = (t: VT) => { t.ready.catch(() => {}); t.finished.catch(() => {}); t.updateCallbackDone.catch(() => {}); };
   if (quiet || typeof doc.startViewTransition !== "function") {
     fn();
     return;
   }
   if (!opts?.asyncRoute) {
-    doc.startViewTransition(fn);
+    quietly(doc.startViewTransition(fn));
     return;
   }
-  doc.startViewTransition(
+  quietly(doc.startViewTransition(
     () =>
       new Promise<void>((resolve) => {
         resolvePendingVT = resolve;
@@ -83,5 +86,5 @@ export function withViewTransition(fn: () => void, opts?: { asyncRoute?: boolean
           }
         }, 320);
       }),
-  );
+  ));
 }

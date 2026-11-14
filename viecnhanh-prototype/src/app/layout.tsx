@@ -3,6 +3,7 @@ import { Be_Vietnam_Pro, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { Preloader } from "@/components/brand/Preloader";
+import { MotionLayer } from "@/components/brand/MotionLayer";
 
 const bevn = Be_Vietnam_Pro({ variable: "--font-bevn", subsets: ["latin", "vietnamese"], weight: ["400", "500", "600", "700", "800"], display: "swap" });
 const mono = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["latin", "vietnamese"], display: "swap" });
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <Providers>{children}</Providers>
         <Preloader />
+        <MotionLayer />
       </body>
     </html>
   );
