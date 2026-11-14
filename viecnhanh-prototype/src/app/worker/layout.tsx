@@ -1,8 +1,8 @@
 "use client";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, type ReactNode } from "react";
+import { Suspense, useEffect, type ReactNode } from "react";
 import { useApp, useHydrated } from "@/lib/store";
-import { BottomNav, SideNav, StatusNotifier } from "@/components/worker/Shell";
+import { BottomNav, StatusNotifier, TopNav } from "@/components/worker/Shell";
 
 // Routes that run full-screen (no nav): auth, onboarding, AI analysis, focused task flows.
 const BARE = ["/worker/onboarding", "/worker/analyzing"];
@@ -32,10 +32,12 @@ export default function WorkerLayout({ children }: { children: ReactNode }) {
       {guarded ? null : bare ? (
         children
       ) : (
-        <div className="lg:flex mx-auto max-w-[1440px]">
-          <SideNav />
+        <>
+          <Suspense><TopNav /></Suspense>
+          <div className="mx-auto max-w-[1440px] lg:px-6">
           <main className={`flex-1 min-w-0 ${NO_BOTTOM_NAV.some((p) => path.startsWith(p)) ? "pb-32" : "pb-28"} lg:pb-12`}>{children}</main>
-        </div>
+          </div>
+        </>
       )}
       {!bare && !guarded && !NO_BOTTOM_NAV.some((p) => path.startsWith(p)) && <BottomNav />}
     </div>

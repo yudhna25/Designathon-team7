@@ -1,5 +1,6 @@
 // Demo data. All factories, people and amounts are fictional (ZEN Kaiz rule: no real company names).
 // Place names are real Aichi municipalities.
+import { EXTRA_JOBS } from "./jobs-extra";
 
 export type VisaId =
   | "ssw1_mfg"
@@ -164,6 +165,7 @@ export type Profile = {
   otherSkills?: string; // free text ("Khác")
   otherCerts?: string;
   province: string; // hometown province in Vietnam, used to match a hometown senpai
+  prefecture?: string; // prefecture in Japan where the worker lives now (romaji, see PREFECTURES)
   currentCompany?: string; // only used to avoid matching a senpai at the same company; never shown
 };
 
@@ -367,6 +369,8 @@ export const JOBS: Job[] = [
     verified: true,
     perks: [],
   },
+  // 40 việc bổ sung để danh sách đủ dày (src/lib/jobs-extra.ts)
+  ...EXTRA_JOBS,
 ];
 
 export const jobById = (id: string) => JOBS.find((j) => j.id === id);
@@ -453,3 +457,14 @@ export const PEERS: Record<string, { count: number; peers: Peer[] }> = {
 export const HIRE_PLAN = { jobId: KEY_JOB_ID, target: 300, days: 7, filledByDay: [38, 41, 35, 44, 0, 0, 0], today: 3, queued: 212 }; // queued = applications still waiting this week
 
 export const JPY_TO_VND = 172; // reference rate for display only
+
+/** 47 tỉnh của Nhật (romaji · 漢字), theo thứ tự mã JIS. */
+export const PREFECTURES: { id: string; ja: string }[] = [
+  ["Hokkaido", "北海道"], ["Aomori", "青森県"], ["Iwate", "岩手県"], ["Miyagi", "宮城県"], ["Akita", "秋田県"], ["Yamagata", "山形県"], ["Fukushima", "福島県"],
+  ["Ibaraki", "茨城県"], ["Tochigi", "栃木県"], ["Gunma", "群馬県"], ["Saitama", "埼玉県"], ["Chiba", "千葉県"], ["Tokyo", "東京都"], ["Kanagawa", "神奈川県"],
+  ["Niigata", "新潟県"], ["Toyama", "富山県"], ["Ishikawa", "石川県"], ["Fukui", "福井県"], ["Yamanashi", "山梨県"], ["Nagano", "長野県"], ["Gifu", "岐阜県"],
+  ["Shizuoka", "静岡県"], ["Aichi", "愛知県"], ["Mie", "三重県"], ["Shiga", "滋賀県"], ["Kyoto", "京都府"], ["Osaka", "大阪府"], ["Hyogo", "兵庫県"],
+  ["Nara", "奈良県"], ["Wakayama", "和歌山県"], ["Tottori", "鳥取県"], ["Shimane", "島根県"], ["Okayama", "岡山県"], ["Hiroshima", "広島県"], ["Yamaguchi", "山口県"],
+  ["Tokushima", "徳島県"], ["Kagawa", "香川県"], ["Ehime", "愛媛県"], ["Kochi", "高知県"], ["Fukuoka", "福岡県"], ["Saga", "佐賀県"], ["Nagasaki", "長崎県"],
+  ["Kumamoto", "熊本県"], ["Oita", "大分県"], ["Miyazaki", "宮崎県"], ["Kagoshima", "鹿児島県"], ["Okinawa", "沖縄県"],
+].map(([id, ja]) => ({ id, ja }));

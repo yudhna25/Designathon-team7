@@ -27,7 +27,7 @@ export default function HRLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh bg-canvas lg:flex" lang={s.config.hrLang}>
       <aside className="hidden lg:flex flex-col w-[248px] shrink-0 sticky top-0 h-dvh p-5 hair-b lg:border-b-0 lg:border-r lg:border-hair bg-surface">
-        <Link href="/" className="px-2 mb-1"><Logo /></Link>
+        <Link href="/hub" className="px-2 mb-1"><Logo /></Link>
         <p className="px-2 t-sm text-muted mb-8 ml-9 -mt-1">{t.brand}</p>
         <div className="px-3 py-3 rounded-2xl well mb-6">
           <p className="t-sm text-muted">{key.companyJa}</p>
@@ -53,7 +53,7 @@ export default function HRLayout({ children }: { children: ReactNode }) {
       <div className="flex-1 min-w-0">
         <header className="sticky top-0 z-20 bg-[color-mix(in_oklab,var(--color-bg-canvas)_86%,transparent)] backdrop-blur-xl border-b border-hair">
           <div className="h-16 px-4 md:px-8 flex items-center gap-4">
-            <Link href="/" className="lg:hidden"><Logo compact /></Link>
+            <Link href="/hub" className="lg:hidden"><Logo compact /></Link>
             <p className="t-sm text-muted hidden md:block flex-1">{t.hiringFor} · <b className="text-fg">{s.config.hrLang === "ja" ? key.titleJa : key.titleEn}</b> · {key.company}</p>
             <div className="flex-1 md:hidden" />
             <div className="w-[148px]"><Segmented size="sm" label="Language" value={s.config.hrLang} onChange={(v) => s.setConfig({ hrLang: v })} options={[{ value: "en", label: "EN" }, { value: "ja", label: "日本語" }]} /></div>

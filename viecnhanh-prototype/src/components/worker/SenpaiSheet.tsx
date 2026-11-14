@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { jobById } from "@/lib/data";
-import { SENPAI_QUESTIONS, askerLabel, hometownLabel, isRevealed, senpaiFor } from "@/lib/senpai";
+import { SENPAI_QUESTIONS, askerLabel, isRevealed, senpaiFor } from "@/lib/senpai";
 import { useApp } from "@/lib/store";
 import { SHOWCASE } from "@/lib/showcase";
 import { Avatar, Button, Icon, Sheet } from "../ui";
@@ -35,7 +35,7 @@ export function SenpaiSheet({ jobId, open, onClose }: { jobId: string; open: boo
     <Sheet
       open={open}
       onClose={onClose}
-      title="Hỏi Senpai cùng quê"
+      title="Hỏi Senpai"
       footer={
         peer && !thread ? (
           <Button size="lg" block icon="lock-01" disabled={questions.length === 0} onClick={send}>Gửi ẩn danh · {questions.length}/3 câu</Button>
@@ -52,13 +52,13 @@ export function SenpaiSheet({ jobId, open, onClose }: { jobId: string; open: boo
             <Avatar name={peer.name} size={44} src={SHOWCASE.avatars[peer.id]} />
             <div className="min-w-0">
               <p className="font-semibold">{peer.name}</p>
-              <p className="t-sm text-muted">{peer.years} năm ở {job.company} · {hometownLabel(p, peer)}</p>
+              <p className="t-sm text-muted">{peer.years} năm ở {job.company}</p>
               <p className="t-sm font-semibold text-brand flex items-center gap-1 mt-0.5"><Icon name="check-verified" size={14} solid />Đã xác minh chấm công</p>
             </div>
           </div>
 
           <p className="t-sm flex items-center gap-2 well px-3 py-2">
-            <Icon name="lock-01" size={16} />Bạn hiện là: <b>{askerLabel(p, revealed, peer.province === p.province)}</b>
+            <Icon name="lock-01" size={16} />Bạn hiện là: <b>{askerLabel(p, revealed)}</b>
           </p>
 
           {!thread ? (
