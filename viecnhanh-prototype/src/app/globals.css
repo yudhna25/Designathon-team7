@@ -325,3 +325,6 @@ select.input { background-image: linear-gradient(45deg, transparent 50%, current
   0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
   30% { transform: translateY(-3px); opacity: 1; }
 }
+
+/* ===== KINTRA brand + motion layer (feat/kintra-brand-motion) ===== */
+html[data-intro="seen"] .kintra-intro { display: none; }

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Be_Vietnam_Pro, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import { Preloader } from "@/components/brand/Preloader";
 
 const bevn = Be_Vietnam_Pro({ variable: "--font-bevn", subsets: ["latin", "vietnamese"], weight: ["400", "500", "600", "700", "800"], display: "swap" });
 const mono = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["latin", "vietnamese"], display: "swap" });
@@ -22,7 +23,7 @@ export const viewport: Viewport = {
 };
 
 // Sets theme + motion before first paint from the persisted demo config (no flash).
-const boot = `try{var s=JSON.parse(localStorage.getItem("viecnhanh-demo-v2")||"{}").state||{};var c=s.config||{};var t=c.theme||"system";var d=t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.dataset.theme=d?"dark":"light";document.documentElement.dataset.motion=c.motion||"normal";}catch(e){}`;
+const boot = `try{var s=JSON.parse(localStorage.getItem("viecnhanh-demo-v2")||"{}").state||{};var c=s.config||{};var t=c.theme||"system";var d=t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.dataset.theme=d?"dark":"light";document.documentElement.dataset.motion=c.motion||"normal";}catch(e){}try{if(sessionStorage.getItem("kintra-intro"))document.documentElement.dataset.intro="seen";}catch(e){}`;
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       </head>
       <body>
         <Providers>{children}</Providers>
+        <Preloader />
       </body>
     </html>
   );
