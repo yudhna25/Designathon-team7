@@ -23,7 +23,7 @@ BTC chấm UX Design 40% và UI Design 40%. Phần UI phải *kể lại đượ
 3. Vế "biết chính xác ngày bắt đầu" phải thành **một ngày cụ thể** trên thẻ: `Bắt đầu sớm nhất: dd/mm`, tính từ tình trạng lưu trú, kèm 1 dòng lý do.
    - **Quy tắc tính (dùng cho demo):** thợ SSW (i) đổi công ty phải xin *chuyển đổi tư cách lưu trú* (在留資格変更許可申請). Thống kê của Cục XNC Nhật (ISA) cho 特定技能1号 vào khoảng **41–64 ngày** xét duyệt. Spec chọn:
      `Bắt đầu sớm nhất = ngày HR duyệt + 7 ngày chuẩn bị hồ sơ + 45 ngày xét duyệt` (≈ 7–8 tuần).
-   - Ví dụ demo: HR duyệt 16/11/2026 → **Bắt đầu sớm nhất: 08/01/2027**.
+   - Ví dụ demo: HR duyệt 16/11/2026 → **Bắt đầu sớm nhất: 07/01/2027**.
    - Dòng lý do trên UI: "Đổi công ty cần xin chuyển đổi tư cách lưu trú, thường mất khoảng 6–9 tuần. Mùa cao điểm tháng 3–4 có thể lâu hơn."
    - Luôn ghi là **dự kiến**. Ngày bắt đầu không được là lời hứa chắc chắn.
    - Nối với Finding 0: dưới ngày bắt đầu có dòng "Trong lúc chờ: vẫn làm ở chỗ cũ nếu còn hợp đồng · ứng lương theo ngày công vẫn dùng được".
