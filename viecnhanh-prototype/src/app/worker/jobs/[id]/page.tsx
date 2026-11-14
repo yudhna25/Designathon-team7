@@ -1,16 +1,20 @@
 "use client";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useRef, useState } from "react";
-import { Button, FitBadge, Icon, InlineNote, MatchChips, Sheet, Segmented } from "@/components/ui";
+import { Suspense, type CSSProperties, useEffect, useRef, useState } from "react";
+import { Button, FitBadge, Icon, InlineNote, MatchChips, Num, Sheet, Segmented } from "@/components/ui";
 import { Screen, TopBar } from "@/components/worker/Shell";
 import { PayCard, ScoreBreakdown } from "@/components/worker/Blocks";
+import { PeersTile } from "@/components/worker/Bento";
+import { Scanner } from "@/components/worker/Scanner";
+import { earliestStart, fmtDate } from "@/lib/start";
+import { FlightPath } from "@/components/worker/FlightPath";
 import { CITIES, JLPT_SHORT, SKILLS, VISAS, jobById } from "@/lib/data";
 import { SHIFT_VI } from "@/lib/labels";
 import { FIT_VI, fitOf, matchChips, matchGuidance, scoreMatch, suggestImprovements } from "@/lib/scoring";
 import { takeHome, yen } from "@/lib/pay";
-import { deadlineOf, fmtLeft, isClosed, useApp, useNow } from "@/lib/store";
-import { gsap, useGSAP } from "@/lib/motion";
+import { deadlineOf, fmtLeft, isClosed, simNow, useApp, useNow } from "@/lib/store";
+import { gsap, resolveViewTransition, useGSAP } from "@/lib/motion";
 
 export default function Page() {
   return <Suspense><JobDetail /></Suspense>;
@@ -22,7 +26,14 @@ function JobDetail() {
   const router = useRouter();
   const s = useApp();
   const job = jobById(id);
-  const [sheet, setSheet] = useState<null | "apply" | "anyway">(null);
+  const [sheet, setSheet] = useState<null | "apply" | "anyway" | "path">(null);
+  const [dorm, setDorm] = useState(() => (job ? job.dorm !== null && (s.profile?.relocate ?? false) : false));
+  useEffect(() => {
+    setDorm(job ? job.dorm !== null && (s.profile?.relocate ?? false) : false);
+  }, [job?.id, s.profile?.relocate]);
+  useEffect(() => {
+    resolveViewTransition();
+  }, [id]);
   if (!job) return <div className="p-8"><p>Không tìm thấy việc này.</p><Link className="underline" href="/worker/jobs">Về danh sách</Link></div>;
 
   const p = s.profile!;
@@ -34,20 +45,21 @@ function JobDetail() {
   const mine = s.apps.find((a) => a.candidateId === "me" && a.jobId === job.id && !isClosed(a, s));
   const invited = s.apps.some((a) => a.candidateId === "me" && a.jobId === job.id && a.status === "approved");
   const best = [...m.criteria].sort((a, b) => b.score - a.score);
-  const pay = takeHome(job, p.relocate);
+  const pay = takeHome(job, dorm);
+  const start = earliestStart(p, simNow(s.clock, s.config.speed) + 864e5);
 
   return (
     <Screen deps={[id]} className="pb-6 lg:pt-6 lg:pb-0">
       <div className="lg:hidden"><TopBar back="/worker/jobs" title={job.company} sub={CITIES[job.city].vi} /></div>
-      <div className="px-5 lg:px-0 grid gap-4 max-w-[760px]">
-        <section className="card p-6 md:p-8" data-reveal>
+      <div className="px-5 lg:px-0 pb-28 lg:pb-6 grid grid-cols-1 gap-4 max-w-[760px]">
+        <section className="card p-6 md:p-8" style={{ viewTransitionName: `pass-card-${job.id}` } as CSSProperties} data-reveal>
           <div className="flex flex-col-reverse md:flex-row md:items-start gap-6 justify-between">
             <div className="min-w-0">
               <p className="t-sm text-muted">{job.company} · {job.companyJa} · {CITIES[job.city].vi}</p>
-              <h1 className="t-h2 mt-1">{job.title}</h1>
+              <h1 className="t-h2 mt-1" style={{ viewTransitionName: `pass-title-${job.id}` } as CSSProperties}>{job.title}</h1>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {job.isNewPlant && <span className="badge badge-solid badge-md">Nhà máy mới</span>}
-                <span className="badge badge-md"><Icon name="check-verified" size={14} />Công ty đã xác minh</span>
+                <span className="badge badge-md"><Icon name={job.verified ? "check-verified" : "hourglass"} size={14} />{job.verified ? "ViệcNhanh đã xác minh" : "Đang xác minh"}</span>
                 <span className="badge badge-md">Cần {job.headcount} người</span>
               </div>
             </div>
@@ -58,7 +70,7 @@ function JobDetail() {
           </div>
           <div className="mt-4 pt-4 hair-t">
             <p className="t-sm text-muted">Thực nhận mỗi tháng · ước tính ban đầu</p>
-            <p className="t-h3 tnum mt-1">{yen(pay.net)}</p>
+            <p className="led text-[40px] leading-none mt-2" style={{ viewTransitionName: `pass-net-${job.id}` } as CSSProperties} aria-hidden><Num value={pay.net} format={yen} spring /></p><p className="sr-only">{yen(pay.net)}</p>
             <p className="t-sm text-muted mt-1">{pay.housingNote} · xem chi tiết khấu trừ bên dưới</p>
           </div>
           <div className="mt-5 pt-5 hair-t"><MatchChips chips={matchChips(p, job, m)} /></div>
@@ -91,20 +103,27 @@ function JobDetail() {
           </details>
         </section>
 
-        <div data-reveal><PayCard key={`${job.id}-${p.relocate}`} job={job} relocate={p.relocate} /></div>
+        <div data-reveal><PayCard key={job.id} job={job} relocate={p.relocate} dorm={dorm} onDormChange={setDorm} /></div>
 
         <section className="card p-6" data-reveal aria-labelledby="facts-h">
           <h2 id="facts-h" className="t-h4 mb-4">Công việc</h2>
+          <div className="grid gap-3 mb-5 pb-5 hair-b">
+            <button className="text-left rounded-2xl -m-2 p-2 hover:bg-subtle pressable" onClick={() => setSheet("path")} aria-label="Xem lộ trình pháp lý đến ngày đi làm">
+              <Fact icon="calendar" k="Bắt đầu sớm nhất · xem lộ trình" v={`${fmtDate(start.date)} · dự kiến`} sub={`${start.reason} Trong lúc chờ: vẫn làm ở chỗ cũ nếu còn hợp đồng · ứng lương theo ngày công vẫn dùng được.`} />
+            </button>
+            {job.contractMonths && <Fact icon="file-check" k="Hợp đồng" v={`Thử việc ${job.contractMonths} tháng${job.renewable ? " · có thể gia hạn" : ""}`} sub="Nếu không gia hạn, ViệcNhanh xếp việc tiếp trong 24h." />}
+          </div>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-5">
             <Fact icon="clock" k="Ca làm" v={SHIFT_VI[job.shift]} />
             <Fact icon="clock-fast-forward" k="Tăng ca" v={`~${job.otHours} giờ/tháng`} />
             <Fact icon="home-02" k="Ký túc xá" v={job.dorm !== null ? `Có · ${yen(job.dorm)}` : "Không"} />
-            <Fact icon="calendar" k="Cần bắt đầu" v={`Trong ${job.startWithinDays} ngày`} />
             <Fact icon="tool-02" k="Kỹ năng" v={job.required.map((x) => SKILLS[x].vi).join(", ")} />
             <Fact icon="translate" k="Tiếng Nhật" v={`Từ ${JLPT_SHORT[job.jlptMin]}`} />
           </dl>
           {job.perks.length > 0 && <ul className="mt-5 flex flex-wrap gap-1.5">{job.perks.map((x) => <li key={x} className="badge badge-md badge-outline">{x}</li>)}</ul>}
         </section>
+
+        <div data-reveal><PeersTile jobId={job.id} /></div>
 
         <div data-reveal>
           <InlineNote icon="shield-tick">
@@ -115,8 +134,8 @@ function JobDetail() {
       </div>
 
       {/* Sticky decision bar */}
-      <div className="fixed lg:sticky bottom-0 inset-x-0 z-20 lg:mt-4 bg-[color-mix(in_oklab,var(--color-bg-canvas)_90%,transparent)] backdrop-blur-xl border-t border-hair lg:border-0 lg:bg-transparent lg:backdrop-blur-none">
-        <div className="px-5 lg:px-0 pt-3 pb-3 safe-b max-w-[760px] lg:pb-8">
+      <div className="fixed lg:sticky bottom-0 inset-x-0 z-20 lg:mt-4 bg-[color-mix(in_oklab,var(--color-bg-canvas)_92%,transparent)] backdrop-blur-xl border-t border-hair">
+        <div className="px-5 lg:px-0 py-3 safe-b max-w-[760px] lg:pb-4">
           {invited ? (
             <Button size="lg" block icon="calendar" onClick={() => router.push("/worker/applications")}>Xem lời mời phỏng vấn</Button>
           ) : mine ? (
@@ -125,8 +144,8 @@ function JobDetail() {
             <Button size="lg" block onClick={() => setSheet("apply")} iconRight="arrow-right">Ứng tuyển · HR trả lời trong {s.config.deadlineH}h</Button>
           ) : m.gate.pass ? (
             <div className="flex flex-wrap gap-2">
-              <Button size="lg" className="flex-1" icon="trend-up-01" onClick={() => router.push(`/worker/improve?job=${job.id}`)}>Cải thiện hồ sơ</Button>
-              <Button size="lg" className="flex-1" variant="tertiary" onClick={() => setSheet("anyway")}>Vẫn ứng tuyển</Button>
+              {ups.length > 0 && <Button size="lg" className="flex-1" icon="trend-up-01" onClick={() => router.push(`/worker/improve?job=${job.id}`)}>Cập nhật kinh nghiệm</Button>}
+              <Button size="lg" className="flex-1" variant="tertiary" onClick={() => setSheet("anyway")}>Vẫn ứng tuyển ngay</Button>
             </div>
           ) : (
             <Button size="lg" block variant="secondary" disabled>Không ứng tuyển được với visa hiện tại</Button>
@@ -134,16 +153,17 @@ function JobDetail() {
         </div>
       </div>
 
-      <ApplySheet open={sheet !== null} flagged={sheet === "anyway"} onClose={() => setSheet(null)} jobId={job.id} />
+      <FlightPath p={p} job={job} from={simNow(s.clock, s.config.speed) + 864e5} open={sheet === "path"} onClose={() => setSheet(null)} />
+      <ApplySheet open={sheet === "apply" || sheet === "anyway"} flagged={sheet === "anyway"} onClose={() => setSheet(null)} jobId={job.id} />
     </Screen>
   );
 }
 
-function Fact({ icon, k, v }: { icon: "clock" | "clock-fast-forward" | "home-02" | "calendar" | "tool-02" | "translate"; k: string; v: string }) {
+function Fact({ icon, k, v, sub }: { icon: "clock" | "clock-fast-forward" | "home-02" | "calendar" | "tool-02" | "translate" | "file-check"; k: string; v: string; sub?: string }) {
   return (
     <div className="flex gap-3">
       <Icon name={icon} className="mt-0.5 text-faint" />
-      <div><dt className="t-sm text-muted">{k}</dt><dd className="font-medium">{v}</dd></div>
+      <div><dt className="t-sm text-muted">{k}</dt><dd className="font-medium">{v}</dd>{sub && <dd className="t-sm text-muted mt-0.5">{sub}</dd>}</div>
     </div>
   );
 }
@@ -153,6 +173,7 @@ function ApplySheet({ open, onClose, jobId, flagged }: { open: boolean; onClose:
   const qs = jobById(jobId)?.questions ?? [];
   const answered = qs.every((q) => answers[q.id]);
   const s = useApp();
+  const needCard = !s.scanned;
   const router = useRouter();
   const job = jobById(jobId)!;
   const [appId, setAppId] = useState<string | null>(null);
@@ -174,7 +195,7 @@ function ApplySheet({ open, onClose, jobId, flagged }: { open: boolean; onClose:
         <Button size="lg" block onClick={() => { close(); router.push("/worker/applications"); }} iconRight="arrow-right">Xem trạng thái hồ sơ</Button>
       ) : (
         <div className="grid gap-2">
-          <Button size="lg" block loading={busy} onClick={() => { setBusy(true); setTimeout(() => { setAppId(s.apply(jobId, { flagged, answers })); setBusy(false); }, 650); }} disabled={!answered}>{answered ? "Gửi hồ sơ" : "Trả lời câu hỏi của nhà máy"}</Button>
+          <Button size="lg" block loading={busy} onClick={() => { setBusy(true); setTimeout(() => { setAppId(s.apply(jobId, { flagged, answers })); setBusy(false); }, 650); }} disabled={needCard || !answered}>{needCard ? "Chụp thẻ cư trú để tiếp tục" : answered ? "Gửi hồ sơ" : "Trả lời câu hỏi của nhà máy"}</Button>
           <Button size="lg" block variant="flat" onClick={close}>Xem lại</Button>
         </div>
       )}>
@@ -187,11 +208,19 @@ function ApplySheet({ open, onClose, jobId, flagged }: { open: boolean; onClose:
           <p className="badge badge-md bg-brand-soft text-brand mt-3">Đang chờ · cam kết 24h</p>
           <p className="text-muted mt-3">HR phải trả lời trước</p>
           <p className="mono t-h2 tnum mt-1">{fmtLeft(deadlineOf(app, s) - now)}</p>
-          <p className="t-sm text-muted mt-3 max-w-[340px] mx-auto">Quá {s.config.deadlineH} giờ mà chưa có kết quả, hồ sơ tự đóng và bạn nhận 3 việc khác. Kết quả báo trong app và qua Zalo OA.</p>
+          <p className="t-sm text-muted mt-3 max-w-[340px] mx-auto">Nếu HR chưa trả lời trong {s.config.deadlineH} giờ, bạn được gợi ý ngay 3 việc khác. Kết quả báo trong app và qua Zalo OA.</p>
         </div>
       ) : (
         <div className="grid gap-4">
           <p className="text-muted">{job.title} · {job.company}</p>
+          {needCard && (
+            <section className="card-flat p-4 grid gap-3" aria-labelledby="tier-h">
+              <p className="t-eyebrow">Xác minh theo tầng</p>
+              <h3 id="tier-h" className="t-sub">Xem việc không cần giấy tờ · Ứng tuyển cần thẻ cư trú</h3>
+              <p className="t-sm text-muted">Nhà máy chỉ được nhận người có tư cách lưu trú đúng ngành. Chụp 1 lần, dùng cho mọi đơn.</p>
+              <Scanner done={false} onResult={() => s.setScanned(true)} />
+            </section>
+          )}
           {flagged && <InlineNote icon="info-circle" tone="warn"><b>Bạn chưa ở mức Rất phù hợp.</b> Hồ sơ vẫn được gửi, HR sẽ thấy nhãn “ứng tuyển khi chưa đủ tiêu chí”.</InlineNote>}
           {qs.length > 0 && (
             <div className="grid gap-4 card-flat p-4">
@@ -209,7 +238,7 @@ function ApplySheet({ open, onClose, jobId, flagged }: { open: boolean; onClose:
             <li className="flex gap-3"><Icon name="tool-02" /><span><b>Kỹ năng, chứng chỉ, tiếng Nhật</b><br /><span className="t-sm text-muted">Kèm mức phù hợp và lý do</span></span></li>
             <li className="flex gap-3"><Icon name="calendar" /><span><b>Ngày bắt đầu và khu vực</b><br /><span className="t-sm text-muted">Tài khoản ngân hàng chỉ hỏi sau khi được duyệt</span></span></li>
           </ul>
-          <InlineNote icon="hourglass">HR phải trả lời trong <b>{s.config.deadlineH} giờ</b>. Quá hạn, hồ sơ tự đóng để bạn không phải chờ.</InlineNote>
+          <InlineNote icon="hourglass">Nếu HR chưa trả lời trong <b>{s.config.deadlineH} giờ</b>, bạn được gợi ý ngay 3 việc khác. <Link href="/worker/jobs" className="font-semibold underline underline-offset-2">Xem 3 việc khác</Link></InlineNote>
         </div>
       )}
     </Sheet>

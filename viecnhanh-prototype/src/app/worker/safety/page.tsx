@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, Icon } from "@/components/ui";
 import { Screen, TopBar } from "@/components/worker/Shell";
 import { useApp } from "@/lib/store";
@@ -28,6 +28,9 @@ export default function Safety() {
   const progress = Math.round(((flipped.length / SIGNS.length) * 0.5 + (answers.filter((a) => a !== null).length / QUIZ.length) * 0.5) * 100);
   const allRight = correct === QUIZ.length;
   const done = safetyDone || allRight;
+  useEffect(() => {
+    if (allRight && !safetyDone) completeSafety();
+  }, [allRight, safetyDone, completeSafety]);
 
   return (
     <Screen className="max-w-[760px]">
@@ -127,12 +130,17 @@ function Certificate({ onSave, saved }: { onSave: () => void; saved: boolean }) 
   return (
     <div ref={ref} className="ink rounded-[28px] p-6 text-center">
       <Icon name="award-01" size={40} solid className="mx-auto" />
-      <p className="t-h3 mt-3">Hoàn thành an toàn</p>
-      <p className="muted-ink mt-1">安全教育 修了 · Nhà máy sẽ thấy trạng thái này trong hồ sơ của bạn.</p>
+      <p className="mt-3">
+        <span className="inline-flex items-center gap-1.5 font-mono text-[11px] tracking-[0.14em] px-2.5 py-1 rounded-full border border-current/25 uppercase">
+          安全教育修了 · Verified
+        </span>
+      </p>
+      <p className="t-h3 mt-2.5">Hoàn thành an toàn</p>
+      <p className="muted-ink mt-1">Nhà máy sẽ thấy trạng thái này trong hồ sơ của bạn.</p>
       {saved ? (
-        <Link href="/worker/applications" className="btn btn-lg btn-block pressable mt-5 bg-[var(--color-bg-inverse-solid)] text-[var(--color-content-neutral-strongest)]">Về hồ sơ đã gửi</Link>
+        <Link href="/worker/applications" className="btn btn-lg btn-inverse btn-block pressable mt-5">Về hồ sơ đã gửi</Link>
       ) : (
-        <Button size="lg" block className="mt-5 !bg-[var(--color-bg-inverse-solid)] !text-[var(--color-content-neutral-strongest)]" onClick={onSave}>Gửi kết quả cho nhà máy</Button>
+        <Button size="lg" block variant="inverse" className="mt-5" onClick={onSave}>Gửi kết quả cho nhà máy</Button>
       )}
     </div>
   );

@@ -4,11 +4,17 @@ import { Suspense, useRef, useState } from "react";
 import { Button, Icon, InlineNote, Picker, Segmented, Toggle, toast } from "@/components/ui";
 import { Scanner } from "@/components/worker/Scanner";
 import { CERTS, CITIES, JLPT, JOBS, SKILLS, START_OPTIONS, VISAS, type CertId, type CityId, type Profile, type SkillId, type VisaId } from "@/lib/data";
-import { visaGate } from "@/lib/scoring";
+import { suggestImprovements, visaGate } from "@/lib/scoring";
 import { useApp } from "@/lib/store";
 import { enter, gsap, useGSAP } from "@/lib/motion";
 
-const EMPTY: Profile = { name: "", nationality: "VN", visa: "ssw1_mfg", cardExpiry: "", skills: {}, certs: [], jlpt: 2, availableInDays: 30, city: "chiryu", relocate: true };
+// Draft lets JLPT and city start unanswered (mentor M3: no silent defaults).
+type Draft = Omit<Profile, "jlpt" | "city"> & { jlpt: number | null; city: CityId | "" };
+const EMPTY: Draft = { name: "", nationality: "VN", visa: "ssw1_mfg", cardExpiry: "", skills: {}, certs: [], jlpt: null, availableInDays: 30, city: "", relocate: true, province: "" };
+const PROVINCES = ["An Giang", "Bà Rịa - Vũng Tàu", "Bắc Giang", "Bắc Kạn", "Bạc Liêu", "Bắc Ninh", "Bến Tre", "Bình Định", "Bình Dương", "Bình Phước", "Bình Thuận", "Cà Mau", "Cần Thơ", "Cao Bằng", "Đà Nẵng", "Đắk Lắk", "Đắk Nông", "Điện Biên", "Đồng Nai", "Đồng Tháp", "Gia Lai", "Hà Giang", "Hà Nam", "Hà Nội", "Hà Tĩnh", "Hải Dương", "Hải Phòng", "Hậu Giang", "Hòa Bình", "Hưng Yên", "Khánh Hòa", "Kiên Giang", "Kon Tum", "Lai Châu", "Lâm Đồng", "Lạng Sơn", "Lào Cai", "Long An", "Nam Định", "Nghệ An", "Ninh Bình", "Ninh Thuận", "Phú Thọ", "Phú Yên", "Quảng Bình", "Quảng Nam", "Quảng Ngãi", "Quảng Ninh", "Quảng Trị", "Sóc Trăng", "Sơn La", "Tây Ninh", "Thái Bình", "Thái Nguyên", "Thanh Hoá", "Thừa Thiên Huế", "Tiền Giang", "TP. Hồ Chí Minh", "Trà Vinh", "Tuyên Quang", "Vĩnh Long", "Vĩnh Phúc", "Yên Bái"];
+// Largest real rescore gain a certificate gives on current jobs, so "optional" is not read as "unimportant".
+const CERT_GAIN = (p: Profile) => Math.max(0, ...JOBS.flatMap((j) => suggestImprovements(p, j).filter((u) => u.id.startsWith("cert-")).map((u) => u.gain)));
+const toProfile = (d: Draft): Profile => ({ ...d, jlpt: d.jlpt ?? 0, city: (d.city || "nagoya") as CityId });
 
 export default function Page() {
   return <Suspense><Onboarding /></Suspense>;
@@ -16,25 +22,30 @@ export default function Page() {
 
 function Onboarding() {
   const router = useRouter();
-  const edit = useSearchParams().get("edit") === "1";
+  const params = useSearchParams();
+  const edit = params.get("edit") === "1";
+  const startStep = Math.min(2, Math.max(0, Number(params.get("step")) || 0));
   const { profile, auth, scanned, setScanned, setProfile } = useApp();
   // A scan survives reloads (persisted flag), so re-seed what it read.
-  const [p, setP] = useState<Profile>(() => profile ?? { ...EMPTY, name: auth?.name || (scanned ? "Nguyễn Tuấn Anh" : ""), ...(scanned ? { visa: "ssw1_mfg", cardExpiry: "2028-03-31" } : {}) });
-  const [step, setStep] = useState(0);
+  const [p, setP] = useState<Draft>(() => (profile ? { ...profile, province: profile.province ?? "" } : null) ?? { ...EMPTY, name: auth?.name || (scanned ? "Nguyễn Tuấn Anh" : ""), ...(scanned ? { visa: "ssw1_mfg", cardExpiry: "2028-03-31" } : {}) });
+  const [step, setStep] = useState(edit ? startStep : 0);
   const [manual, setManual] = useState(edit || scanned);
   const stage = useRef<HTMLDivElement>(null);
   const dir = useRef(1);
-  const set = (patch: Partial<Profile>) => setP((x) => ({ ...x, ...patch }));
+  const set = (patch: Partial<Draft>) => setP((x) => ({ ...x, ...patch }));
+  const [upload, setUpload] = useState<{ state: "idle" | "busy" | "ok" | "error"; name?: string }>({ state: "idle" });
 
   useGSAP(() => { enter("[data-step] > *", { x: 28 * dir.current }, { stagger: 0.05, duration: 0.7 }); }, { scope: stage, dependencies: [step] });
 
   const go = (n: number) => { dir.current = n > step ? 1 : -1; setStep(n); window.scrollTo({ top: 0 }); };
-  const visaOk = !!p.visa && !!p.cardExpiry && !!p.name.trim();
+  const visaOk = !!p.visa && !!p.cardExpiry && !!p.name.trim() && !!p.province;
+  const whereOk = !!p.city;
+  const certGain = CERT_GAIN(toProfile(p));
   const skillCount = Object.keys(p.skills).length + (p.otherSkills?.trim() ? 1 : 0);
-  const legalJobs = JOBS.filter((j) => visaGate(p, j).pass).length;
+  const legalJobs = JOBS.filter((j) => visaGate(toProfile(p), j).pass).length;
   // Concrete reason (e.g. 28h/week cap) instead of a generic "contact support".
-  const gateWhy = (() => { const g = visaGate(p, JOBS[0]); return g.pass ? "" : g.reason; })();
-  const titles = ["Tư cách lưu trú của bạn?", "Bạn làm được việc gì?", "Khi nào và ở đâu?"];
+  const gateWhy = (() => { const g = visaGate(toProfile(p), JOBS[0]); return g.pass ? "" : g.reason; })();
+  const titles = ["Tư cách lưu trú của bạn?", "Bạn làm được việc gì?", "Bạn đi làm được từ ngày nào, ở thành phố nào?"];
   const subs = [
     "Quét thẻ cư trú để AI chỉ gợi ý việc bạn được phép làm.",
     "Chọn kỹ năng, số năm kinh nghiệm và chứng chỉ bạn có.",
@@ -42,15 +53,16 @@ function Onboarding() {
   ];
 
   const finish = () => {
-    setProfile(p);
-    router.push(edit ? "/worker/jobs" : "/worker/analyzing");
+    setProfile(toProfile(p));
+    if (edit) toast("Đã lưu · AI đã chấm lại các việc", "stars-01");
+    router.push(edit ? "/worker/profile" : "/worker/analyzing");
   };
 
   return (
     <div className="min-h-dvh flex flex-col mx-auto w-full max-w-[640px]">
       <header className="sticky top-0 z-20 bg-[color-mix(in_oklab,var(--color-bg-canvas)_88%,transparent)] backdrop-blur-xl px-2 md:px-0">
         <div className="h-14 flex items-center gap-2">
-          <button className="icon-btn pressable" aria-label={step ? "Câu trước" : "Thoát"} onClick={() => (step ? go(step - 1) : router.push(edit ? "/worker/profile" : "/worker"))}>
+          <button className="icon-btn pressable" aria-label={step ? "Câu trước" : "Thoát"} onClick={() => (step > 0 ? go(step - 1) : router.push(edit ? "/worker/profile" : "/worker"))}>
             <Icon name={step ? "arrow-left" : "x-medium"} />
           </button>
           <div className="flex-1 grid grid-cols-3 gap-1.5 px-2" role="progressbar" aria-valuemin={1} aria-valuemax={3} aria-valuenow={step + 1} aria-label={`Câu ${step + 1} trên 3`}>
@@ -80,6 +92,7 @@ function Onboarding() {
                   }}
                 />
               )}
+              {!edit && <p className="t-sm text-muted -mt-2">Không bắt buộc lúc này. Bạn có thể chụp sau, khi ứng tuyển.</p>}
               {!manual ? (
                 <button className="t-base underline underline-offset-4 justify-self-start" onClick={() => setManual(true)}>Không có thẻ bên cạnh? Nhập tay</button>
               ) : (
@@ -97,6 +110,17 @@ function Onboarding() {
                   <div className="field">
                     <label htmlFor="ex">Hạn thẻ cư trú</label>
                     <input id="ex" type="date" className="input tnum" value={p.cardExpiry} onChange={(e) => set({ cardExpiry: e.target.value })} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="pv">Quê bạn ở tỉnh nào?</label>
+                    <Picker id="pv" label="Tỉnh quê" searchable value={p.province} onChange={(v) => set({ province: v })} placeholder="Chọn tỉnh…"
+                      options={PROVINCES.map((x) => ({ value: x, label: x }))} />
+                    <p className="t-sm text-muted mt-1">Để ghép bạn với Senpai cùng quê ở nhà máy mới.</p>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="cc">Đang làm ở công ty nào? <span className="text-muted font-normal">· không bắt buộc</span></label>
+                    <input id="cc" className="input" value={p.currentCompany ?? ""} onChange={(e) => set({ currentCompany: e.target.value || undefined })} placeholder="Ví dụ: Kariya Parts" />
+                    <p className="t-sm text-muted mt-1">Chỉ để không ghép bạn với người cùng công ty. Không ai thấy thông tin này.</p>
                   </div>
                   {visaOk && (
                     <InlineNote icon={legalJobs ? "shield-tick" : "alert-triangle"} tone={legalJobs ? "neutral" : "warn"}>
@@ -161,7 +185,8 @@ function Onboarding() {
               )}
 
               <fieldset>
-                <legend className="label mb-3">Chứng chỉ · không bắt buộc</legend>
+                <legend className="label mb-1">Chứng chỉ · không bắt buộc</legend>
+                <p className="t-sm text-muted mb-3">{certGain > 0 ? `Có chứng chỉ phù hợp, mức phù hợp tăng đến +${certGain}% ở một số việc.` : "Chứng chỉ giúp nhà máy tin tay nghề của bạn hơn."}</p>
                 <div className="flex flex-wrap gap-2">
                   {(Object.keys(CERTS) as CertId[]).map((c) => {
                     const on = p.certs.includes(c);
@@ -178,11 +203,27 @@ function Onboarding() {
                 {p.otherCerts !== undefined && (
                   <input autoFocus className="input mt-3" aria-label="Chứng chỉ khác" placeholder="Ví dụ: Chứng chỉ điện, an toàn hoá chất…" value={p.otherCerts} onChange={(e) => set({ otherCerts: e.target.value })} />
                 )}
+                <label className={`mt-3 flex items-center gap-3 rounded-2xl border-2 border-dashed p-4 cursor-pointer pressable ${upload.state === "error" ? "border-[var(--color-border-negative-solid,var(--color-content-negative-base))]" : upload.state === "ok" ? "border-[var(--color-border-accent-solid)]" : "border-line"}`}>
+                  <input type="file" accept="image/*,application/pdf" className="sr-only" onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    setUpload({ state: "busy", name: f.name });
+                    // Demo: files over 8 MB fail so the error state is reachable.
+                    setTimeout(() => setUpload({ state: f.size > 8e6 ? "error" : "ok", name: f.name }), 900);
+                  }} />
+                  <Icon name={upload.state === "ok" ? "check-circle" : upload.state === "error" ? "alert-triangle" : "image-plus"} size={24} />
+                  <span className="flex-1 min-w-0" aria-live="polite">
+                    <b className="block">{upload.state === "busy" ? "Đang tải lên…" : upload.state === "ok" ? "Đã thêm · AI chấm lại khi bạn lưu" : upload.state === "error" ? "Tải lên chưa được · ảnh quá 8 MB" : "Chụp hoặc chọn ảnh chứng chỉ"}</b>
+                    <span className="t-sm text-muted truncate block">{upload.name ?? "Ảnh rõ 4 góc · JPG, PNG hoặc PDF"}</span>
+                  </span>
+                  {upload.state === "error" && <span className="t-sm font-semibold underline">Thử lại</span>}
+                  {upload.state === "busy" && <Icon name="stars-01" className="animate-[zen-spin_1s_linear_infinite]" />}
+                </label>
               </fieldset>
 
               <div>
                 <p className="label mb-3">Tiếng Nhật (JLPT / JFT)</p>
-                <Segmented label="Trình độ tiếng Nhật" value={p.jlpt} onChange={(v) => set({ jlpt: v })} options={JLPT.map((l, i) => ({ value: i, label: l === "Chưa có" ? "Chưa" : l }))} />
+                <Segmented label="Trình độ tiếng Nhật" value={p.jlpt ?? -1} onChange={(v) => set({ jlpt: v })} options={JLPT.map((l, i) => ({ value: i, label: l === "Chưa có" ? "Chưa" : l }))} />
               </div>
             </div>
           )}
@@ -203,7 +244,7 @@ function Onboarding() {
               </fieldset>
               <div className="field">
                 <label htmlFor="ct">Bạn đang sống ở · tỉnh Aichi (愛知県)</label>
-                <Picker id="ct" label="Thành phố ở Aichi" searchable value={p.city} onChange={(v) => set({ city: v })}
+                <Picker id="ct" label="Thành phố ở Aichi" searchable placeholder="Chọn thành phố…" value={p.city} onChange={(v) => set({ city: v })}
                   options={(Object.keys(CITIES) as CityId[]).map((c) => ({ value: c, label: CITIES[c].vi, sub: `Aichi · ${CITIES[c].ja}` }))} />
               </div>
               <div className="card p-4 flex items-center justify-between gap-4">
@@ -220,9 +261,23 @@ function Onboarding() {
 
       <div className="fixed bottom-0 inset-x-0 z-20 bg-[color-mix(in_oklab,var(--color-bg-canvas)_90%,transparent)] backdrop-blur-xl border-t border-hair">
         <div className="mx-auto max-w-[640px] px-5 md:px-0 pt-3 safe-b">
-          {step === 0 && <Button size="lg" block variant={visaOk && !legalJobs ? "tertiary" : "primary"} disabled={!visaOk} onClick={() => go(1)} iconRight="arrow-right">{visaOk && !legalJobs ? "Vẫn tạo hồ sơ để nhận báo việc" : "Tiếp tục"}</Button>}
-          {step === 1 && <Button size="lg" block disabled={!skillCount} onClick={() => go(2)} iconRight="arrow-right">{skillCount ? "Tiếp tục" : "Chọn ít nhất 1 kỹ năng"}</Button>}
-          {step === 2 && <Button size="lg" block icon="stars-01" onClick={finish}>{edit ? "Lưu hồ sơ" : "Để AI tìm việc cho tôi"}</Button>}
+          {step === 0 && (
+            <Button size="lg" block variant={visaOk && !legalJobs ? "tertiary" : "primary"} disabled={!visaOk} onClick={() => go(1)} iconRight="arrow-right">
+              {!manual
+                ? "Quét thẻ hoặc chọn nhập tay để tiếp tục"
+                : !p.name.trim()
+                  ? "Nhập họ tên để tiếp tục"
+                  : !p.cardExpiry
+                    ? "Chọn hạn thẻ cư trú để tiếp tục"
+                    : !p.province
+                      ? "Chọn tỉnh quê của bạn để tiếp tục"
+                      : legalJobs
+                        ? "Tiếp tục"
+                        : "Vẫn tạo hồ sơ để nhận báo việc"}
+            </Button>
+          )}
+          {step === 1 && <Button size="lg" block disabled={!skillCount || p.jlpt === null} onClick={() => go(2)} iconRight="arrow-right">{!skillCount ? "Chọn ít nhất 1 kỹ năng" : p.jlpt === null ? "Chọn trình độ tiếng Nhật" : "Tiếp tục"}</Button>}
+          {step === 2 && <Button size="lg" block icon="stars-01" disabled={!whereOk} onClick={finish}>{!whereOk ? "Chọn thành phố bạn đang sống" : edit ? "Lưu hồ sơ" : "Để AI tìm việc cho tôi"}</Button>}
         </div>
       </div>
     </div>

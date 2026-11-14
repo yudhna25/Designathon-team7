@@ -14,11 +14,12 @@ const SHIFTS = ["T2 17/11", "T3 18/11", "T4 19/11", "T5 20/11", "T6 21/11", "T2 
 
 export default function Wallet() {
   const [preview, setPreview] = useState(false);
+  const hasAccepted = useApp((s) => s.apps.some((a) => a.candidateId === "me" && a.accepted));
 
-  if (!preview) return (
+  if (!hasAccepted && !preview) return (
     <Screen>
       <TopBar title="Ví lương" />
-      <div className="px-5 lg:px-0 max-w-[640px] grid gap-4">
+      <div className="px-5 lg:px-0 pb-24 lg:pb-10 max-w-[640px] grid gap-4">
         <section className="card p-6" data-reveal>
           <span className="grid size-14 place-items-center rounded-full bg-subtle mb-5"><Icon name="wallet-02" size={26} /></span>
           <h1 className="t-h3">Ứng lương những ngày đã làm</h1>
@@ -37,11 +38,12 @@ export default function Wallet() {
       </div>
     </Screen>
   );
-  return <ActiveWallet onExit={() => setPreview(false)} />;
+  return <ActiveWallet isPreview={!hasAccepted} onExit={() => setPreview(false)} />;
 }
 
-function ActiveWallet({ onExit }: { onExit: () => void }) {
-  const { withdrawals, withdraw } = useApp();
+function ActiveWallet({ isPreview, onExit }: { isPreview: boolean; onExit: () => void }) {
+  const { withdrawals, withdraw, setConfig } = useApp();
+  const ewaDown = useApp((s) => s.config.ewaDown);
   const job = JOBS[0];
   const earned = SHIFTS.length * 8 * job.hourly;
   const taken = withdrawals.reduce((t, w) => t + w.amount, 0);
@@ -56,15 +58,25 @@ function ActiveWallet({ onExit }: { onExit: () => void }) {
   const pct = (n: number) => `${(n / earned) * 100}%`;
   return (
     <Screen>
-      <TopBar title="Ví lương mẫu" sub={`${job.company} · dữ liệu mẫu`} />
-      <div className="px-5 lg:px-0 max-w-[640px] grid gap-4">
-        <div data-reveal><InlineNote icon="info-circle">Bạn đang xem ví mẫu. Ca làm, số dư và lệnh chuyển đều là mô phỏng.</InlineNote></div>
+      <TopBar title={isPreview ? "Ví lương mẫu" : "Ví lương"} sub={isPreview ? `${job.company} · dữ liệu mẫu` : `${job.company} · kỳ lương tháng này`} />
+      <div className="px-5 lg:px-0 pb-24 lg:pb-10 max-w-[640px] grid gap-4">
+        {isPreview && <div data-reveal><InlineNote icon="info-circle">Bạn đang xem ví mẫu. Ca làm, số dư và lệnh chuyển đều là mô phỏng.</InlineNote></div>}
+        {ewaDown && (
+          <div role="alert" className="grid gap-2">
+            <InlineNote icon="alert-triangle" tone="warn">
+              <b>Đối tác ứng lương đang tạm lỗi.</b> Lương tháng của bạn vẫn trả đủ, đúng ngày 25. Ngày công đã ghi nhận không mất. Thử lại sau.
+            </InlineNote>
+            <div>
+              <Button size="sm" variant="secondary" onClick={() => setConfig({ ewaDown: false })}>Thử kết nối lại</Button>
+            </div>
+          </div>
+        )}
         <section className="ink rounded-[28px] p-6" data-reveal>
           <p className="t-sm muted-ink">Lương đã làm tháng này · {SHIFTS.length} ca đã xác nhận</p>
           <p className="text-[44px] leading-none font-semibold tracking-[-0.045em] mt-2"><Num value={earned} format={yen} /></p>
           <div ref={bar} className="mt-6 flex h-3 gap-1 rounded-full overflow-hidden" aria-hidden>
-            <span className="seg-fill bg-[var(--color-bg-inverse-solid)] opacity-40" style={{ width: pct(taken) }} />
-            <span className="seg-fill bg-[var(--color-bg-inverse-solid)]" style={{ width: pct(available) }} />
+            <span className="seg-fill ewa-seg-taken bg-[var(--color-bg-inverse-solid)] opacity-40" style={{ "--ewa-taken": pct(taken) } as React.CSSProperties} />
+            <span className="seg-fill ewa-seg-avail bg-[var(--color-bg-inverse-solid)]" style={{ "--ewa-avail": pct(available) } as React.CSSProperties} />
             <span className="seg-fill flex-1 bg-[repeating-linear-gradient(135deg,var(--color-bg-inverse-subtle-pressed)_0_4px,transparent_4px_8px)] ring-1 ring-inset ring-[color:var(--color-border-overlay-subtle-pressed)] rounded-r-full" />
           </div>
           <dl className="mt-3 grid grid-cols-3 gap-2 t-sm">
@@ -76,17 +88,17 @@ function ActiveWallet({ onExit }: { onExit: () => void }) {
 
         <section className="card p-6" data-reveal aria-labelledby="amt-h">
           <h2 id="amt-h" className="t-h4">Bạn muốn nhận bao nhiêu?</h2>
-          <p className="text-[36px] leading-none font-semibold tracking-[-0.04em] mt-4 tnum" aria-live="polite">{yen(amt)}</p>
-          <input type="range" min={0} max={available} step={1000} value={amt} onChange={(e) => setAmount(+e.target.value)} aria-label="Số tiền muốn ứng" className="w-full mt-4 accent-[var(--color-bg-neutral-solid)]" disabled={!available} />
+          <p className="text-[36px] leading-none font-semibold tracking-[-0.04em] mt-4 tnum" aria-live="polite"><Num value={amt} format={yen} spring duration={0.35} /></p>
+          <input type="range" min={available >= 1000 ? 1000 : 0} max={available} step={1000} value={amt} onChange={(e) => setAmount(+e.target.value)} aria-label="Số tiền muốn ứng" className="w-full mt-4 accent-[var(--color-bg-neutral-solid)]" disabled={available < 1000} />
           <div className="flex flex-wrap gap-2 mt-3">
             {[5000, 10000, 20000].filter((v) => v <= available).map((v) => <button key={v} className="chip pressable !h-9 t-sm" aria-pressed={amt === v} onClick={() => setAmount(v)}>{yen(v)}</button>)}
             {available > 0 && <button className="chip pressable !h-9 t-sm" aria-pressed={amt === available} onClick={() => setAmount(available)}>Tối đa</button>}
           </div>
           <dl className="mt-5 grid gap-2 t-base">
             <div className="flex justify-between"><dt className="text-muted">Phí chuyển cố định</dt><dd className="tnum">{yen(FEE)}</dd></div>
-            <div className="flex justify-between font-semibold"><dt>Về tài khoản Yucho ••4821</dt><dd className="tnum">{yen(Math.max(0, amt - FEE))}</dd></div>
+            <div className="flex justify-between font-semibold"><dt>Về tài khoản Yucho ••4821</dt><dd className="tnum"><Num value={Math.max(0, amt - FEE)} format={yen} spring duration={0.35} /></dd></div>
           </dl>
-          <Button size="lg" block className="mt-5" disabled={amt < 1000} onClick={() => setSheet("confirm")}>Thử nhận {yen(Math.max(0, amt - FEE))}</Button>
+          <Button size="lg" block className="mt-5" disabled={ewaDown || amt < 1000} onClick={() => setSheet("confirm")}>{ewaDown ? "Tạm dừng ứng lương · thử lại sau" : `Thử nhận ${yen(Math.max(0, amt - FEE))}`}</Button>
         </section>
 
         <div data-reveal><InlineNote icon="shield-tick"><b>Đây là lương bạn đã làm, không phải khoản vay.</b> Không lãi suất. Số đã ứng được trừ vào kỳ lương ngày 25, sau khi nhà máy trừ thuế và bảo hiểm.</InlineNote></div>
@@ -108,7 +120,7 @@ function ActiveWallet({ onExit }: { onExit: () => void }) {
             </>
           )}
         </section>
-        <Button size="lg" variant="flat" onClick={onExit}>Thoát ví mẫu</Button>
+        {isPreview && <Button size="lg" variant="flat" onClick={onExit}>Thoát ví mẫu</Button>}
       </div>
 
       <Sheet open={sheet !== null} onClose={() => setSheet(null)} title={sheet === "confirm" ? "Mô phỏng ứng lương" : "Đã mô phỏng ứng lương"}

@@ -17,7 +17,12 @@ export function useReveal(scope: RefObject<HTMLElement | null>, deps: unknown[] 
     () => {
       const els = gsap.utils.toArray<HTMLElement>("[data-reveal]", scope.current);
       if (!els.length) return;
+      // Content must never wait on animation: skip when hidden (rAF paused) or motion is off.
+      const quiet = document.visibilityState !== "visible" || matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.dataset.motion === "off";
+      if (quiet) return;
       enter(els, { y: 18 }, { duration: 0.8, stagger: 0.045 });
+      const t = setTimeout(() => gsap.set(els, { clearProps: "opacity,visibility,transform" }), 1500);
+      return () => clearTimeout(t);
     },
     { scope, dependencies: deps },
   );
@@ -40,4 +45,43 @@ export function applyMotion(mode: "normal" | "slow" | "off") {
   const effective = mode === "normal" && reduce ? "off" : mode;
   document.documentElement.dataset.motion = effective;
   gsap.globalTimeline.timeScale(effective === "slow" ? 1 / 3 : effective === "off" ? 1000 : 1);
+}
+
+let resolvePendingVT: (() => void) | null = null;
+
+/** Finish an active route View Transition once the destination view mounts. */
+export function resolveViewTransition() {
+  if (resolvePendingVT) {
+    const r = resolvePendingVT;
+    resolvePendingVT = null;
+    requestAnimationFrame(() => r());
+  }
+}
+
+/** Run a state or route transition inside the View Transitions API when supported and motion is active. */
+export function withViewTransition(fn: () => void, opts?: { asyncRoute?: boolean }) {
+  if (typeof document === "undefined") { fn(); return; }
+  const quiet = window.matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.dataset.motion === "off";
+  const doc = document as Document & { startViewTransition?: (cb: () => void | Promise<void>) => void };
+  if (quiet || typeof doc.startViewTransition !== "function") {
+    fn();
+    return;
+  }
+  if (!opts?.asyncRoute) {
+    doc.startViewTransition(fn);
+    return;
+  }
+  doc.startViewTransition(
+    () =>
+      new Promise<void>((resolve) => {
+        resolvePendingVT = resolve;
+        fn();
+        setTimeout(() => {
+          if (resolvePendingVT === resolve) {
+            resolvePendingVT = null;
+            resolve();
+          }
+        }, 320);
+      }),
+  );
 }

@@ -56,13 +56,13 @@ export function DemoPanel() {
   return (
     <>
       {show && !open && (
-        // Phones: slim tab on the right edge so it never covers a CTA. Desktop: pill bottom-right.
+        // Compact bottom-right pill (above BottomNav on phones) so it never covers cards or citation links.
         <button
           onClick={() => setOpen(true)}
-          className="pressable fixed z-40 right-0 top-[38%] lg:top-auto lg:right-5 lg:bottom-5 flex flex-col lg:flex-row items-center gap-1.5 lg:gap-2 rounded-l-xl lg:rounded-full bg-surface px-1.5 py-3 lg:pl-3 lg:pr-4 lg:py-0 lg:h-10 shadow-[var(--shadow-bottom-2)] border border-hair border-r-0 lg:border-r t-sm font-semibold"
+          className="pressable fixed z-40 right-3 bottom-20 lg:right-5 lg:bottom-5 flex items-center gap-1.5 lg:gap-2 rounded-full bg-surface px-3 h-9 lg:pl-3 lg:pr-4 lg:h-10 shadow-[var(--shadow-bottom-2)] border border-hair t-sm font-semibold"
           aria-label="Mở bảng điều khiển demo (Shift + D)"
         >
-          <Icon name="sliders-02" size={18} /><span className="[writing-mode:vertical-rl] lg:[writing-mode:horizontal-tb] text-[12px] lg:text-[length:var(--text-body-small)] tracking-wide">Demo</span>
+          <Icon name="sliders-02" size={16} /><span className="text-[12px] lg:text-[length:var(--text-body-small)] tracking-wide">Demo</span>
         </button>
       )}
       {open && <Drawer onClose={() => setOpen(false)} />}
@@ -208,6 +208,7 @@ function Drawer({ onClose }: { onClose: () => void }) {
             <h3 className="t-eyebrow">Hiển thị</h3>
             <Row label="Animation"><Segmented size="sm" label="Animation" value={s.config.motion} onChange={(v) => s.setConfig({ motion: v })} options={[{ value: "normal", label: "Chuẩn" }, { value: "slow", label: "Chậm ×3" }, { value: "off", label: "Tắt" }]} /></Row>
             <Row label="Giao diện"><Segmented size="sm" label="Giao diện" value={s.config.theme} onChange={(v) => s.setConfig({ theme: v })} options={[{ value: "system", label: "Tự động" }, { value: "light", label: "Sáng" }, { value: "dark", label: "Tối" }]} /></Row>
+            <Row label="Đối tác ứng lương"><Segmented size="sm" label="Đối tác ứng lương" value={s.config.ewaDown ? "down" : "ok"} onChange={(v) => s.setConfig({ ewaDown: v === "down" })} options={[{ value: "ok", label: "Bình thường" }, { value: "down", label: "Tạm lỗi" }]} /></Row>
             <Row label="Ngôn ngữ HR"><Segmented size="sm" label="Ngôn ngữ HR" value={s.config.hrLang} onChange={(v) => s.setConfig({ hrLang: v })} options={[{ value: "en", label: "EN" }, { value: "ja", label: "日本語" }]} /></Row>
             <Row label="Nút Demo"><button className="btn btn-xs btn-secondary pressable" onClick={() => { s.setConfig({ showDemo: false }); close(); toast("Đã ẩn · nhấn Shift + D để mở lại", "eye"); }}>Ẩn khi thuyết trình</button></Row>
           </section>

@@ -47,3 +47,67 @@ assert.match(hrT("ja").toastApprove("Tuấn Anh"), /面接案内/, "Japanese app
 assert.doesNotMatch(hrT("ja").toastApprove("Tuấn Anh"), /採用/, "an interview invitation must not announce hiring");
 console.log("take-home mikawa:", pay);
 console.log("OK");
+
+// --- M4: earliest start, legal path, 3-month trial, peers, 300-hire plan ---
+import { earliestStart, fmtDate, legalPath } from "../src/lib/start";
+import { PEERS, HIRE_PLAN } from "../src/lib/data";
+const hrDay = Date.parse("2026-11-16T09:00:00+09:00");
+assert.equal(fmtDate(earliestStart(p, hrDay).date), "07/01/2027", "SSW job change = HR day + 7 + 45");
+assert.equal(earliestStart(p, hrDay).statusChange, true);
+const res = { ...p, visa: "resident" as const, availableInDays: 14 };
+assert.equal(fmtDate(earliestStart(res, hrDay).date), "30/11/2026", "residents need no status change");
+assert.equal(fmtDate(earliestStart({ ...p, availableInDays: 60 }, hrDay).date), "15/01/2027", "later of review and own availability");
+assert.match(earliestStart(p, hrDay).reason, /chuyển đổi tư cách lưu trú/);
+assert.equal(jobById("mikawa-cnc")!.headcount, 300);
+assert.equal(jobById("mikawa-cnc")!.contractMonths, 3);
+assert.ok(JOBS.every((j) => typeof j.verified === "boolean"));
+assert.ok(PEERS["mikawa-cnc"].peers.some((x) => x.askable), "key job has a volunteer to ask");
+const path = legalPath(p, hrDay);
+assert.deepEqual(path.map((x) => x.key), ["approve", "docs", "file", "review", "card", "day1"]);
+assert.equal(fmtDate(path.at(-1)!.at), fmtDate(earliestStart(p, hrDay).date), "flight-path ends on the start date");
+assert.deepEqual(legalPath(res, hrDay).map((x) => x.key), ["approve", "day1"]);
+assert.ok(!path.some((x) => /đảm bảo|guarantee/i.test(x.label + x.note)), "never promise a date");
+assert.ok(PEERS["mikawa-cnc"].peers.every((x) => x.attendanceVerified || !x.askable), "only attendance-verified peers are askable");
+assert.equal(HIRE_PLAN.jobId, "mikawa-cnc"); assert.equal(HIRE_PLAN.target, 300); assert.equal(HIRE_PLAN.filledByDay.length, HIRE_PLAN.days);
+console.log("M4 data checks OK");
+
+// --- M4: anonymous hometown senpai ---
+import { askerLabel, senpaiFor, isRevealed } from "../src/lib/senpai";
+assert.equal(senpaiFor(p, "mikawa-cnc")!.province, p.province, "same province first");
+assert.equal(senpaiFor({ ...p, currentCompany: jobById("mikawa-cnc")!.company }, "mikawa-cnc"), null, "never match a senpai at the asker's current company");
+assert.equal(askerLabel(p, false), "Thợ ẩn danh · cùng quê Nghệ An");
+assert.ok(!askerLabel(p, false).includes(p.name) && !askerLabel(p, false).includes(p.currentCompany!), "no identity leaks before accept");
+const offer = { id: "x", jobId: "mikawa-cnc", candidateId: "me", appliedAt: 0, status: "approved" as const };
+assert.equal(isRevealed([offer], "mikawa-cnc"), false, "approval alone does not reveal");
+assert.equal(isRevealed([{ ...offer, accepted: true }], "mikawa-cnc"), true);
+import { hometownLabel } from "../src/lib/senpai";
+assert.equal(hometownLabel(p, senpaiFor(p, "mikawa-cnc")!), "Cùng quê Nghệ An");
+assert.equal(hometownLabel(p, senpaiFor(p, "okazaki-nc")!), "Quê Hà Tĩnh", "never claim a shared hometown that is not shared");
+console.log("M4 senpai checks OK");
+
+// --- M4: HR 300-hire plan, batch approve ---
+import { batchEligible, hireProgress, needsBatch } from "../src/lib/hire";
+const rows = [
+  { appId: "a", gatePass: true, fit: "great" as const, status: "sent" as const },
+  { appId: "b", gatePass: false, fit: "great" as const, status: "sent" as const },
+  { appId: "c", gatePass: true, fit: "possible" as const, status: "viewed" as const },
+  { appId: "d", gatePass: true, fit: "great" as const, status: "approved" as const },
+  { appId: "e", gatePass: true, fit: "great" as const, status: "expired" as const },
+];
+assert.deepEqual(batchEligible(rows), ["a"], "batch never approves gate-failed, weaker or decided candidates");
+assert.equal(hireProgress(HIRE_PLAN, 2).filled, 160);
+assert.equal(hireProgress(HIRE_PLAN, 2).pct, 53);
+assert.equal(needsBatch(300, 20), true); assert.equal(needsBatch(10, 20), false);
+console.log("M4 HR checks OK");
+
+// --- M4: AI Q&A assistant ---
+import { answer } from "../src/lib/ask";
+assert.ok(answer("đổi công ty mất bao lâu", p).a.includes("dự kiến"), "start-date answers stay estimates");
+assert.equal(answer("xyz", p).cites.length, 0, "unknown questions cite nothing");
+assert.ok(answer("Có người Việt nào làm ở Mikawa không?", p).cites.includes("mikawa-cnc"));
+assert.ok(answer("Việc nào lương thực nhận trên ¥200k?", p).cites.every((id) => takeHome(jobById(id)!, p.relocate).net > 200000), "pay answer cites only jobs above 200k");
+assert.match(answer("Trong lúc chờ có ứng lương được không?", p).a, /ngày công/, "wage-advance follow-up is not routed to the pay answer");
+assert.ok(answer("Việc nào lương thực nhận trên ¥200k?", p).cites.every((id) => scoreMatch(p, jobById(id)!).gate.pass), "assistant never suggests jobs the visa forbids");
+assert.ok(answer("Việc nào có ký túc xá?", p).cites.every((id) => scoreMatch(p, jobById(id)!).gate.pass), "dorm answer respects the visa gate too");
+assert.match(answer("đổi công ty mất bao lâu", p, hrDay - 864e5).a, /07\/01\/2027/, "assistant uses the simulated clock it is given");
+console.log("M4 ask checks OK");

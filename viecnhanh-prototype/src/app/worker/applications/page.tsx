@@ -1,13 +1,17 @@
 "use client";
+import { flushSync } from "react-dom";
 import Link from "next/link";
 import { Button, FitBadge, Icon, Meter, toast } from "@/components/ui";
 import { BellLink, Screen, TopBar } from "@/components/worker/Shell";
 import { StatusSteps } from "@/components/worker/Blocks";
 import { CITIES, JOBS, jobById } from "@/lib/data";
 import { REJECT_REASONS, STATUS_VI } from "@/lib/labels";
+import { withViewTransition } from "@/lib/motion";
 import { takeHome, yen } from "@/lib/pay";
 import { fitOf, scoreMatch, suggestImprovements } from "@/lib/scoring";
 import { deadlineOf, displayStatus, fmtLeft, fmtSlot, useApp, useNow, type Application } from "@/lib/store";
+import { senpaiFor } from "@/lib/senpai";
+import { earliestStart, fmtDate } from "@/lib/start";
 
 export default function Applications() {
   const s = useApp();
@@ -81,7 +85,7 @@ function AppCard({ a, now }: { a: Application; now: number }) {
               <span className={`mono tnum t-h4 ${urgent ? "underline decoration-2 underline-offset-4" : ""}`} aria-label={`Còn ${fmtLeft(left)}`}>{fmtLeft(left)}</span>
             </div>
             <Meter value={Math.max(0, (left / total) * 100)} label={`Thời gian HR còn lại cho ${job.company}`} className="mt-3" />
-            <p className="t-sm text-muted mt-2">Quá hạn, hồ sơ tự đóng và bạn nhận 3 việc khác.</p>
+            <p className="t-sm text-muted mt-2">Nếu HR chưa trả lời trong {s.config.deadlineH} giờ, bạn được gợi ý ngay 3 việc khác. <Link href="/worker/jobs" className="font-semibold underline underline-offset-2">Xem 3 việc khác</Link></p>
           </div>
         </>
       )}
@@ -106,13 +110,20 @@ function AppCard({ a, now }: { a: Application; now: number }) {
 
 function Approved({ a }: { a: Application }) {
   const safety = useApp((s) => s.safetyDone);
+  const profile = useApp((s) => s.profile);
+  const acceptOffer = useApp((s) => s.acceptOffer);
+  const senpai = profile ? senpaiFor(profile, a.jobId) : null;
+  const job = jobById(a.jobId)!;
+  const start = profile ? fmtDate(earliestStart(profile, a.decidedAt ?? a.appliedAt).date) : null;
   const iv = a.interview;
   // Order matches reality: invite → interview → (if hired) safety before day 1 → wallet after first shift.
   const steps = [
     { done: true, t: "Nhà máy mời bạn phỏng vấn", d: "Hồ sơ đã qua vòng lọc" },
     { done: false, t: iv ? `Phỏng vấn ${fmtSlot(iv.slot)}` : "Phỏng vấn", d: "Kết quả báo trong app và qua Zalo OA" },
     { done: safety, t: "Nếu đạt: học an toàn trước ngày 1", d: safety ? "Đã hoàn thành" : "8 phút · có thể học trước", href: "/worker/safety" },
+    ...(start ? [{ done: false, t: `Bắt đầu đi làm · ${start} (dự kiến)`, d: "Tính từ ngày HR duyệt và thủ tục lưu trú" }] : []),
     { done: false, t: "Ví lương mở sau ca đầu tiên", d: "Ứng lương đã làm, không phải vay", href: "/worker/wallet" },
+    ...(job.contractMonths ? [{ done: false, t: `Tháng ${job.contractMonths}: đánh giá gia hạn`, d: "Nếu không gia hạn, ViệcNhanh xếp việc tiếp trong 24h" }] : []),
   ];
   return (
     <div className="mt-5">
@@ -120,7 +131,7 @@ function Approved({ a }: { a: Application }) {
       {iv && (
         <div className="mt-4 rounded-2xl bg-[var(--color-bg-inverse-solid)] text-[var(--color-content-neutral-strongest)] p-4 grid gap-3">
           <div className="flex gap-3"><Icon name="calendar-check" /><span><span className="t-sm text-muted block">Lịch phỏng vấn</span><b>{fmtSlot(iv.slot)}</b></span></div>
-          <div className="flex gap-3"><Icon name={iv.mode === "onsite" ? "marker-pin-02" : "phone-call"} /><span><span className="t-sm text-muted block">{iv.mode === "onsite" ? "Tại nhà máy" : "Online"}</span><b>{iv.mode === "onsite" ? "Cổng số 2, Mikawa Precision · Toyota-shi. Mang thẻ cư trú." : "Gọi video qua Zalo, HR sẽ gọi đúng giờ."}</b></span></div>
+          <div className="flex gap-3"><Icon name={iv.mode === "onsite" ? "marker-pin-02" : "phone-call"} /><span><span className="t-sm text-muted block">{iv.mode === "onsite" ? "Tại nhà máy" : "Online"}</span><b>{iv.mode === "onsite" ? `${job.company} · ${CITIES[job.city].vi} (xem cổng vào trong tin nhắn Zalo OA). Mang thẻ cư trú.` : "Gọi video qua Zalo, HR sẽ gọi đúng giờ."}</b></span></div>
           <Button size="sm" variant="secondary" icon="calendar" onClick={() => toast("Đã thêm vào lịch và nhắc trước 1 giờ qua Zalo OA", "calendar-check")}>Thêm vào lịch</Button>
         </div>
       )}
@@ -142,6 +153,32 @@ function Approved({ a }: { a: Application }) {
           );
         })}
       </ol>
+      {a.accepted ? (
+        <div className="mt-4 rounded-2xl bg-[var(--color-bg-inverse-solid)] text-[var(--color-content-neutral-strongest)] p-4 flex gap-3" role="status">
+          <Icon name="users-check" />
+          <span><b className="block">Đã nhận việc</b><span className="t-sm text-muted">{senpai ? `Zalo OA đã mở hồ sơ hai bên. Senpai ${senpai.name} sẽ đón bạn ngày đầu.` : "Zalo OA sẽ gửi hướng dẫn ngày đầu đi làm."}</span></span>
+        </div>
+      ) : (
+        <div className="mt-4 grid gap-2">
+          <Button
+            size="lg"
+            block
+            variant="inverse"
+            icon="check-circle"
+            onClick={() => {
+              withViewTransition(() => {
+                flushSync(() => {
+                  acceptOffer(a.id);
+                });
+              });
+              toast(senpai ? `Đã nhận việc · Zalo OA đã mở hồ sơ hai bên với ${senpai.name}` : "Đã nhận việc", "users-check");
+            }}
+          >
+            Nhận việc
+          </Button>
+          <p className="t-sm muted-ink">Khi bạn nhận việc, tên bạn mới được mở cho Senpai ở nhà máy để hỗ trợ ngày đầu.</p>
+        </div>
+      )}
     </div>
   );
 }
