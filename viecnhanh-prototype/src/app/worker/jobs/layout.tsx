@@ -1,14 +1,14 @@
 "use client";
 import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Button, Icon } from "@/components/ui";
 import { BellLink, Screen, TopBar } from "@/components/worker/Shell";
-import { JobCard } from "@/components/worker/Blocks";
+import { JobPass } from "@/components/worker/Pass";
+import { Bento } from "@/components/worker/Bento";
 import { JOBS, VISAS } from "@/lib/data";
 import { fitOf, matchChips, scoreMatch } from "@/lib/scoring";
-import { isClosed, useApp } from "@/lib/store";
-import { Flip } from "@/lib/motion";
+import { isClosed, useApp, useNow } from "@/lib/store";
 
 export default function JobsLayout({ children }: { children: ReactNode }) {
   const path = usePathname();
@@ -29,29 +29,40 @@ function JobList({ activeId }: { activeId?: string }) {
   const p = s.profile!;
   const [showHidden, setShowHidden] = useState(false);
   const [filter, setFilter] = useState<"all" | "ok">("all");
-  // After "Bổ sung thông tin" we briefly show the old order, then let Flip move the card to its new rank.
   const rescored = params.get("rescored");
-  const from = Number(params.get("from"));
-  const [settled, setSettled] = useState(!rescored);
-  useEffect(() => { if (!rescored) return; const t = setTimeout(() => setSettled(true), 650); return () => clearTimeout(t); }, [rescored]);
+  const now = useNow(60000);
 
   const all = useMemo(() => JOBS.map((j) => ({ j, m: scoreMatch(p, j, s.config.weights) })), [p, s.config.weights]);
   const visible = all
     .filter((r) => r.m.gate.pass && (filter === "all" || r.m.total >= s.config.threshold))
-    .sort((a, b) => sortScore(b) - sortScore(a));
-  function sortScore(r: (typeof all)[number]) { return !settled && r.j.id === rescored && from ? from : r.m.total; }
+    .sort((a, b) => b.m.total - a.m.total);
   const hidden = all.filter((r) => !r.m.gate.pass);
-  const applied = new Set(s.apps.filter((a) => a.candidateId === "me" && (!isClosed(a, s) || a.status === "approved")).map((a) => a.jobId));
+  const mine = s.apps.filter((a) => a.candidateId === "me");
+  const applied = new Set(mine.filter((a) => !isClosed(a, s) || a.status === "approved").map((a) => a.jobId));
 
-  const list = useRef<HTMLDivElement>(null);
-  const flip = useRef<Flip.FlipState | null>(null);
+  // Pass carousel: the pass nearest the centre drives the bento below.
+  const strip = useRef<HTMLDivElement>(null);
+  const [idx, setIdx] = useState(0);
   const order = visible.map((r) => r.j.id).join();
-  useLayoutEffect(() => {
-    const els = list.current?.querySelectorAll("[data-flip-id]");
-    if (!els) return;
-    if (flip.current) Flip.from(flip.current, { duration: 0.9, ease: "expo.inOut", absolute: false, nested: true, scale: false });
-    flip.current = Flip.getState(els);
-  }, [order]);
+  const onStrip = () => {
+    const root = strip.current;
+    if (!root) return;
+    const mid = root.getBoundingClientRect().left + root.clientWidth / 2;
+    let best = 0, dist = Infinity;
+    root.querySelectorAll<HTMLElement>("[data-i]").forEach((el) => {
+      const r = el.getBoundingClientRect(), d = Math.abs(r.left + r.width / 2 - mid);
+      if (d < dist) { dist = d; best = Number(el.dataset.i); }
+    });
+    setIdx(best);
+  };
+  useEffect(() => setIdx(0), [order]);
+  useEffect(() => {
+    const i = visible.findIndex((r) => r.j.id === (rescored ?? activeId));
+    if (i > 0) strip.current?.querySelector<HTMLElement>(`[data-i="${i}"]`)?.scrollIntoView({ inline: "center", block: "nearest" });
+    onStrip();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rescored, activeId, order]);
+  const cur = visible[Math.min(idx, visible.length - 1)];
 
   const okCount = all.filter((r) => r.m.gate.pass && r.m.total >= s.config.threshold).length;
   return (
@@ -62,13 +73,21 @@ function JobList({ activeId }: { activeId?: string }) {
           <button className="chip pressable !h-9 t-sm" aria-pressed={filter === "all"} onClick={() => setFilter("all")}>Tất cả · {all.length - hidden.length}</button>
           <button className="chip pressable !h-9 t-sm" aria-pressed={filter === "ok"} onClick={() => setFilter("ok")}>Rất phù hợp · {okCount}</button>
         </div>
-        <div ref={list} className="grid grid-cols-1 gap-3">
-          {visible.map(({ j, m }) => (
-            <div key={j.id} data-reveal data-flip-id={j.id}>
-              <JobCard job={j} relocate={p.relocate} m={m} fit={fitOf(m, s.config.threshold)} chips={matchChips(p, j, m)} applied={applied.has(j.id)} active={activeId === j.id} highlight={!!(rescored === j.id && from)} />
+        {visible.length > 0 && (
+          <>
+            <div ref={strip} onScroll={onStrip} className="-mx-5 lg:mx-0 px-5 lg:px-0 flex gap-3 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-1" role="list" aria-label="Việc phù hợp, vuốt ngang để xem">
+              {visible.map(({ j, m }, i) => (
+                <div key={j.id} data-i={i} role="listitem" className={`snap-center shrink-0 w-[86%] lg:w-full ${rescored === j.id ? "ring-4 ring-[var(--color-border-accent-solid)] rounded-[30px]" : ""}`}>
+                  <JobPass job={j} p={p} m={m} fit={fitOf(m, s.config.threshold)} now={now} applied={applied.has(j.id)} active={activeId === j.id} />
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+            <div className="flex justify-center gap-1.5 mt-3" aria-hidden>
+              {visible.map((r, i) => <i key={r.j.id} className={`h-1.5 rounded-full transition-all ${i === idx ? "w-[18px] bg-[var(--color-bg-accent-solid,#1B22A7)]" : "w-1.5 bg-subtle"}`} />)}
+            </div>
+            {cur && <Bento job={cur.j} p={p} chips={matchChips(p, cur.j, cur.m)} fit={fitOf(cur.m, s.config.threshold)} app={mine.filter((a) => a.jobId === cur.j.id).at(-1)} />}
+          </>
+        )}
         {visible.length === 0 && (
           <section className="card-flat p-5 grid gap-3" role="status">
             <h2 className="t-sub">{filter === "ok" ? "Chưa có việc ở mức Rất phù hợp" : "Chưa có việc phù hợp với visa hiện tại"}</h2>

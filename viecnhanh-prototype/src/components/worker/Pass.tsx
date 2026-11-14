@@ -31,12 +31,12 @@ export function JobPass({ job, p, m, fit, now, applied, active }: { job: Job; p:
         <span className="shrink-0 rounded-full bg-white/15 px-2.5 py-1.5 t-sm font-bold">{m.gate.pass ? FIT_VI[fit] : "Không hợp visa"}</span>
       </div>
       <h2 className="text-[20px] leading-tight font-semibold tracking-[-0.025em] mt-3">{job.title}</h2>
-      <p className="mt-3 flex items-baseline gap-2">
-        <span className="led text-[44px] leading-none" aria-hidden>{yen(net)}</span>
-        <span className="t-sm text-[#DCE3FC]">thực nhận/tháng</span>
+      <p className="mt-3">
+        <span className="led block text-[44px] leading-none" aria-hidden>{yen(net)}</span>
+        <span className="t-sm text-[#DCE3FC] block mt-1.5">thực nhận mỗi tháng · ước tính</span>
       </p>
       <p className="mt-3 t-sm font-semibold flex items-center gap-1.5"><Icon name="calendar" size={16} />Bắt đầu sớm nhất: {start} · dự kiến</p>
-      <p className="mt-1 t-sm text-[#DCE3FC]">{SHIFT_VI[job.shift]} · {CITIES[job.city].vi} · ~{km} km từ chỗ bạn</p>
+      <p className="mt-1 t-sm text-[#DCE3FC]">{SHIFT_VI[job.shift]} · {CITIES[job.city].vi} · {km < 1 ? "cùng thành phố với bạn" : `~${km} km từ chỗ bạn`}</p>
       <div className="mt-3 flex flex-wrap gap-1.5">
         {job.contractMonths && <span className="rounded-full bg-white/15 px-2.5 py-1 t-sm">Thử việc {job.contractMonths} tháng{job.renewable ? " · có thể gia hạn" : ""}</span>}
         {peers && <span className="rounded-full bg-white/15 px-2.5 py-1 t-sm">{peers.count} người Việt đang làm ở đây</span>}
