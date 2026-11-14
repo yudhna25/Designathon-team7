@@ -223,3 +223,7 @@ select.input { background-image: linear-gradient(45deg, transparent 50%, current
 @media (prefers-reduced-motion: reduce) {
   :root:not([data-motion="slow"]) { --motion-instant: 0s; --motion-fast: 0s; --motion-base: 0s; --motion-slow: 0s; --motion-slower: 0s; }
 }
+
+/* Wallet job pass (M4 Bento + Thẻ). Stays brand blue in both themes. */
+.pass { background: linear-gradient(150deg, #2B33C9 0%, #1B22A7 55%, #121882 100%); box-shadow: 0 12px 28px -14px rgb(27 34 167 / .55); }
+.pass:focus-visible { outline: 3px solid #4260E6; outline-offset: 3px; }
