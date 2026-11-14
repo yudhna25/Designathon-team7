@@ -81,6 +81,7 @@ type Actions = {
   decide: (appId: string, status: "approved" | "rejected", extra?: { reason?: string; startDate?: string; interview?: Application["interview"] }) => void;
   completeSafety: () => void;
   withdraw: (amount: number, fee: number) => void;
+  decideMany: (appIds: string[], interview: Application["interview"]) => void;
   askSenpai: (jobId: string, peerId: string, questions: string[]) => string;
   acceptOffer: (appId: string) => void;
   reset: () => void;
@@ -154,6 +155,7 @@ export const useApp = create<State & Actions>()(
       completeSafety: () => set({ safetyDone: true }),
       withdraw: (amount, fee) =>
         set((s) => ({ withdrawals: [{ id: `w${Date.now()}`, amount, fee, at: simNow(s.clock, s.config.speed) }, ...s.withdrawals] })),
+      decideMany: (appIds, interview) => appIds.forEach((id) => get().decide(id, "approved", { interview })),
       askSenpai: (jobId, peerId, questions) => {
         const id = `t${Date.now()}`;
         const qs = questions.slice(0, 3);

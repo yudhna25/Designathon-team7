@@ -81,3 +81,18 @@ const offer = { id: "x", jobId: "mikawa-cnc", candidateId: "me", appliedAt: 0, s
 assert.equal(isRevealed([offer], "mikawa-cnc"), false, "approval alone does not reveal");
 assert.equal(isRevealed([{ ...offer, accepted: true }], "mikawa-cnc"), true);
 console.log("M4 senpai checks OK");
+
+// --- M4: HR 300-hire plan, batch approve ---
+import { batchEligible, hireProgress, needsBatch } from "../src/lib/hire";
+const rows = [
+  { appId: "a", gatePass: true, fit: "great" as const, status: "sent" as const },
+  { appId: "b", gatePass: false, fit: "great" as const, status: "sent" as const },
+  { appId: "c", gatePass: true, fit: "possible" as const, status: "viewed" as const },
+  { appId: "d", gatePass: true, fit: "great" as const, status: "approved" as const },
+  { appId: "e", gatePass: true, fit: "great" as const, status: "expired" as const },
+];
+assert.deepEqual(batchEligible(rows), ["a"], "batch never approves gate-failed, weaker or decided candidates");
+assert.equal(hireProgress(HIRE_PLAN, 2).filled, 160);
+assert.equal(hireProgress(HIRE_PLAN, 2).pct, 53);
+assert.equal(needsBatch(300, 20), true); assert.equal(needsBatch(10, 20), false);
+console.log("M4 HR checks OK");

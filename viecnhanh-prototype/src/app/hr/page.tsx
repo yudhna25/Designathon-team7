@@ -2,11 +2,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { Avatar, Icon, Meter, Num } from "@/components/ui";
-import { JLPT_SHORT, KEY_JOB_ID, SKILLS, VISAS, jobById, type SkillId } from "@/lib/data";
+import { Avatar, Icon, Meter, Num, toast } from "@/components/ui";
+import { HirePlan } from "@/components/hr/HirePlan";
+import { HIRE_PLAN, JLPT_SHORT, KEY_JOB_ID, SKILLS, VISAS, jobById, type SkillId } from "@/lib/data";
+import { batchEligible, hireProgress, needsBatch } from "@/lib/hire";
 import { fmtLeftShort, hrT } from "@/lib/hr-i18n";
 import { FIT_EN, FIT_JA, fitOf } from "@/lib/scoring";
-import { deadlineOf, displayStatus, matchOf, profileOf, useApp, useNow, type DisplayStatus } from "@/lib/store";
+import { INTERVIEW_SLOTS, deadlineOf, displayStatus, fmtSlot, matchOf, profileOf, useApp, useNow, type DisplayStatus } from "@/lib/store";
 import { useReveal } from "@/lib/motion";
 
 export default function HRCandidates() {
@@ -16,6 +18,8 @@ export default function HRCandidates() {
   const t = hrT(s.config.hrLang);
   const lang = s.config.hrLang;
   const [showEx, setShowEx] = useState(false);
+  const [picked, setPicked] = useState<string[]>([]);
+  const [slot, setSlot] = useState(INTERVIEW_SLOTS[0]);
   const root = useRef<HTMLDivElement>(null);
   useReveal(root);
   const job = jobById(KEY_JOB_ID)!;
@@ -32,6 +36,20 @@ export default function HRCandidates() {
   const due = open.filter((r) => r.left < s.config.reminderH * 36e5);
   const fresh = ranked.filter((r) => now - r.a.appliedAt < 864e5).length;
   const approved = ranked.filter((r) => r.st === "approved").length;
+  const eligible = new Set(batchEligible(ranked.map((r) => ({ appId: r.a.id, gatePass: r.m.gate.pass, fit: fitOf(r.m, s.config.threshold), status: r.st }))));
+  const sel = picked.filter((id) => eligible.has(id));
+  const toggle = (id: string) => setPicked((x) => (x.includes(id) ? x.filter((y) => y !== id) : [...x, id]));
+  const oldestLeftH = open.length ? Math.min(...open.map((r) => r.left)) / 36e5 : s.config.deadlineH;
+  const crowded = needsBatch(open.length + HIRE_PLAN.queued, Math.max(1, oldestLeftH));
+  const decided = rows.filter((r) => r.a.decidedAt);
+  const hrs = decided.map((r) => (r.a.decidedAt! - r.a.appliedAt) / 36e5).sort((x, y) => x - y);
+  const medianH = hrs.length ? Math.round(hrs[Math.floor(hrs.length / 2)] * 10) / 10 : 0;
+  const fill = hireProgress(HIRE_PLAN, approved);
+  const invite = () => {
+    s.decideMany(sel, { slot, mode: "onsite" });
+    toast(lang === "ja" ? `${sel.length}名をグループ面接に招待しました` : `Invited ${sel.length} to a group interview · ${fmtSlot(slot, lang)}`, "users-check");
+    setPicked([]);
+  };
 
   return (
     <div ref={root}>
@@ -43,12 +61,24 @@ export default function HRCandidates() {
         <p className="t-sm text-muted flex items-center gap-2"><Icon name="shield-tick" size={16} />{t.sortedBy}</p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5" data-reveal>
-        <Kpi label={t.kpi.fresh} value={fresh} icon="users-check" />
+      <HirePlan approvedNow={approved} lang={lang} />
+
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5" data-reveal>
         <Kpi label={t.kpi.pending} value={open.length} icon="hourglass" />
         <Kpi label={t.kpi.due(s.config.reminderH)} value={due.length} icon="alert-triangle" strong={due.length > 0} />
-        <Kpi label={t.kpi.approved} value={approved} icon="check-verified" />
+        <Kpi label={lang === "ja" ? "判断までの時間（中央値）" : "Time to decision (median)"} value={medianH} suffix={lang === "ja" ? "時間" : "h"} icon="clock" />
+        <Kpi label={lang === "ja" ? "充足率（300名）" : "Fill rate (of 300)"} value={fill.pct} suffix="%" icon="users-check" />
+        <Kpi label={lang === "ja" ? "30日定着率 · 試算" : "30-day retention · simulated"} value={91} suffix="%" icon="check-verified" />
       </div>
+      {fresh > 0 && <p className="sr-only">{t.kpi.fresh}: {fresh}</p>}
+
+      {crowded && (
+        <div className="card-flat p-4 md:px-5 flex flex-wrap items-center gap-3 mb-5" role="status" data-reveal>
+          <Icon name="users-check" />
+          <p className="flex-1 min-w-[200px] font-medium">{lang === "ja" ? `今週の待機 ${open.length + HIRE_PLAN.queued}名。24時間以内に判断するにはグループ招待を使ってください。` : `${open.length + HIRE_PLAN.queued} applications waiting this week. Turn on group invites to keep the 24h promise.`}</p>
+          <button className="btn btn-sm btn-secondary pressable" onClick={() => setPicked([...eligible])} disabled={eligible.size === 0}>{lang === "ja" ? `対象 ${eligible.size}名を選択` : `Select ${eligible.size} eligible`}</button>
+        </div>
+      )}
 
       {due.length > 0 && (
         <div className="ink rounded-2xl p-4 md:px-5 flex flex-wrap items-center gap-3 mb-5" role="alert" data-reveal>
@@ -63,7 +93,8 @@ export default function HRCandidates() {
         <table className="w-full t-base">
           <thead>
             <tr className="text-left t-sm text-muted hair-b">
-              <th className="font-medium py-3 pl-5">{t.th.cand}</th>
+              <th className="font-medium py-3 pl-5 w-10"><span className="sr-only">{lang === "ja" ? "選択" : "Select"}</span></th>
+              <th className="font-medium py-3">{t.th.cand}</th>
               <th className="font-medium py-3">{t.th.match}</th>
               <th className="font-medium py-3">{t.th.visa}</th>
               <th className="font-medium py-3 hidden xl:table-cell">{t.th.skills}</th>
@@ -78,7 +109,10 @@ export default function HRCandidates() {
               const isDue = (st === "sent" || st === "viewed") && left < s.config.reminderH * 36e5;
               return (
                 <tr key={a.id} onClick={() => router.push(`/hr/candidates/${a.id}`)} className={`cursor-pointer hair-b last:border-0 hover:bg-pale transition-colors ${st === "expired" || st === "rejected" ? "text-muted" : ""} ${a.candidateId === "me" ? "bg-pale" : ""}`}>
-                  <td className="py-3 pl-5">
+                  <td className="py-3 pl-5" onClick={(e) => e.stopPropagation()}>
+                    {eligible.has(a.id) && <input type="checkbox" className="size-5 accent-[#1B22A7]" checked={sel.includes(a.id)} onChange={() => toggle(a.id)} aria-label={`${lang === "ja" ? "選択" : "Select"} ${p.name}`} />}
+                  </td>
+                  <td className="py-3">
                     <Link href={`/hr/candidates/${a.id}`} className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
                       <Avatar name={p.name} size={36} />
                       <span><b className="block text-fg">{p.name}{a.candidateId === "me" && <span className="badge ml-2 align-middle">Demo</span>}{a.flagged && <span className="badge badge-dash ml-2 align-middle">{lang === "ja" ? "条件未達で応募" : "Applied below fit"}</span>}</b><span className="t-sm text-muted">{t.nationality[p.nationality]}</span></span>
@@ -98,6 +132,16 @@ export default function HRCandidates() {
         </table>
         {ranked.length === 0 && <p className="p-8 text-center text-muted">{t.empty}</p>}
       </div>
+
+      {sel.length > 0 && (
+        <div className="sticky bottom-4 z-20 mt-4 ink rounded-2xl p-3 md:p-4 flex flex-wrap items-center gap-3 shadow-[var(--shadow-bottom-2)]" role="region" aria-label={lang === "ja" ? "一括招待" : "Batch invite"}>
+          <b className="flex-1 min-w-[160px]">{lang === "ja" ? `${sel.length}名を選択中` : `${sel.length} selected`}</b>
+          <select className="input !h-10 !w-auto t-sm" value={slot} onChange={(e) => setSlot(e.target.value)} aria-label={lang === "ja" ? "面接日時" : "Interview slot"}>
+            {INTERVIEW_SLOTS.map((x) => <option key={x} value={x}>{fmtSlot(x, lang)}</option>)}
+          </select>
+          <button className="btn btn-sm pressable bg-[var(--color-bg-inverse-solid)] text-[var(--color-content-neutral-strongest)]" onClick={invite}>{lang === "ja" ? `${sel.length}名をグループ面接に招待` : `Invite ${sel.length} to group interview`}</button>
+        </div>
+      )}
 
       {/* Mobile cards */}
       <ul className="md:hidden grid gap-3">
@@ -139,11 +183,11 @@ function StatusBadge({ st, label }: { st: DisplayStatus; label: string }) {
   return <span className={`badge ${cls}`}>{st === "approved" && <Icon name="check" size={12} />}{label}</span>;
 }
 
-function Kpi({ label, value, icon, strong }: { label: string; value: number; icon: "users-check" | "hourglass" | "alert-triangle" | "check-verified"; strong?: boolean }) {
+function Kpi({ label, value, icon, strong, suffix }: { label: string; value: number; icon: "users-check" | "hourglass" | "alert-triangle" | "check-verified" | "clock"; strong?: boolean; suffix?: string }) {
   return (
     <div className={`rounded-[20px] p-4 ${strong ? "ink" : "card"}`}>
       <div className="flex items-center justify-between"><span className={`t-sm ${strong ? "muted-ink" : "text-muted"}`}>{label}</span><Icon name={icon} size={18} className="opacity-60" /></div>
-      <p className="t-h2 mt-2 tnum"><Num value={value} /></p>
+      <p className="t-h2 mt-2 tnum"><Num value={value} format={(n) => (Number.isInteger(value) ? Math.round(n) : Math.round(n * 10) / 10).toLocaleString("en-US")} />{suffix && <span className="t-sub text-muted ml-0.5">{suffix}</span>}</p>
     </div>
   );
 }

@@ -450,6 +450,6 @@ export const PEERS: Record<string, { count: number; peers: Peer[] }> = {
 };
 
 // Demo data — mô phỏng. Key client: 3-month trial, 300 workers in week 1 (M3 market event). Day index is 0-based.
-export const HIRE_PLAN = { jobId: KEY_JOB_ID, target: 300, days: 7, filledByDay: [38, 41, 35, 44, 0, 0, 0], today: 3 };
+export const HIRE_PLAN = { jobId: KEY_JOB_ID, target: 300, days: 7, filledByDay: [38, 41, 35, 44, 0, 0, 0], today: 3, queued: 212 }; // queued = applications still waiting this week
 
 export const JPY_TO_VND = 172; // reference rate for display only
