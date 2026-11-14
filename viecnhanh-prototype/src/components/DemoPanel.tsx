@@ -218,14 +218,14 @@ function Drawer({ onClose }: { onClose: () => void }) {
               <div className="well p-4">
                 <p className="mb-3">Xoá hồ sơ, đơn ứng tuyển và lịch sử ứng lương của bản demo này?</p>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="primary" onClick={() => { s.reset(); setConfirmReset(false); toast("Đã reset dữ liệu demo", "refresh-ccw-01"); router.push("/"); close(); }}>Reset</Button>
+                  <Button size="sm" variant="primary" onClick={() => { s.reset(); setConfirmReset(false); toast("Đã reset dữ liệu demo", "refresh-ccw-01"); router.push("/worker"); close(); }}>Reset</Button>
                   <Button size="sm" variant="flat" onClick={() => setConfirmReset(false)}>Huỷ</Button>
                 </div>
               </div>
             ) : (
               <Button block variant="danger" icon="refresh-ccw-01" onClick={() => setConfirmReset(true)}>Reset dữ liệu demo</Button>
             )}
-            <p className="mt-4 text-muted"><Link href="/" className="underline underline-offset-4" onClick={close}>Về trang giới thiệu</Link> · Phím tắt <kbd className="mono">Shift + D</kbd></p>
+            <p className="mt-4 text-muted"><Link href="/worker" className="underline underline-offset-4" onClick={close}>Về màn đăng nhập</Link> · Phím tắt <kbd className="mono">Shift + D</kbd></p>
           </section>
         </div>
       </div>

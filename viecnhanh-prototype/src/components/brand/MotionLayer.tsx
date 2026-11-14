@@ -1,6 +1,6 @@
 "use client";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { gsap, resolveViewTransition, withViewTransition } from "@/lib/motion";
 
 /**
@@ -19,6 +19,15 @@ export function MotionLayer() {
 
   // Finish any pending View Transition when the new route has rendered.
   useEffect(() => { resolveViewTransition(); }, [path]);
+
+  // Login → app: the K stairs open onto the app the first time the worker gets past the login screen.
+  const prev = useRef(path);
+  // Layout effect: cover the new screen before it paints, so the app never flashes before the stairs.
+  useLayoutEffect(() => {
+    const from = prev.current;
+    prev.current = path;
+    if (from === "/worker" && path.startsWith("/worker/") && !quiet()) enterApp();
+  }, [path]);
 
   // Route transitions: K curtain from the landing into an app, View Transition morph inside the app.
   useEffect(() => {
@@ -194,4 +203,32 @@ function curtain(go: () => void) {
     .add(() => go())
     .to(cols, { yPercent: -100, duration: 0.55, stagger: 0.07, ease: "expo.inOut", delay: 0.35 });
   setTimeout(() => host.remove(), 2500); // never leave the curtain up
+}
+
+/** Login → app entrance: blue stairs cover the screen with the white Step K, the K builds, then the stairs lift. */
+function enterApp() {
+  const host = document.createElement("div");
+  host.setAttribute("aria-hidden", "true");
+  Object.assign(host.style, { position: "fixed", inset: "0", zIndex: "110", pointerEvents: "none" });
+  const grid = document.createElement("div");
+  Object.assign(grid.style, { position: "absolute", inset: "0", display: "grid", gridTemplateColumns: "repeat(4, 1fr)" });
+  const cols = Array.from({ length: 4 }, () => {
+    const c = document.createElement("span");
+    c.style.background = "#1B22A7";
+    grid.appendChild(c);
+    return c;
+  });
+  host.appendChild(grid);
+  const mark = document.createElement("div");
+  Object.assign(mark.style, { position: "absolute", inset: "0", display: "grid", placeItems: "center" });
+  mark.innerHTML = '<svg width="96" height="96" viewBox="0 0 256 256"><g transform="translate(-6 0)" fill="#fff"><path data-k d="M48 32h44v192H48z"/><path data-k d="M112 152h44l64 72h-44z"/><path data-s d="M92 152v-40h40v40z"/><path data-s d="M132 112V72h40v40z"/><path data-s d="M172 72V32h40v40z"/></g></svg>';
+  host.appendChild(mark);
+  document.body.appendChild(host);
+  const steps = mark.querySelectorAll("[data-s]");
+  gsap.timeline({ onComplete: () => host.remove() })
+    .from(mark.querySelectorAll("[data-k]"), { scaleY: 0, transformOrigin: "50% 100%", duration: 0.32, ease: "expo.out" })
+    .from(steps, { scale: 0, transformOrigin: "50% 50%", duration: 0.28, stagger: 0.08, ease: "back.out(2.4)" }, "-=0.1")
+    .to(mark, { autoAlpha: 0, scale: 0.9, duration: 0.2, ease: "power2.in" }, "+=0.12")
+    .to(cols, { yPercent: -100, duration: 0.55, stagger: 0.07, ease: "expo.inOut" }, "-=0.05");
+  setTimeout(() => host.remove(), 2600); // never leave the stairs up
 }
