@@ -1,6 +1,15 @@
 // Zalo OA (mô phỏng) — data DỰNG theo BRD "ViệcNhanh Aichi · Cửa vào Zalo OA" v1.0.
 // Không dùng tên nhà máy thật (BR8). Số % là số dựng, không chạy engine chấm điểm.
 
+// ---- Ngôn ngữ (VI mặc định, EN cho bản trình bày quốc tế) --------------------------
+export type Lang = "vi" | "en";
+let LANG: Lang = "vi";
+/** Đặt ngôn ngữ hiện tại; màn /zalo-oa gọi ở mỗi lần render, khung chat dựng lại khi đổi. */
+export const setOaLang = (l: Lang) => { LANG = l; };
+export const getOaLang = () => LANG;
+/** Chọn chữ theo ngôn ngữ đang bật. */
+export const t = (vi: string, en: string) => (LANG === "en" ? en : vi);
+
 /** BR6: mọi widget mở link này ở tab mới. */
 export const OA_WEB_URL = "https://team7designathon-viecnhanh.vercel.app/worker/analyzing";
 
@@ -17,10 +26,11 @@ export const FIT_LABEL: Record<FitLevelId, string> = { great: "Rất phù hợp"
 
 // ---- Nhóm chat của việc ("Mở box chat"): chỉ trưởng nhóm / phó nhóm được nhắn ------
 export type GroupPost = { id: string; by: "lead" | "deputy"; text?: string; info?: { k: string; v: string }[]; up: number; seen: number; at: string };
-export const GROUP_ADMINS = {
+type Admins = Record<"lead" | "deputy", { name: string; role: string }>;
+export const GROUP_ADMINS: Admins = {
   lead: { name: "Chị Sato · HR", role: "Trưởng nhóm" },
   deputy: { name: "Anh Minh · Tổ trưởng ca ngày", role: "Phó nhóm" },
-} as const;
+};
 export function groupPosts(job: string, factory: string, area: string, km: number, monthly: string, hourly: string): GroupPost[] {
   return [
     { id: "g1", by: "lead", at: "08:30", up: 24, seen: 96, text: `Chào mừng các bạn đến nhóm tuyển ${job} của ${factory}. Nhóm dùng để thông báo, câu hỏi riêng vui lòng nhắn OA ViệcNhanh.` },
@@ -161,18 +171,19 @@ export const RECOMMEND_BELOW: Recommend = { job: "Lắp ráp · Nhà máy C", ar
 // ---- Sự kiện: tham quan nhà máy (職場見学) và hội chợ việc làm ---------------------
 export type OaEvent = {
   id: string; type: string; jp: string; title: string; host: string; place: string; km: number;
-  date: string; time: string; start: string; end: string; scope: string; age: string; who: string; seats?: string; perks: string[];
+  /** badge = ngày ngắn trên cover ("Thứ 7 · 21/11"). */
+  date: string; badge: string; time: string; start: string; end: string; scope: string; age: string; who: string; seats?: string; perks: string[];
 };
 export const EVENTS: OaEvent[] = [
   {
     id: "kengaku-d", type: "Tham quan nhà máy", jp: "職場見学", title: "Tham quan dây chuyền hàn · Nhà máy D", host: "Nhà máy D",
-    place: "Toyota-shi", km: 4, date: "Thứ Bảy 21/11", time: "9:30–12:00", start: "2026-11-21T09:30:00+09:00", end: "2026-11-21T12:00:00+09:00",
+    place: "Toyota-shi", km: 4, date: "Thứ Bảy 21/11", badge: "Thứ 7 · 21/11", time: "9:30–12:00", start: "2026-11-21T09:30:00+09:00", end: "2026-11-21T12:00:00+09:00",
     scope: "Xem dây chuyền hàn MIG, gặp tổ trưởng người Việt, hỏi về lương và ký túc xá", age: "18–35 tuổi",
     who: "Visa Kỹ năng đặc định hoặc Thực tập sinh", seats: "Còn 12 chỗ", perks: ["Miễn phí", "Xe đưa đón từ ga Toyotashi", "Có phiên dịch"],
   },
   {
     id: "fair-nagoya", type: "Hội chợ việc làm", jp: "就職フェア", title: "Hội chợ việc làm cho người Việt tại Aichi", host: "ViệcNhanh Aichi",
-    place: "Nagoya", km: 28, date: "Chủ nhật 29/11", time: "10:00–16:00", start: "2026-11-29T10:00:00+09:00", end: "2026-11-29T16:00:00+09:00",
+    place: "Nagoya", km: 28, date: "Chủ nhật 29/11", badge: "Chủ nhật · 29/11", time: "10:00–16:00", start: "2026-11-29T10:00:00+09:00", end: "2026-11-29T16:00:00+09:00",
     scope: "25 nhà máy sản xuất, phỏng vấn tại chỗ, tư vấn đổi visa", age: "18–40 tuổi",
     who: "Người Việt đang sống ở Aichi", perks: ["Miễn phí", "Phỏng vấn tại chỗ", "Mang theo thẻ cư trú"],
   },
@@ -185,13 +196,14 @@ export function eventIcs(e: OaEvent) {
     "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//ViecNhanh Aichi//Zalo OA demo//VI", "BEGIN:VEVENT",
     `UID:${e.id}@viecnhanh-demo`, `DTSTAMP:${z(new Date().toISOString())}`, `DTSTART:${z(e.start)}`, `DTEND:${z(e.end)}`,
     `SUMMARY:${e.title}`, `LOCATION:${e.place}, Aichi`, `DESCRIPTION:${e.type} (${e.jp}) · ${e.scope}`,
-    "BEGIN:VALARM", "TRIGGER:-P1D", "ACTION:DISPLAY", "DESCRIPTION:Nhắc lịch ViệcNhanh", "END:VALARM",
+    "BEGIN:VALARM", "TRIGGER:-P1D", "ACTION:DISPLAY", `DESCRIPTION:${t("Nhắc lịch ViệcNhanh", "ViệcNhanh reminder")}`, "END:VALARM",
     "END:VEVENT", "END:VCALENDAR",
   ].join("\r\n");
 }
 
 /** Nhóm / thành viên mô phỏng cho side tab "Thông tin nhóm" (tên dựng). */
-export const GROUP_MEMBERS: { name: string; note: string; admin?: "lead" | "deputy"; me?: boolean }[] = [
+export type GroupMember = { name: string; note: string; admin?: "lead" | "deputy"; me?: boolean };
+export const GROUP_MEMBERS: GroupMember[] = [
   { name: "Chị Sato · HR", note: "Trưởng cộng đồng", admin: "lead" },
   { name: "Anh Minh · Tổ trưởng", note: "Phó cộng đồng", admin: "deputy" },
   { name: "Chị Linh · Phiên dịch", note: "Phó cộng đồng", admin: "deputy" },
@@ -202,3 +214,154 @@ export const GROUP_MEMBERS: { name: string; note: string; admin?: "lead" | "depu
   { name: "Đỗ Quang Vinh", note: "Thêm bởi Anh Minh · Tổ trưởng" },
   { name: "Bạn", note: "Tham gia qua ViệcNhanh Aichi", me: true },
 ];
+
+
+// =====================================================================================
+// English version (dữ liệu dựng, cùng số liệu với bản tiếng Việt)
+// =====================================================================================
+const enPay = (yenPerHour: number) => `¥${yenPerHour.toLocaleString("en-US")}/hr`;
+const enMonthlyNum = (yenPerHour: number) => (Math.round((yenPerHour * 168) / 1000) * 1000).toLocaleString("en-US");
+const enMonthly = (yenPerHour: number) => `≈ ¥${enMonthlyNum(yenPerHour)}/month`;
+const enMonthlyYen = (yenPerHour: number) => `about ${enMonthlyNum(yenPerHour)} yen a month`;
+
+const EN_ADMINS: Admins = {
+  lead: { name: "Ms. Sato · HR", role: "Owner" },
+  deputy: { name: "Mr. Minh · Day-shift lead", role: "Deputy" },
+};
+function enGroupPosts(job: string, factory: string, area: string, km: number, monthly: string, hourly: string): GroupPost[] {
+  return [
+    { id: "g1", by: "lead", at: "08:30", up: 24, seen: 96, text: `Welcome to the ${job} hiring group of ${factory}. This group is for announcements; for personal questions, please message the ViệcNhanh OA.` },
+    { id: "g2", by: "lead", at: "08:31", up: 31, seen: 94, info: [
+      { k: "Pay", v: `${monthly} (${hourly})` },
+      { k: "Shift", v: "Day shift 8:00–17:00, Sat & Sun off" },
+      { k: "Dormitory", v: "Yes, ¥25,000/month, 2 per room" },
+      { k: "Location", v: `${area} · ${km} km from you` },
+      { k: "Openings", v: "5 people, until Nov 30" },
+    ] },
+    { id: "g3", by: "deputy", at: "09:05", up: 18, seen: 81, text: "There are 6 Vietnamese workers on site. A Vietnamese interpreter will join the interview, so don't worry." },
+    { id: "g4", by: "lead", at: "10:12", up: 12, seen: 64, text: "Online interview: Wednesday Nov 18, 10:00. Everyone who applied will get a private link through the OA." },
+  ];
+}
+
+const EN_TOP3: OaJob[] = [
+  { id: "a-mig", title: "MIG welding", factory: "Factory A", area: "Toyota-shi", fit: 91, pay: 1350, km: 4 },
+  { id: "b-cnc", title: "CNC lathe", factory: "Factory B", area: "Okazaki", fit: 86, pay: 1400, km: 11 },
+  { id: "c-asm", title: "Assembly", factory: "Factory C", area: "Anjo", fit: 84, pay: 1250, km: 15 },
+];
+
+const EN_QUESTIONS: typeof QUESTIONS = {
+  q1: {
+    ask: "Question 1/3 · What is your visa (status of residence) and field? If unsure, check the 在留資格 line on your residence card.",
+    chips: ["Specified Skilled Worker · Manufacturing", "Specified Skilled Worker · Food", "Technical Intern"],
+    retry: "I couldn't recognise the visa type. Pick one of the options below or type e.g. “specified skilled worker manufacturing”.",
+  },
+  q2: {
+    ask: "Question 2/3 · What work can you do, and for how many years? Any certificates?",
+    chips: ["CNC 3 years", "Welding 3 years", "Assembly 1 year", "Forklift · certified"],
+    retry: "I need at least one skill to match you. For example: “CNC 3 years” or “welding 2 years”.",
+  },
+  q3: {
+    ask: "Question 3/3 · When can you start, and which area would you like to work in?",
+    chips: ["In 30 days · Toyota-shi", "Now · Okazaki", "In 2 weeks · Anjo"],
+    retry: "Please tell me both the time and the area. For example: “in 2 weeks, Okazaki”.",
+  },
+};
+
+/** Hiểu câu trả lời gõ tay bằng tiếng Anh (và cả tiếng Việt), trả về nhãn tiếng Anh. */
+function enParseAnswer(q: QuestionId, raw: string): string | null {
+  const t = norm(raw.trim());
+  if (!t) return null;
+  if (q === "q1") {
+    if (/intern|trainee|thuc tap|tts|jisshu/.test(t)) return "Technical Intern";
+    if (!/ssw|specified|skilled|tokutei|ky nang dac dinh/.test(t)) return null;
+    return `Specified Skilled Worker · ${/food|thuc pham/.test(t) ? "Food" : "Manufacturing"}`;
+  }
+  if (q === "q2") return /cnc|weld|lathe|mill|assembl|forklift|paint|pack|inspect|han|tien|lap rap|xe nang|\d+\s*(years?|yrs?|nam)/.test(t) ? raw.trim() : null;
+  const when = /now|today|week|month|day|ngay|tuan|thang|\d/.test(t);
+  const area = AREAS.find((a) => t.includes(a));
+  return when && area ? raw.trim() : null;
+}
+
+const EN_STATUS_LABEL: Record<StatusId, string> = {
+  pending: "Pending",
+  viewed: "Under review",
+  interview: "Interview scheduled",
+  rejected: "Not selected",
+  expired: "Expired",
+};
+
+const EN_STATUS_UPDATES: typeof STATUS_UPDATES = {
+  viewed: { job: "MIG welding · Factory A", pay: 1350, from: "pending", to: "viewed", note: "HR at Factory A is reviewing your profile. They commit to reply within 24h.", at: "09:12" },
+  interview: { job: "MIG welding · Factory A", pay: 1350, from: "viewed", to: "interview", note: "The factory approved your profile. Interview: Wednesday Nov 18, 10:00 (online).", at: "14:30" },
+  rejected: {
+    job: "CNC lathe · Factory B", pay: 1400, from: "viewed", to: "rejected",
+    note: "This position needs a forklift certificate, which your profile doesn't have yet.",
+    upskill: "Get a forklift certificate (2 days, Toyota-shi) to unlock 6 more jobs with a fit of 85% or higher.",
+    at: "16:05",
+  },
+  expired: {
+    job: "Assembly · Factory C", pay: 1250, from: "pending", to: "expired",
+    note: "The factory didn't reply within 24h, so the application closed automatically. Here are 3 other jobs that fit you:",
+    alternatives: [
+      { id: "d-mig", title: "MIG welding", factory: "Factory D", area: "Toyota-shi", fit: 91, pay: 1380, km: 4 },
+      { id: "e-cnc", title: "CNC operator", factory: "Factory E", area: "Kariya", fit: 87, pay: 1420, km: 9 },
+      { id: "f-qc", title: "Quality inspection", factory: "Factory F", area: "Anjo", fit: 80, pay: 1200, km: 15 },
+    ],
+    at: "08:00",
+  },
+};
+
+const EN_RECOMMENDS: Recommend[] = [
+  { job: "MIG welding · Factory D", area: "Toyota-shi", fit: 91, pay: 1380, km: 4, chips: [{ ok: true, label: "Right visa" }, { ok: true, label: "Welding 3 years" }, { ok: true, label: "4 km from home" }] },
+  { job: "CNC operator · Factory E", area: "Kariya", fit: 88, pay: 1420, km: 9, chips: [{ ok: true, label: "Right visa" }, { ok: true, label: "CNC 3 years" }, { ok: false, label: "JLPT N3" }] },
+  { job: "Metal stamping · Factory G", area: "Okazaki", fit: 86, pay: 1300, km: 11, chips: [{ ok: true, label: "Right visa" }, { ok: true, label: "Day shift" }] },
+  { job: "Powder coating · Factory H", area: "Nishio", fit: 89, pay: 1330, km: 18, chips: [{ ok: true, label: "Right visa" }, { ok: true, label: "Dormitory" }] },
+];
+const EN_RECOMMEND_BELOW: Recommend = { job: "Assembly · Factory C", area: "Anjo", fit: 84, pay: 1250, km: 15, chips: [{ ok: true, label: "Right visa" }, { ok: false, label: "Forklift" }] };
+
+const EN_EVENTS: OaEvent[] = [
+  {
+    id: "kengaku-d", type: "Factory visit", jp: "職場見学", title: "Welding line tour · Factory D", host: "Factory D",
+    place: "Toyota-shi", km: 4, date: "Saturday, Nov 21", badge: "Sat · Nov 21", time: "9:30–12:00", start: "2026-11-21T09:30:00+09:00", end: "2026-11-21T12:00:00+09:00",
+    scope: "See the MIG welding line, meet the Vietnamese team lead, ask about pay and the dormitory", age: "Age 18–35",
+    who: "Specified Skilled Worker or Technical Intern visa", seats: "12 seats left", perks: ["Free", "Shuttle from Toyotashi station", "Interpreter"],
+  },
+  {
+    id: "fair-nagoya", type: "Job fair", jp: "就職フェア", title: "Job fair for Vietnamese workers in Aichi", host: "ViệcNhanh Aichi",
+    place: "Nagoya", km: 28, date: "Sunday, Nov 29", badge: "Sunday · Nov 29", time: "10:00–16:00", start: "2026-11-29T10:00:00+09:00", end: "2026-11-29T16:00:00+09:00",
+    scope: "25 manufacturing companies, on-the-spot interviews, visa change advice", age: "Age 18–40",
+    who: "Vietnamese people living in Aichi", perks: ["Free", "On-the-spot interviews", "Bring your residence card"],
+  },
+];
+
+const EN_GROUP_MEMBERS: GroupMember[] = [
+  { name: "Ms. Sato · HR", note: "Community owner", admin: "lead" },
+  { name: "Mr. Minh · Team lead", note: "Community deputy", admin: "deputy" },
+  { name: "Ms. Linh · Interpreter", note: "Community deputy", admin: "deputy" },
+  { name: "Trần Văn Hùng", note: "Joined via community link" },
+  { name: "Lê Thị Mai", note: "Added by Ms. Sato · HR" },
+  { name: "Phạm Đức Long", note: "Joined via ViệcNhanh Aichi" },
+  { name: "Nguyễn Thu Hà", note: "Joined via community link" },
+  { name: "Đỗ Quang Vinh", note: "Added by Mr. Minh · Team lead" },
+  { name: "You", note: "Joined via ViệcNhanh Aichi", me: true },
+];
+
+const EN_PROFILE: typeof profile = {
+  ...profile,
+  visa: "Specified Skilled Worker · Manufacturing",
+  skills: ["CNC 3 years"],
+  missing: ["Forklift certificate"],
+  start: "In 30 days",
+};
+
+const VI_SET = {
+  profile, top3, QUESTIONS, STATUS_LABEL, STATUS_UPDATES, RECOMMENDS, RECOMMEND_BELOW, EVENTS, GROUP_ADMINS, GROUP_MEMBERS,
+  groupPosts, fmtPay, fmtMonthly, fmtMonthlyYen, parseAnswer,
+};
+const EN_SET: typeof VI_SET = {
+  profile: EN_PROFILE, top3: EN_TOP3, QUESTIONS: EN_QUESTIONS, STATUS_LABEL: EN_STATUS_LABEL, STATUS_UPDATES: EN_STATUS_UPDATES,
+  RECOMMENDS: EN_RECOMMENDS, RECOMMEND_BELOW: EN_RECOMMEND_BELOW, EVENTS: EN_EVENTS, GROUP_ADMINS: EN_ADMINS, GROUP_MEMBERS: EN_GROUP_MEMBERS,
+  groupPosts: enGroupPosts, fmtPay: enPay, fmtMonthly: enMonthly, fmtMonthlyYen: enMonthlyYen, parseAnswer: enParseAnswer,
+};
+/** Bộ dữ liệu theo ngôn ngữ đang bật. */
+export const D = () => (LANG === "en" ? EN_SET : VI_SET);
