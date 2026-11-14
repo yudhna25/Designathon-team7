@@ -17,3 +17,11 @@ export const REJECT_REASONS: { id: string; vi: string; en: string; ja: string }[
 
 export const CRITERIA_VI = { skills: "Kỹ năng & chứng chỉ", start: "Ngày bắt đầu", area: "Khu vực", jp: "Tiếng Nhật" } as const;
 export const SHIFT_VI = { day: "Ca ngày", rotating: "2 ca luân phiên", night: "Ca đêm" } as const;
+export const SHIFT_JA = { day: "日勤", rotating: "2交替", night: "夜勤" } as const;
+export const STATUS_JA: Record<DisplayStatus, string> = {
+  sent: "応募済み",
+  viewed: "HR確認中",
+  approved: "面接の案内",
+  rejected: "今回は見送り",
+  expired: "24時間で期限切れ",
+};

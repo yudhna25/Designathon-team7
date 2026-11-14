@@ -71,18 +71,15 @@ assert.ok(PEERS["mikawa-cnc"].peers.every((x) => x.attendanceVerified || !x.aska
 assert.equal(HIRE_PLAN.jobId, "mikawa-cnc"); assert.equal(HIRE_PLAN.target, 300); assert.equal(HIRE_PLAN.filledByDay.length, HIRE_PLAN.days);
 console.log("M4 data checks OK");
 
-// --- M4: anonymous hometown senpai ---
+// --- M4: anonymous senpai (hometown matching removed) ---
 import { askerLabel, senpaiFor, isRevealed } from "../src/lib/senpai";
-assert.equal(senpaiFor(p, "mikawa-cnc")!.province, p.province, "same province first");
+assert.equal(senpaiFor(p, "mikawa-cnc")!.years, Math.max(...PEERS["mikawa-cnc"].peers.filter((x) => x.askable && x.attendanceVerified).map((x) => x.years)), "most experienced first");
 assert.equal(senpaiFor({ ...p, currentCompany: jobById("mikawa-cnc")!.company }, "mikawa-cnc"), null, "never match a senpai at the asker's current company");
-assert.equal(askerLabel(p, false), "Thợ ẩn danh · cùng quê Nghệ An");
+assert.equal(askerLabel(p, false), "Thợ ẩn danh");
 assert.ok(!askerLabel(p, false).includes(p.name) && !askerLabel(p, false).includes(p.currentCompany!), "no identity leaks before accept");
 const offer = { id: "x", jobId: "mikawa-cnc", candidateId: "me", appliedAt: 0, status: "approved" as const };
 assert.equal(isRevealed([offer], "mikawa-cnc"), false, "approval alone does not reveal");
 assert.equal(isRevealed([{ ...offer, accepted: true }], "mikawa-cnc"), true);
-import { hometownLabel } from "../src/lib/senpai";
-assert.equal(hometownLabel(p, senpaiFor(p, "mikawa-cnc")!), "Cùng quê Nghệ An");
-assert.equal(hometownLabel(p, senpaiFor(p, "okazaki-nc")!), "Quê Hà Tĩnh", "never claim a shared hometown that is not shared");
 console.log("M4 senpai checks OK");
 
 // --- M4: HR 300-hire plan, batch approve ---

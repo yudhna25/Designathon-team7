@@ -1,9 +1,9 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useRef, useState } from "react";
-import { Button, Icon, InlineNote, Picker, Segmented, Toggle, toast } from "@/components/ui";
+import { Button, Icon, InlineNote, Picker, Toggle, toast } from "@/components/ui";
 import { Scanner } from "@/components/worker/Scanner";
-import { CERTS, CITIES, JLPT, JOBS, SKILLS, START_OPTIONS, VISAS, type CertId, type CityId, type Profile, type SkillId, type VisaId } from "@/lib/data";
+import { CERTS, CITIES, JLPT, JOBS, PREFECTURES, SKILLS, START_OPTIONS, VISAS, type CertId, type CityId, type Profile, type SkillId, type VisaId } from "@/lib/data";
 import { suggestImprovements, visaGate } from "@/lib/scoring";
 import { useApp } from "@/lib/store";
 import { enter, gsap, useGSAP } from "@/lib/motion";
@@ -11,7 +11,6 @@ import { enter, gsap, useGSAP } from "@/lib/motion";
 // Draft lets JLPT and city start unanswered (mentor M3: no silent defaults).
 type Draft = Omit<Profile, "jlpt" | "city"> & { jlpt: number | null; city: CityId | "" };
 const EMPTY: Draft = { name: "", nationality: "VN", visa: "ssw1_mfg", cardExpiry: "", skills: {}, certs: [], jlpt: null, availableInDays: 30, city: "", relocate: true, province: "" };
-const PROVINCES = ["An Giang", "Bà Rịa - Vũng Tàu", "Bắc Giang", "Bắc Kạn", "Bạc Liêu", "Bắc Ninh", "Bến Tre", "Bình Định", "Bình Dương", "Bình Phước", "Bình Thuận", "Cà Mau", "Cần Thơ", "Cao Bằng", "Đà Nẵng", "Đắk Lắk", "Đắk Nông", "Điện Biên", "Đồng Nai", "Đồng Tháp", "Gia Lai", "Hà Giang", "Hà Nam", "Hà Nội", "Hà Tĩnh", "Hải Dương", "Hải Phòng", "Hậu Giang", "Hòa Bình", "Hưng Yên", "Khánh Hòa", "Kiên Giang", "Kon Tum", "Lai Châu", "Lâm Đồng", "Lạng Sơn", "Lào Cai", "Long An", "Nam Định", "Nghệ An", "Ninh Bình", "Ninh Thuận", "Phú Thọ", "Phú Yên", "Quảng Bình", "Quảng Nam", "Quảng Ngãi", "Quảng Ninh", "Quảng Trị", "Sóc Trăng", "Sơn La", "Tây Ninh", "Thái Bình", "Thái Nguyên", "Thanh Hoá", "Thừa Thiên Huế", "Tiền Giang", "TP. Hồ Chí Minh", "Trà Vinh", "Tuyên Quang", "Vĩnh Long", "Vĩnh Phúc", "Yên Bái"];
 // Largest real rescore gain a certificate gives on current jobs, so "optional" is not read as "unimportant".
 const CERT_GAIN = (p: Profile) => Math.max(0, ...JOBS.flatMap((j) => suggestImprovements(p, j).filter((u) => u.id.startsWith("cert-")).map((u) => u.gain)));
 const toProfile = (d: Draft): Profile => ({ ...d, jlpt: d.jlpt ?? 0, city: (d.city || "nagoya") as CityId });
@@ -34,11 +33,13 @@ function Onboarding() {
   const dir = useRef(1);
   const set = (patch: Partial<Draft>) => setP((x) => ({ ...x, ...patch }));
   const [upload, setUpload] = useState<{ state: "idle" | "busy" | "ok" | "error"; name?: string }>({ state: "idle" });
+  // Chọn chip chứng chỉ → mở luôn hộp chọn file ảnh/PDF của chứng chỉ đó.
+  const certFile = useRef<HTMLInputElement>(null);
 
   useGSAP(() => { enter("[data-step] > *", { x: 28 * dir.current }, { stagger: 0.05, duration: 0.7 }); }, { scope: stage, dependencies: [step] });
 
   const go = (n: number) => { dir.current = n > step ? 1 : -1; setStep(n); window.scrollTo({ top: 0 }); };
-  const visaOk = !!p.visa && !!p.cardExpiry && !!p.name.trim() && !!p.province;
+  const visaOk = !!p.visa && !!p.cardExpiry && !!p.name.trim();
   const whereOk = !!p.city;
   const certGain = CERT_GAIN(toProfile(p));
   const skillCount = Object.keys(p.skills).length + (p.otherSkills?.trim() ? 1 : 0);
@@ -112,10 +113,9 @@ function Onboarding() {
                     <input id="ex" type="date" className="input tnum" value={p.cardExpiry} onChange={(e) => set({ cardExpiry: e.target.value })} />
                   </div>
                   <div className="field">
-                    <label htmlFor="pv">Quê bạn ở tỉnh nào?</label>
-                    <Picker id="pv" label="Tỉnh quê" searchable value={p.province} onChange={(v) => set({ province: v })} placeholder="Chọn tỉnh…"
-                      options={PROVINCES.map((x) => ({ value: x, label: x }))} />
-                    <p className="t-sm text-muted mt-1">Để ghép bạn với Senpai cùng quê ở nhà máy mới.</p>
+                    <label htmlFor="pf">Đang sống ở tỉnh nào của Nhật?</label>
+                    <Picker id="pf" label="Tỉnh đang sống ở Nhật" searchable value={p.prefecture ?? ""} onChange={(v) => set({ prefecture: v })} placeholder="Chọn tỉnh (都道府県)…"
+                      options={PREFECTURES.map((x) => ({ value: x.id, label: x.id, sub: x.ja }))} />
                   </div>
                   <div className="field">
                     <label htmlFor="cc">Đang làm ở công ty nào? <span className="text-muted font-normal">· không bắt buộc</span></label>
@@ -191,7 +191,7 @@ function Onboarding() {
                   {(Object.keys(CERTS) as CertId[]).map((c) => {
                     const on = p.certs.includes(c);
                     return (
-                      <button key={c} type="button" className="chip pressable" aria-pressed={on} onClick={() => set({ certs: on ? p.certs.filter((x) => x !== c) : [...p.certs, c] })}>
+                      <button key={c} type="button" className="chip pressable" aria-pressed={on} onClick={() => { set({ certs: on ? p.certs.filter((x) => x !== c) : [...p.certs, c] }); if (!on) certFile.current?.click(); }}>
                         {on ? <Icon name="check" size={16} /> : <Icon name="certificate" size={16} />}{CERTS[c].vi}
                       </button>
                     );
@@ -204,7 +204,7 @@ function Onboarding() {
                   <input autoFocus className="input mt-3" aria-label="Chứng chỉ khác" placeholder="Ví dụ: Chứng chỉ điện, an toàn hoá chất…" value={p.otherCerts} onChange={(e) => set({ otherCerts: e.target.value })} />
                 )}
                 <label className={`mt-3 flex items-center gap-3 rounded-2xl border-2 border-dashed p-4 cursor-pointer pressable ${upload.state === "error" ? "border-[var(--color-border-negative-solid,var(--color-content-negative-base))]" : upload.state === "ok" ? "border-[var(--color-border-accent-solid)]" : "border-line"}`}>
-                  <input type="file" accept="image/*,application/pdf" className="sr-only" onChange={(e) => {
+                  <input ref={certFile} type="file" accept="image/*,application/pdf" className="sr-only" onChange={(e) => {
                     const f = e.target.files?.[0];
                     if (!f) return;
                     setUpload({ state: "busy", name: f.name });
@@ -221,9 +221,10 @@ function Onboarding() {
                 </label>
               </fieldset>
 
-              <div>
-                <p className="label mb-3">Tiếng Nhật (JLPT / JFT)</p>
-                <Segmented label="Trình độ tiếng Nhật" value={p.jlpt ?? -1} onChange={(v) => set({ jlpt: v })} options={JLPT.map((l, i) => ({ value: i, label: l === "Chưa có" ? "Chưa" : l }))} />
+              <div className="field">
+                <label htmlFor="jl">Tiếng Nhật (JLPT / JFT)</label>
+                <Picker id="jl" label="Trình độ tiếng Nhật" value={p.jlpt === null ? "" : String(p.jlpt)} onChange={(v) => set({ jlpt: Number(v) })} placeholder="Chọn trình độ…"
+                  options={JLPT.map((l, i) => ({ value: String(i), label: l, sub: i === 0 ? "Chưa thi JLPT / JFT" : undefined }))} />
               </div>
             </div>
           )}
@@ -269,9 +270,7 @@ function Onboarding() {
                   ? "Nhập họ tên để tiếp tục"
                   : !p.cardExpiry
                     ? "Chọn hạn thẻ cư trú để tiếp tục"
-                    : !p.province
-                      ? "Chọn tỉnh quê của bạn để tiếp tục"
-                      : legalJobs
+                    : legalJobs
                         ? "Tiếp tục"
                         : "Vẫn tạo hồ sơ để nhận báo việc"}
             </Button>

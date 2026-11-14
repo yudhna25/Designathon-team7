@@ -26,7 +26,7 @@ export default function Login() {
       <Hero />
       <div className="flex flex-col px-5 md:px-12 pb-8 pt-4 lg:justify-center lg:max-w-[520px] lg:mx-auto w-full">
         <div className="flex items-center justify-between h-14 lg:hidden" data-reveal>
-          <Link href="/" aria-label="Trang giới thiệu"><Logo /></Link>
+          <Link href="/hub" aria-label="Trang giới thiệu"><Logo /></Link>
           <span className="badge badge-outline">Tiếng Việt</span>
         </div>
         <div className="lg:hidden my-6" data-reveal><HeroArt compact /></div>
@@ -68,7 +68,7 @@ export default function Login() {
 function Hero() {
   return (
     <div className="hidden lg:flex relative ink overflow-hidden flex-col justify-between p-12 min-h-dvh">
-      <Link href="/" aria-label="Trang giới thiệu" className="text-[var(--color-content-on-accent)]"><Logo inverse /></Link>
+      <Link href="/hub" aria-label="Trang giới thiệu" className="text-[var(--color-content-on-accent)]"><Logo inverse /></Link>
       <div className="grid place-items-center"><HeroArt /></div>
       <p className="text-[56px] leading-[1] font-semibold tracking-[-0.05em] max-w-[560px]" data-reveal>
         Đúng visa. Đúng tay nghề.<br /><span className="muted-ink">Có kết quả trong 24 giờ.</span>

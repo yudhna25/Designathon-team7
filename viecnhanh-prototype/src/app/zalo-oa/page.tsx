@@ -91,7 +91,7 @@ export default function ZaloOaPage() {
       {/* < 1024px: thanh trên cùng nằm ngoài khung điện thoại */}
       <header data-id="zalo-oa-topbar" className="lg:hidden shrink-0 bg-canvas border-b border-hair px-3 pt-2 pb-3 md:px-6">
         <div className="flex items-center gap-2 h-11">
-          <Link href="/" className="pressable rounded-xl px-1" aria-label={t("Trang giới thiệu", "Home")}><Logo compact /></Link>
+          <Link href="/hub" className="pressable rounded-xl px-1" aria-label={t("Trang giới thiệu", "Home")}><Logo compact /></Link>
           <p className="flex-1 min-w-0 truncate t-sm text-muted"><span className="font-semibold text-fg">Zalo OA</span> {t("(mô phỏng)", "(simulated)")}</p>
           <span className="w-[92px]"><LangToggle lang={lang} onChange={setLang} size="sm" /></span>
           <ThemeToggle />
@@ -105,7 +105,7 @@ export default function ZaloOaPage() {
       {/* ≥ 1024px: bảng điều khiển bên trái */}
       <section data-id="zalo-oa-panel" className="hidden lg:flex flex-col gap-8 flex-1 max-w-[560px] max-h-dvh overflow-y-auto no-scrollbar py-10">
         <div className="flex items-center justify-between gap-4">
-          <Link href="/" className="pressable rounded-xl"><Logo /></Link>
+          <Link href="/hub" className="pressable rounded-xl"><Logo /></Link>
           <span className="flex items-center gap-2"><span className="w-[104px]"><LangToggle lang={lang} onChange={setLang} size="sm" /></span><ThemeToggle withLabel /></span>
         </div>
         <div>
@@ -268,7 +268,7 @@ function OaAvatar({ size = 40 }: { size?: number }) {
 function ChatHeader({ typing, onInfo }: { typing: boolean; onInfo?: () => void }) {
   return (
     <header data-id="zalo-oa-header" className="relative z-20 flex h-14 shrink-0 items-center gap-1 px-2 bg-(--chat-header-bg) bg-(image:--chat-header-gradient) text-(--chat-header-fg) transition-colors duration-[var(--motion-base)]">
-      <Link href="/" aria-label={t("Quay lại", "Back")} className="pressable group/hb inline-flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-(--chat-header-fg)/15 active:bg-(--chat-header-fg)/25">
+      <Link href="/hub" aria-label={t("Quay lại", "Back")} className="pressable group/hb inline-flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-(--chat-header-fg)/15 active:bg-(--chat-header-fg)/25">
         <Icon name="arrow-left" size={24} className="transition-transform duration-[var(--motion-base)] [transition-timing-function:var(--ease-spring)] group-hover/hb:-translate-x-0.5" />
       </Link>
       <button type="button" onClick={onInfo} aria-label={t("Mở hồ sơ OA", "Open OA profile")} className="pressable flex min-w-0 flex-1 items-center gap-3 rounded-[var(--radius-base)] py-1 text-left">

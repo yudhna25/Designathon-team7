@@ -35,6 +35,7 @@ export type Config = {
   speed: number; // simulated seconds per real second
   motion: "normal" | "slow" | "off";
   hrLang: "en" | "ja";
+  workerLang: "vi" | "ja"; // app người lao động: tiếng Việt (mặc định) hoặc tiếng Nhật cho buổi trình bày
   theme: "system" | "light" | "dark";
   showDemo: boolean;
   ewaDown: boolean; // demo: wage-advance partner outage (M4 "when one party fails")
@@ -48,6 +49,7 @@ export const DEFAULT_CONFIG: Config = {
   speed: 1,
   motion: "normal",
   hrLang: "en",
+  workerLang: "vi",
   theme: "system",
   showDemo: true,
   ewaDown: false,

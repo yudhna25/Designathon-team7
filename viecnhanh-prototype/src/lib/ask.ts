@@ -51,7 +51,7 @@ export function answer(q: string, p: Profile, now = Date.now()): Answer {
     const peer = senpaiFor(p, id);
     return {
       q,
-      a: `Ở Mikawa Precision có ${PEERS[id].count} người Việt đang làm [1].${peer ? ` Anh ${peer.name} (quê ${peer.province}) sẵn sàng trả lời ẩn danh 3 câu hỏi của bạn.` : ""}`,
+      a: `Ở Mikawa Precision có ${PEERS[id].count} người Việt đang làm [1].${peer ? ` Anh ${peer.name} sẵn sàng trả lời ẩn danh 3 câu hỏi của bạn.` : ""}`,
       cites: [id],
       follow: ["Việc nào có ký túc xá?", "Đổi công ty mất bao lâu mới đi làm được?"],
     };
