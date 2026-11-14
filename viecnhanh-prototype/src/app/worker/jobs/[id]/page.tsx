@@ -8,6 +8,7 @@ import { PayCard, ScoreBreakdown } from "@/components/worker/Blocks";
 import { PeersTile } from "@/components/worker/Bento";
 import { Scanner } from "@/components/worker/Scanner";
 import { earliestStart, fmtDate } from "@/lib/start";
+import { FlightPath } from "@/components/worker/FlightPath";
 import { CITIES, JLPT_SHORT, SKILLS, VISAS, jobById } from "@/lib/data";
 import { SHIFT_VI } from "@/lib/labels";
 import { FIT_VI, fitOf, matchChips, matchGuidance, scoreMatch, suggestImprovements } from "@/lib/scoring";
@@ -25,7 +26,7 @@ function JobDetail() {
   const router = useRouter();
   const s = useApp();
   const job = jobById(id);
-  const [sheet, setSheet] = useState<null | "apply" | "anyway">(null);
+  const [sheet, setSheet] = useState<null | "apply" | "anyway" | "path">(null);
   if (!job) return <div className="p-8"><p>Không tìm thấy việc này.</p><Link className="underline" href="/worker/jobs">Về danh sách</Link></div>;
 
   const p = s.profile!;
@@ -100,7 +101,9 @@ function JobDetail() {
         <section className="card p-6" data-reveal aria-labelledby="facts-h">
           <h2 id="facts-h" className="t-h4 mb-4">Công việc</h2>
           <div className="grid gap-3 mb-5 pb-5 hair-b">
-            <Fact icon="calendar" k="Bắt đầu sớm nhất" v={`${fmtDate(start.date)} · dự kiến`} sub={`${start.reason} Trong lúc chờ: vẫn làm ở chỗ cũ nếu còn hợp đồng · ứng lương theo ngày công vẫn dùng được.`} />
+            <button className="text-left rounded-2xl -m-2 p-2 hover:bg-subtle pressable" onClick={() => setSheet("path")} aria-label="Xem lộ trình pháp lý đến ngày đi làm">
+              <Fact icon="calendar" k="Bắt đầu sớm nhất · xem lộ trình" v={`${fmtDate(start.date)} · dự kiến`} sub={`${start.reason} Trong lúc chờ: vẫn làm ở chỗ cũ nếu còn hợp đồng · ứng lương theo ngày công vẫn dùng được.`} />
+            </button>
             {job.contractMonths && <Fact icon="file-check" k="Hợp đồng" v={`Thử việc ${job.contractMonths} tháng${job.renewable ? " · có thể gia hạn" : ""}`} sub="Nếu không gia hạn, ViệcNhanh xếp việc tiếp trong 24h." />}
           </div>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-5">
@@ -143,7 +146,8 @@ function JobDetail() {
         </div>
       </div>
 
-      <ApplySheet open={sheet !== null} flagged={sheet === "anyway"} onClose={() => setSheet(null)} jobId={job.id} />
+      <FlightPath p={p} job={job} from={Date.now() + 864e5} open={sheet === "path"} onClose={() => setSheet(null)} />
+      <ApplySheet open={sheet === "apply" || sheet === "anyway"} flagged={sheet === "anyway"} onClose={() => setSheet(null)} jobId={job.id} />
     </Screen>
   );
 }
