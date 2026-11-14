@@ -1,0 +1,137 @@
+/* SINH TỰ ĐỘNG bởi scripts/gen-palette.mjs từ design-tokens/palette-zalo.json — KHÔNG sửa tay */
+/* Template Chat · phong cách Zalo (DỰNG · Light) — class: bg-zalo-{màu}-{1..12} · text-… · border-… · màu đặt tên: bg-zalo-{brand} */
+@theme static {
+  --color-zalo-blue-1: #fafcff;
+  --color-zalo-blue-2: #f3f8ff;
+  --color-zalo-blue-3: #e5f0ff;
+  --color-zalo-blue-4: #c7e0ff;
+  --color-zalo-blue-5: #aed2ff;
+  --color-zalo-blue-6: #98c6ff;
+  --color-zalo-blue-7: #86bcff;
+  --color-zalo-blue-8: #75b3ff;
+  --color-zalo-blue-9: #0087ff;
+  --color-zalo-blue-10: #0076df;
+  --color-zalo-blue-11: #024f98;
+  --color-zalo-blue-12: #032b56;
+  --color-zalo-slate-1: #fafcff;
+  --color-zalo-slate-2: #f3f7fc;
+  --color-zalo-slate-3: #e9eef5;
+  --color-zalo-slate-4: #e2e9f1;
+  --color-zalo-slate-5: #d9e1ea;
+  --color-zalo-slate-6: #d2dae3;
+  --color-zalo-slate-7: #c7cfd8;
+  --color-zalo-slate-8: #b3bbc3;
+  --color-zalo-slate-9: #868d95;
+  --color-zalo-slate-10: #777e86;
+  --color-zalo-slate-11: #555c64;
+  --color-zalo-slate-12: #080e13;
+  --color-zalo-brand: var(--color-zalo-blue-9);
+}
+
+/* Scope [data-chat-theme='zalo'] — semantic chat + accent ZEN đổi sang dải zalo */
+[data-chat-theme='zalo'] {
+  --chat-header-h: 44px;
+  --chat-name-size: 17px;
+  --chat-name-lh: 22px;
+  --chat-preview-size: 15px;
+  --chat-preview-lh: 20px;
+  --chat-time-size: 13px;
+  --chat-time-lh: 18px;
+  --chat-search-size: 17px;
+  --chat-verified: #ff8c00;
+  --chat-unread: #fe3641;
+}
+:root:not([data-theme='dark']) [data-chat-theme='zalo'] {
+  --chat-header-bg: var(--color-zalo-blue-9);
+  --chat-header-fg: #ffffff;
+  --chat-rail-bg: var(--color-zalo-blue-10);
+  --chat-canvas: var(--color-zalo-slate-4);
+  --chat-surface: var(--color-bg-surface);
+  --chat-bubble-in-bg: var(--color-bg-surface);
+  --chat-bubble-in-border: var(--color-zalo-slate-5);
+  --chat-bubble-out-bg: var(--color-zalo-blue-3);
+  --chat-bubble-out-border: var(--color-zalo-blue-4);
+  --chat-bubble-fg: var(--color-zalo-slate-12);
+  --chat-meta: #767a7e;
+  --chat-link: var(--color-zalo-blue-10);
+  --chat-list-hover: #f9f9f9;
+  --chat-list-active: var(--color-zalo-blue-2);
+  --chat-separator-bg: color-mix(in oklch, var(--color-zalo-slate-11) 40%, transparent);
+  --chat-separator-fg: #ffffff;
+  --chat-reply-bar: var(--color-zalo-blue-9);
+  --color-bg-accent-solid: var(--color-zalo-blue-9);
+  --color-bg-accent-solid-hover: var(--color-zalo-blue-10);
+  --color-bg-accent-solid-pressed: var(--color-zalo-blue-10);
+  --color-bg-accent-subtle: var(--color-zalo-blue-3);
+  --color-bg-accent-subtle-hover: var(--color-zalo-blue-4);
+  --color-bg-accent-subtle-pressed: var(--color-zalo-blue-5);
+  --color-bg-accent-flat-hover: var(--color-zalo-blue-3);
+  --color-bg-accent-flat-pressed: var(--color-zalo-blue-4);
+  --color-content-accent-base: var(--color-zalo-blue-10);
+  --color-content-accent-light: var(--color-zalo-blue-10);
+  --color-content-accent-strongest: var(--color-zalo-blue-11);
+  --color-content-on-accent: #ffffff;
+  --color-content-on-accent-hover: #ffffff;
+  --color-content-on-accent-pressed: #ffffff;
+  --color-border-accent-solid: var(--color-zalo-blue-9);
+  --color-border-accent-subtle: var(--color-zalo-blue-5);
+  --c-button-accent-bg: var(--color-bg-accent-solid);
+  --c-button-accent-bg-hover: var(--color-bg-accent-solid-hover);
+  --c-button-accent-bg-pressed: var(--color-bg-accent-solid-pressed);
+  --c-button-accent-fg: var(--color-content-on-accent);
+  --c-button-accent-fg-hover: var(--color-content-on-accent-hover);
+  --c-button-accent-fg-pressed: var(--color-content-on-accent-pressed);
+  --chat-header-gradient: linear-gradient(90deg, #0087ff 0%, #01affb 100%);
+  --chat-header-fg-muted: color-mix(in oklch, #ffffff 86%, transparent);
+  --chat-name: #1a1a1a;
+  --chat-pin: #a6a9ad;
+  --chat-divider: #e7e7e7;
+  --chat-list-pinned: #f9f9f9;
+}
+[data-theme='dark'] [data-chat-theme='zalo'] {
+  --chat-header-bg: var(--color-bg-surface);
+  --chat-header-fg: var(--color-content-neutral-strongest);
+  --chat-rail-bg: var(--color-bg-canvas);
+  --chat-canvas: var(--color-bg-canvas);
+  --chat-surface: var(--color-bg-surface);
+  --chat-bubble-in-bg: var(--color-bg-surface);
+  --chat-bubble-in-border: var(--color-border-neutral-pale);
+  --chat-bubble-out-bg: color-mix(in oklch, var(--color-zalo-blue-9) 32%, var(--color-bg-surface));
+  --chat-bubble-out-border: color-mix(in oklch, var(--color-zalo-blue-9) 45%, var(--color-bg-surface));
+  --chat-bubble-fg: var(--color-content-neutral-strongest);
+  --chat-meta: var(--color-content-neutral-light);
+  --chat-link: var(--color-zalo-blue-7);
+  --chat-list-hover: var(--color-bg-neutral-pale);
+  --chat-list-active: color-mix(in oklch, var(--color-zalo-blue-9) 22%, var(--color-bg-surface));
+  --chat-separator-bg: var(--color-bg-neutral-subtle);
+  --chat-separator-fg: var(--color-content-neutral-base);
+  --chat-reply-bar: var(--color-zalo-blue-7);
+  --color-bg-accent-solid: var(--color-zalo-blue-9);
+  --color-bg-accent-solid-hover: var(--color-zalo-blue-8);
+  --color-bg-accent-solid-pressed: var(--color-zalo-blue-10);
+  --color-bg-accent-subtle: color-mix(in oklch, var(--color-zalo-blue-9) 22%, transparent);
+  --color-bg-accent-subtle-hover: color-mix(in oklch, var(--color-zalo-blue-9) 30%, transparent);
+  --color-bg-accent-subtle-pressed: color-mix(in oklch, var(--color-zalo-blue-9) 36%, transparent);
+  --color-bg-accent-flat-hover: color-mix(in oklch, var(--color-zalo-blue-9) 18%, transparent);
+  --color-bg-accent-flat-pressed: color-mix(in oklch, var(--color-zalo-blue-9) 26%, transparent);
+  --color-content-accent-base: var(--color-zalo-blue-7);
+  --color-content-accent-light: var(--color-zalo-blue-6);
+  --color-content-accent-strongest: var(--color-zalo-blue-5);
+  --color-content-on-accent: #ffffff;
+  --color-content-on-accent-hover: #ffffff;
+  --color-content-on-accent-pressed: #ffffff;
+  --color-border-accent-solid: var(--color-zalo-blue-8);
+  --color-border-accent-subtle: color-mix(in oklch, var(--color-zalo-blue-9) 45%, transparent);
+  --c-button-accent-bg: var(--color-bg-accent-solid);
+  --c-button-accent-bg-hover: var(--color-bg-accent-solid-hover);
+  --c-button-accent-bg-pressed: var(--color-bg-accent-solid-pressed);
+  --c-button-accent-fg: var(--color-content-on-accent);
+  --c-button-accent-fg-hover: var(--color-content-on-accent-hover);
+  --c-button-accent-fg-pressed: var(--color-content-on-accent-pressed);
+  --chat-header-gradient: none;
+  --chat-header-fg-muted: var(--color-content-neutral-light);
+  --chat-name: var(--color-content-neutral-strongest);
+  --chat-pin: var(--color-content-placeholder);
+  --chat-divider: var(--color-border-neutral-pale);
+  --chat-list-pinned: var(--color-bg-neutral-pale);
+}

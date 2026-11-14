@@ -26,6 +26,10 @@ const SCREENS: { group: string; items: { href: string; label: string; needsProfi
     ],
   },
   {
+    group: "Zalo OA · mô phỏng",
+    items: [{ href: "/zalo-oa", label: "Chat 3 câu · trạng thái đơn · gợi ý ≥ 85%" }],
+  },
+  {
     group: "HR nhà máy · desktop",
     items: [
       { href: "/hr", label: "Danh sách ứng viên xếp theo %" },
