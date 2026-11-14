@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" role="img" aria-labelledby="title desc"><title id="title">Mikawa — xe đưa đón từ ga</title><desc id="desc">Xe buýt đưa đón màu xanh ngọc đỗ tại điểm đón gần nhà xưởng, có mái chờ và làn đi bộ. Xe và địa điểm đều là minh hoạ hư cấu.</desc>
+<rect width="640" height="360" fill="#EAF2F1"/><circle cx="510" cy="58" r="27" fill="#F8F4DE"/><path d="M0 126 102 87l94 39 103-41 113 41 85-38 143 38v108H0Z" fill="#D6E3DB"/>
+<path d="M412 105h200v149H412Z" fill="#F5F5EC"/><path d="m401 105 33-27h188v27Z" fill="#B6C8C4"/><path d="M433 125h37v43h-37Zm49 0h37v43h-37Zm49 0h37v43h-37Z" fill="#B8CFCD"/><path d="M433 183h135v55H433Z" fill="#E2E7DC"/><path d="M412 247h200v8H412Z" fill="#B7C7B6"/>
+<path d="M0 261h640v99H0Z" fill="#C6D1CC"/><path d="M0 261h640v20H0Z" fill="#E1E7DC"/><path d="M0 282h640" stroke="#A9B9AE" stroke-width="3"/><path d="M38 334h91m61 0h91m61 0h91m61 0h91" stroke="#F5F5EA" stroke-width="5"/>
+<path d="M31 132h111v8H31Z" fill="#52786D"/><path d="M41 140v116m91-116v116" stroke="#698B7B" stroke-width="6"/><path d="M50 221h73v9H50Zm7 9v26m58-26v26" stroke="#9AAB8E" stroke-width="5"/>
+<rect x="53" y="151" width="38" height="49" rx="3" fill="#F8FAF0"/><path d="M62 162h19m-19 9h14m-14 9h19" stroke="#8AA48F" stroke-width="3"/>
+<ellipse cx="321" cy="293" rx="236" ry="18" fill="#A8B9AD"/>
+<path d="M127 135h347q28 0 38 25l20 57v54H98v-99q0-37 29-37Z" fill="#FCFCF3"/><path d="M128 135h345q24 0 34 18H103q5-18 25-18Z" fill="#16766E"/>
+<path d="M98 229h434v38H98Z" fill="#16766E"/><path d="M98 267h434v10H98Z" fill="#496D67"/>
+<path d="M119 162h313v57H119Z" fill="#BDD5D0"/><path d="M128 169h64v43h-64Zm74 0h64v43h-64Zm74 0h64v43h-64Zm74 0h73v43h-73Z" fill="#426A70"/>
+<path d="m134 170 31 41m44-41 32 41m43-41 32 41m42-41 32 41" stroke="#D5E8DD" stroke-opacity=".2" stroke-width="6"/>
+<path d="M443 165h39q12 0 17 13l13 36h-69Z" fill="#426A70"/><path d="M445 223h39v42h-39Z" fill="#E1EAE0" stroke="#537A71" stroke-width="3"/><path d="M465 223v42" stroke="#537A71" stroke-width="2"/><path d="M451 233h8v17h-8m13-17h11v17h-11" fill="#A8C5B7"/>
+<path d="M510 207h18v-21h-11" fill="none" stroke="#4A6A66" stroke-width="4" stroke-linejoin="round"/>
+<circle cx="168" cy="273" r="26" fill="#354E4D"/><circle cx="168" cy="273" r="13" fill="#B8CCC2"/><circle cx="168" cy="273" r="5" fill="#7D9A8F"/><circle cx="440" cy="273" r="26" fill="#354E4D"/><circle cx="440" cy="273" r="13" fill="#B8CCC2"/><circle cx="440" cy="273" r="5" fill="#7D9A8F"/>
+<path d="M309 239 323 247v16l-14 8-14-8v-16Z" fill="#F5FAEF"/><circle cx="309" cy="255" r="6" fill="#16766E"/>
+<path d="M108 242h10v13h-10Z" fill="#CF9670"/><path d="M516 235h11v13h-11Z" fill="#E9D7A1"/>
+<path d="M580 178v87" stroke="#899D8A" stroke-width="6"/><circle cx="580" cy="165" r="18" fill="#fff" stroke="#789782" stroke-width="4"/><path d="M572 158h16v11h-16Zm2 11v4m12-4v4" fill="none" stroke="#52776A" stroke-width="2" stroke-linejoin="round"/>
+</svg>
