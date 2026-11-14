@@ -19,7 +19,7 @@ export const SUGGESTED = [
 const legal = (p: Profile) => JOBS.filter((j) => visaGate(p, j).pass);
 const has = (q: string, ...words: string[]) => words.some((w) => q.toLowerCase().includes(w));
 
-export function answer(q: string, p: Profile): Answer {
+export function answer(q: string, p: Profile, now = Date.now()): Answer {
   if (has(q, "ứng lương", "trong lúc chờ")) {
     return {
       q,
@@ -38,7 +38,7 @@ export function answer(q: string, p: Profile): Answer {
     };
   }
   if (has(q, "bao lâu", "đổi công ty", "khi nào", "bắt đầu")) {
-    const s = earliestStart(p, Date.now() + 864e5);
+    const s = earliestStart(p, now + 864e5);
     return {
       q,
       a: `Nếu HR duyệt trong 24 giờ, bạn có thể bắt đầu sớm nhất ngày ${fmtDate(s.date)} (dự kiến). ${s.reason}`,

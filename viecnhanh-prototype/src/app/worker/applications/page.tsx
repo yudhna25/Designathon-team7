@@ -159,7 +159,7 @@ function Approved({ a }: { a: Application }) {
       ) : (
         <div className="mt-4 grid gap-2">
           <Button size="lg" block icon="check-circle" onClick={() => { acceptOffer(a.id); toast(senpai ? `Đã nhận việc · Zalo OA đã mở hồ sơ hai bên với ${senpai.name}` : "Đã nhận việc", "users-check"); }}>Nhận việc</Button>
-          <p className="t-sm muted-ink">Khi bạn nhận việc, tên bạn mới được mở cho Senpai cùng quê để hỗ trợ ngày đầu.</p>
+          <p className="t-sm muted-ink">Khi bạn nhận việc, tên bạn mới được mở cho Senpai ở nhà máy để hỗ trợ ngày đầu.</p>
         </div>
       )}
     </div>

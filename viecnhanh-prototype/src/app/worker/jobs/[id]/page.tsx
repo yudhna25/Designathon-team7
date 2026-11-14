@@ -13,7 +13,7 @@ import { CITIES, JLPT_SHORT, SKILLS, VISAS, jobById } from "@/lib/data";
 import { SHIFT_VI } from "@/lib/labels";
 import { FIT_VI, fitOf, matchChips, matchGuidance, scoreMatch, suggestImprovements } from "@/lib/scoring";
 import { takeHome, yen } from "@/lib/pay";
-import { deadlineOf, fmtLeft, isClosed, useApp, useNow } from "@/lib/store";
+import { deadlineOf, fmtLeft, isClosed, simNow, useApp, useNow } from "@/lib/store";
 import { gsap, useGSAP } from "@/lib/motion";
 
 export default function Page() {
@@ -39,7 +39,7 @@ function JobDetail() {
   const invited = s.apps.some((a) => a.candidateId === "me" && a.jobId === job.id && a.status === "approved");
   const best = [...m.criteria].sort((a, b) => b.score - a.score);
   const pay = takeHome(job, p.relocate);
-  const start = earliestStart(p, Date.now() + 864e5);
+  const start = earliestStart(p, simNow(s.clock, s.config.speed) + 864e5);
 
   return (
     <Screen deps={[id]} className="pb-6 lg:pt-6 lg:pb-0">
@@ -146,7 +146,7 @@ function JobDetail() {
         </div>
       </div>
 
-      <FlightPath p={p} job={job} from={Date.now() + 864e5} open={sheet === "path"} onClose={() => setSheet(null)} />
+      <FlightPath p={p} job={job} from={simNow(s.clock, s.config.speed) + 864e5} open={sheet === "path"} onClose={() => setSheet(null)} />
       <ApplySheet open={sheet === "apply" || sheet === "anyway"} flagged={sheet === "anyway"} onClose={() => setSheet(null)} jobId={job.id} />
     </Screen>
   );

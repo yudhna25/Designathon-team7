@@ -31,6 +31,9 @@ export function askerLabel(p: Profile, revealed: boolean, sameProvince = true): 
   return sameProvince && p.province ? `Thợ ẩn danh · cùng quê ${p.province}` : "Thợ ẩn danh";
 }
 
+/** "Cùng quê X" only when it really is the same province. */
+export const hometownLabel = (p: Profile, peer: Peer) => (p.province && peer.province === p.province ? `Cùng quê ${peer.province}` : `Quê ${peer.province}`);
+
 export const isRevealed = (apps: Pick<Application, "jobId" | "candidateId" | "accepted">[], jobId: string) =>
   apps.some((a) => a.candidateId === "me" && a.jobId === jobId && a.accepted === true);
 

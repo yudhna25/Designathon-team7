@@ -80,6 +80,9 @@ assert.ok(!askerLabel(p, false).includes(p.name) && !askerLabel(p, false).includ
 const offer = { id: "x", jobId: "mikawa-cnc", candidateId: "me", appliedAt: 0, status: "approved" as const };
 assert.equal(isRevealed([offer], "mikawa-cnc"), false, "approval alone does not reveal");
 assert.equal(isRevealed([{ ...offer, accepted: true }], "mikawa-cnc"), true);
+import { hometownLabel } from "../src/lib/senpai";
+assert.equal(hometownLabel(p, senpaiFor(p, "mikawa-cnc")!), "Cùng quê Nghệ An");
+assert.equal(hometownLabel(p, senpaiFor(p, "okazaki-nc")!), "Quê Hà Tĩnh", "never claim a shared hometown that is not shared");
 console.log("M4 senpai checks OK");
 
 // --- M4: HR 300-hire plan, batch approve ---
@@ -106,4 +109,5 @@ assert.ok(answer("Việc nào lương thực nhận trên ¥200k?", p).cites.eve
 assert.match(answer("Trong lúc chờ có ứng lương được không?", p).a, /ngày công/, "wage-advance follow-up is not routed to the pay answer");
 assert.ok(answer("Việc nào lương thực nhận trên ¥200k?", p).cites.every((id) => scoreMatch(p, jobById(id)!).gate.pass), "assistant never suggests jobs the visa forbids");
 assert.ok(answer("Việc nào có ký túc xá?", p).cites.every((id) => scoreMatch(p, jobById(id)!).gate.pass), "dorm answer respects the visa gate too");
+assert.match(answer("đổi công ty mất bao lâu", p, hrDay - 864e5).a, /07\/01\/2027/, "assistant uses the simulated clock it is given");
 console.log("M4 ask checks OK");

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { jobById } from "@/lib/data";
-import { SENPAI_QUESTIONS, askerLabel, isRevealed, senpaiFor } from "@/lib/senpai";
+import { SENPAI_QUESTIONS, askerLabel, hometownLabel, isRevealed, senpaiFor } from "@/lib/senpai";
 import { useApp } from "@/lib/store";
 import { Avatar, Button, Icon, Sheet } from "../ui";
 
@@ -51,7 +51,7 @@ export function SenpaiSheet({ jobId, open, onClose }: { jobId: string; open: boo
             <Avatar name={peer.name} size={44} />
             <div className="min-w-0">
               <p className="font-semibold">{peer.name}</p>
-              <p className="t-sm text-muted">{peer.years} năm ở {job.company} · Cùng quê {peer.province}</p>
+              <p className="t-sm text-muted">{peer.years} năm ở {job.company} · {hometownLabel(p, peer)}</p>
               <p className="t-sm font-semibold text-brand flex items-center gap-1 mt-0.5"><Icon name="check-verified" size={14} solid />Đã xác minh chấm công</p>
             </div>
           </div>
@@ -81,7 +81,7 @@ export function SenpaiSheet({ jobId, open, onClose }: { jobId: string; open: boo
           ) : (
             <ol className="grid gap-3" aria-live="polite">
               {thread.questions.map((q, i) => (
-                <li key={q} className="grid gap-1.5">
+                <li key={i} className="grid gap-1.5">
                   <p className="justify-self-end max-w-[85%] rounded-2xl rounded-br-md bg-[#1B22A7] text-white px-3 py-2 t-sm">{q}</p>
                   {showAnswers ? (
                     <p className="max-w-[85%] rounded-2xl rounded-bl-md bg-subtle px-3 py-2 t-sm"><b>{peer.name.split(" ").pop()}:</b> {thread.answers[i]}</p>
@@ -93,7 +93,7 @@ export function SenpaiSheet({ jobId, open, onClose }: { jobId: string; open: boo
             </ol>
           )}
 
-          <p className="t-sm text-muted">Senpai được thưởng giới thiệu khi bạn nhận việc. Câu trả lời là ý kiến cá nhân. Tên và công ty hiện tại của bạn chỉ mở cho Senpai khi bạn bấm <b>Nhận việc</b>.</p>
+          <p className="t-sm text-muted">Senpai được thưởng giới thiệu khi bạn nhận việc. Câu trả lời là ý kiến cá nhân. Tên của bạn chỉ mở cho Senpai khi bạn bấm <b>Nhận việc</b>. Công ty hiện tại của bạn không bao giờ được hiện.</p>
         </div>
       )}
     </Sheet>

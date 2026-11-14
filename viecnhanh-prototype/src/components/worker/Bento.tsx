@@ -49,7 +49,7 @@ export function Bento({ job, p, chips, fit, app }: { job: Job; p: Profile; chips
   const open = app && !isClosed(app, s);
   const steps = fit === "great" ? 0 : Math.max(1, suggestImprovements(p, job, s.config.weights).length);
   return (
-    <div className="grid grid-cols-2 gap-2 mt-3" aria-live="polite">
+    <div className="grid grid-cols-2 gap-2 mt-3">
       <PeersTile key={job.id} jobId={job.id} className="col-span-2" />
       <section className="card-flat p-4" aria-label="Tiêu chí">
         <p className="t-sm font-semibold text-muted mb-2">Tiêu chí</p>
