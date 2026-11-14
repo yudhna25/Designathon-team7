@@ -2,22 +2,23 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useApp } from "@/lib/store";
-import { Avatar, Button, FitBadge, Icon, InlineNote, Logo, MatchChips, ScoreRing, Segmented, Sheet, toast } from "@/components/ui";
+import { Avatar, Button, Icon, InlineNote, Logo, MatchChips, Segmented, Sheet, Toggle, toast } from "@/components/ui";
 import {
-  OA_WEB_URL, QUESTIONS, RECOMMENDS, RECOMMEND_BELOW, RECOMMEND_MIN, RECOMMEND_WEEKLY_CAP, STATUS_LABEL, STATUS_TONE, STATUS_UPDATES,
-  FIT_LABEL, GROUP_ADMINS, fitLevel, fmtMonthly, fmtMonthlyYen, fmtPay, groupPosts, parseAnswer, profile, top3, type OaJob, type QuestionId, type Recommend, type StatusId, type StatusUpdate,
+  OA_WEB_URL, STATUS_TONE, QUESTIONS, RECOMMENDS, RECOMMEND_BELOW, RECOMMEND_MIN, RECOMMEND_WEEKLY_CAP, STATUS_LABEL, STATUS_UPDATES,
+  EVENTS, GROUP_ADMINS, GROUP_MEMBERS, eventIcs, fmtMonthly, fmtMonthlyYen, fmtPay, groupPosts, parseAnswer, profile, top3, type OaEvent, type OaJob, type QuestionId, type Recommend, type StatusId, type StatusUpdate,
 } from "@/lib/zalo-oa";
 
 // Màn mô phỏng Zalo OA — BRD "ViệcNhanh Aichi · Cửa vào Zalo OA" v1.0. Không dùng logo Zalo (BR8).
 
-type Scenario = "first" | "status" | "recommend";
+type Scenario = "first" | "status" | "recommend" | "event";
 type StatusTo = Exclude<StatusId, "pending">;
 type RecMode = "pass" | "below";
 
 const SCENARIOS: { value: Scenario; label: string }[] = [
   { value: "first", label: "Lần đầu" },
-  { value: "status", label: "Trạng thái đơn" },
+  { value: "status", label: "Trạng thái" },
   { value: "recommend", label: "Gợi ý việc" },
+  { value: "event", label: "Sự kiện" },
 ];
 
 const SLIDE = "animate-[zen-slide-up_var(--motion-slow)_var(--ease-spring)_both]";
@@ -43,13 +44,11 @@ function ThemeToggle({ withLabel }: { withLabel?: boolean }) {
   );
 }
 
-/** Điền sẵn câu hỏi vào ô soạn tin và đưa con trỏ vào đó ("Mở box chat"). */
-function compose(text: string) {
-  window.dispatchEvent(new CustomEvent<string>("oa-compose", { detail: text }));
-}
-
-/** Hành động từ widget lên kịch bản chat (ứng tuyển ngay trong Zalo). */
-type WidgetActions = { onApply?: (job: string, pay: number) => void; applied?: string[]; onOpenGroup?: (r: Recommend) => void };
+/** Hành động từ tin nhắn lên kịch bản chat: mở nhóm tuyển dụng, phản hồi widget sự kiện. */
+type WidgetActions = {
+  onOpenGroup?: (r: Recommend) => void;
+  onEvent?: (e: OaEvent, act: "yes" | "no" | "undo") => void; events?: Record<string, "yes" | "no">;
+};
 
 /** BR6 + AC5: Toast trước, rồi mở link ngoài ở tab mới. */
 function openWeb(message = "Đang mở ViệcNhanh…") {
@@ -104,7 +103,7 @@ export default function ZaloOaPage() {
           <p className="t-eyebrow mb-4">Cửa vào thứ 2 · Zalo OA (mô phỏng)</p>
           <h1 className="t-h1">Có hồ sơ mà không cần mở web</h1>
           <p className="t-lg text-muted mt-3">
-            Lần đầu, người lao động trả lời 3 câu ngay trong chat và nhận bản đánh giá cùng Top 3 việc. Lần sau, OA tự gửi trạng thái đơn và việc phù hợp từ 85%.
+            Lần đầu, người lao động trả lời 3 câu bằng tin nhắn (không cần gửi ảnh) và nhận 3 tiêu chí cùng 3 công ty phù hợp. Lần sau, OA gửi trạng thái đơn và việc mới. Mọi nút “Xem chi tiết” mở website ViệcNhanh.
           </p>
         </div>
         <div className="grid gap-3">
@@ -118,6 +117,7 @@ export default function ZaloOaPage() {
         {scenario === "first" && <FirstRunChat />}
         {scenario === "status" && <StatusChat to={statusTo} />}
         {scenario === "recommend" && <RecommendChat mode={recMode} attempts={recAttempts} />}
+        {scenario === "event" && <EventChat />}
       </Phone>
 
       <Sheet open={sheet} onClose={() => setSheet(false)} title="Tuỳ chọn kịch bản">
@@ -142,8 +142,8 @@ function Controls(props: {
           <p className="t-sub">B1 · Lần đầu vào OA</p>
           <ol className="grid gap-2 t-base text-muted list-decimal pl-5">
             <li>Bấm “Bắt đầu tìm việc”.</li>
-            <li>Trả lời 3 câu bằng ô gợi ý hoặc tự gõ. Câu nào thiếu, bot hỏi lại đúng câu đó.</li>
-            <li>Chờ khoảng 1,5 giây để xem bản đánh giá và Top 3 việc.</li>
+            <li>Trả lời 3 câu bằng tin nhắn (bấm gợi ý hoặc tự gõ), không cần gửi ảnh. Câu nào thiếu, bot hỏi lại đúng câu đó.</li>
+            <li>Nhận thẻ gồm 3 tiêu chí và 3 công ty phù hợp. Bấm “Xem chi tiết” để mở website.</li>
           </ol>
           <Button variant="tertiary" size="sm" icon="refresh-ccw-01" className="justify-self-start" onClick={props.onRestart}>Chạy lại từ đầu</Button>
         </div>
@@ -159,7 +159,7 @@ function Controls(props: {
               </button>
             ))}
           </div>
-          <p className="t-sm text-muted">Widget trạng thái đơn không bị giới hạn số lần gửi.</p>
+          <p className="t-sm text-muted">Thông báo trạng thái đơn không bị giới hạn số lần gửi.</p>
         </div>
       )}
 
@@ -179,9 +179,21 @@ function Controls(props: {
         </div>
       )}
 
+      {scenario === "event" && (
+        <div className="card p-5 grid gap-4">
+          <p className="t-sub">Sự kiện · tham quan nhà máy, hội chợ việc làm</p>
+          <ol className="grid gap-2 t-base text-muted list-decimal pl-5">
+            <li>OA gợi ý hoạt động gần bạn (職場見学, hội chợ) kèm địa điểm, nội dung, độ tuổi.</li>
+            <li>“Quan tâm” thêm vào lịch (tải file .ics, nhắc trước 1 ngày).</li>
+            <li>“Không quan tâm” ẩn thẻ thành một dòng nhỏ để tin cập nhật đơn không bị trôi.</li>
+          </ol>
+          <Button variant="tertiary" size="sm" icon="refresh-ccw-01" className="justify-self-start" onClick={props.onRestart}>Chạy lại</Button>
+        </div>
+      )}
+
       <ul className="grid gap-3 t-sm text-muted">
         <li className="flex gap-3"><Icon name="target-04" size={18} className="mt-0.5" />Chỉ gửi gợi ý qua Zalo khi mức phù hợp từ {RECOMMEND_MIN}%, tối đa {RECOMMEND_WEEKLY_CAP} lần một tuần.</li>
-        <li className="flex gap-3"><Icon name="arrow-up-right" size={18} className="mt-0.5" />Bấm widget nào cũng mở web ở tab mới, đã đăng nhập sẵn qua Zalo.</li>
+        <li className="flex gap-3"><Icon name="arrow-up-right" size={18} className="mt-0.5" />Nút “Xem chi tiết” nào cũng mở website ở tab mới, đã đăng nhập sẵn qua Zalo. Ứng tuyển làm trên website.</li>
         <li className="flex gap-3"><Icon name="info-circle" size={18} className="mt-0.5" />Số liệu và tên nhà máy đều là dữ liệu dựng.</li>
       </ul>
     </div>
@@ -195,7 +207,7 @@ function Phone({ children }: { children: ReactNode }) {
     <div
       data-id="zalo-oa-phone"
       data-chat-theme="zalo"
-      className="relative flex flex-col flex-1 min-h-0 overflow-hidden bg-(--chat-canvas) md:flex-none md:w-[390px] md:h-[780px] md:mx-auto md:my-8 md:rounded-[44px] md:border md:border-line md:shadow-[var(--shadow-bottom-4)] lg:mx-0 lg:my-0 lg:h-[min(844px,calc(100dvh-64px))] lg:shrink-0"
+      className="relative flex flex-col flex-1 min-h-0 overflow-clip bg-(--chat-canvas) md:flex-none md:w-[390px] md:h-[780px] md:mx-auto md:my-8 md:rounded-[44px] md:border md:border-line md:shadow-[var(--shadow-bottom-4)] lg:mx-0 lg:my-0 lg:h-[min(844px,calc(100dvh-64px))] lg:shrink-0"
     >
       <StatusBar />
       {children}
@@ -241,13 +253,13 @@ function OaAvatar({ size = 40 }: { size?: number }) {
 }
 
 /** Chat Header · variant brand (Chat Kit): nền gradient ngang #0087FF→#01AFFB, cao 56, nút tròn 40, tên 16 đậm + tick OA cam, phụ đề 12. */
-function ChatHeader({ typing }: { typing: boolean }) {
+function ChatHeader({ typing, onInfo }: { typing: boolean; onInfo?: () => void }) {
   return (
     <header data-id="zalo-oa-header" className="relative z-20 flex h-14 shrink-0 items-center gap-1 px-2 bg-(--chat-header-bg) bg-(image:--chat-header-gradient) text-(--chat-header-fg) transition-colors duration-[var(--motion-base)]">
       <Link href="/" aria-label="Quay lại" className="pressable group/hb inline-flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-(--chat-header-fg)/15 active:bg-(--chat-header-fg)/25">
         <Icon name="arrow-left" size={24} className="transition-transform duration-[var(--motion-base)] [transition-timing-function:var(--ease-spring)] group-hover/hb:-translate-x-0.5" />
       </Link>
-      <div className="flex min-w-0 flex-1 items-center gap-3 py-1">
+      <button type="button" onClick={onInfo} aria-label="Mở hồ sơ OA" className="pressable flex min-w-0 flex-1 items-center gap-3 rounded-[var(--radius-base)] py-1 text-left">
         <span className="rounded-full ring-2 ring-(--chat-header-fg)/30"><OaAvatar /></span>
         <span className="flex min-w-0 flex-col">
           <span className="flex items-center gap-1">
@@ -258,7 +270,8 @@ function ChatHeader({ typing }: { typing: boolean }) {
             {typing ? "đang soạn tin…" : "Official Account · Zalo OA (mô phỏng)"}
           </span>
         </span>
-      </div>
+      </button>
+      <HeaderIcon icon="menu-01" label="Thông tin Official Account" onClick={onInfo} />
     </header>
   );
 }
@@ -290,25 +303,26 @@ function FactoryLogo({ name, size = 40 }: { name: string; size?: number }) {
 const splitJob = (s: string) => { const [title, factory = ""] = s.split(" · "); return { title, factory }; };
 
 // ---- Khung chat dùng chung: danh sách tin + chip trả lời nhanh + ô nhập --------
+/** Link trong tin nhắn chữ: mặc định mở website (BR6); có group → mở nhóm tuyển dụng trong Zalo. */
+type MsgLink = { label: string; sub?: string; group?: Recommend };
 type Msg = { id: number; at: string } & (
-  | { kind: "text"; from: "bot" | "me"; text: string }
-  | { kind: "card-photo" }
+  | { kind: "text"; from: "bot" | "me"; text: string; links?: MsgLink[] }
   | { kind: "typing" }
   | { kind: "day"; text: string }
   | { kind: "note"; text: string }
-  | { kind: "evaluating" }
+  | { kind: "event"; data: OaEvent }
+  | { kind: "oa-intro" }
+  | { kind: "welcome" }
   | { kind: "assess"; answers: Answers }
   | { kind: "status"; data: StatusUpdate }
   | { kind: "recommend"; data: Recommend }
-  | { kind: "oa-intro" }
-  | { kind: "welcome" }
 );
 
-type Answers = { q1?: string; card?: boolean; q2?: string; q3?: string };
+type Answers = { q1?: string; q2?: string; q3?: string };
 type NewMsg = Msg extends infer M ? (M extends Msg ? Omit<M, "id" | "at"> : never) : never;
 
 type Role = "bot" | "me" | "sys";
-const roleOf = (m: Msg): Role => (m.kind === "text" ? m.from : m.kind === "card-photo" ? "me" : m.kind === "day" || m.kind === "note" || m.kind === "oa-intro" ? "sys" : "bot");
+const roleOf = (m: Msg): Role => (m.kind === "text" ? m.from : m.kind === "day" || m.kind === "note" || m.kind === "oa-intro" ? "sys" : "bot");
 type Pos = "single" | "first" | "middle" | "last";
 /* Góc bo theo cụm (Chat Kit): phía người gửi bo 2px ở chỗ nối giữa các tin */
 const RADIUS: Record<"in" | "out", Record<Pos, string>> = {
@@ -318,13 +332,14 @@ const RADIUS: Record<"in" | "out", Record<Pos, string>> = {
 const BUBBLE_IN = "rounded-[var(--radius-base)] border border-(--chat-bubble-in-border) bg-(--chat-bubble-in-bg) text-(--chat-bubble-fg) shadow-[var(--shadow-bottom-1)]";
 const BUBBLE_OUT = "rounded-[var(--radius-base)] border border-(--chat-bubble-out-border) bg-(--chat-bubble-out-bg) text-(--chat-bubble-fg) shadow-[var(--shadow-bottom-1)]";
 /** Khối widget OA: cùng nền/viền với tin đến của Chat Kit. */
-const WIDGET = `w-full ${BUBBLE_IN}`;
+const WIDGET = `w-full min-w-0 grid-cols-[minmax(0,1fr)] ${BUBBLE_IN}`;
 
-function Chat({ msgs, chips, onChip, onSend, onCamera, busy, placeholder = "Nhập tin nhắn", actions }: {
-  msgs: Msg[]; chips: string[]; onChip: (c: string) => void; onSend: (t: string) => void; onCamera: () => void; busy?: boolean; placeholder?: string; actions?: WidgetActions;
+function Chat({ msgs, chips, onChip, onSend, busy, placeholder = "Nhập tin nhắn", actions }: {
+  msgs: Msg[]; chips: string[]; onChip: (c: string) => void; onSend: (t: string) => void; busy?: boolean; placeholder?: string; actions?: WidgetActions;
 }) {
   const list = useRef<HTMLDivElement>(null);
-  const typing = msgs.some((m) => m.kind === "typing" || m.kind === "evaluating");
+  const [profile, setProfile] = useState(false);
+  const typing = msgs.some((m) => m.kind === "typing");
 
   // Luôn cuộn xuống tin mới nhất, kể cả khi widget nở ra sau skeleton.
   useEffect(() => {
@@ -343,8 +358,9 @@ function Chat({ msgs, chips, onChip, onSend, onCamera, busy, placeholder = "Nh�
 
   return (
     <>
-      <ChatHeader typing={typing} />
-      <div ref={list} data-id="zalo-oa-messages" className="flex-1 min-h-0 overflow-y-auto px-3 pb-3" aria-live="polite">
+      <div className={profile ? "hidden" : "contents"}>
+      <ChatHeader typing={typing} onInfo={() => setProfile(true)} />
+      <div ref={list} data-id="zalo-oa-messages" className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 pb-3" aria-live="polite">
         <div className="flex flex-col">
           {msgs.map((m, i) => {
             const r = roles[i];
@@ -367,20 +383,21 @@ function Chat({ msgs, chips, onChip, onSend, onCamera, busy, placeholder = "Nh�
           {chips.map((c) => (
             <button key={c} type="button" disabled={busy} onClick={() => onChip(c)}
               className={`pressable shrink-0 inline-flex items-center gap-1.5 h-9 px-4 rounded-full border border-(--color-border-accent-subtle) bg-(--chat-surface) text-(--chat-link) t-base font-medium shadow-[var(--shadow-bottom-1)] hover:bg-(--chat-list-active) disabled:opacity-50 disabled:cursor-not-allowed ${SLIDE}`}>
-              {c === "Gửi ảnh thẻ cư trú" && <Icon name="camera" size={16} />}
               {c}
             </button>
           ))}
         </div>
       )}
 
-      <ChatComposer onSend={onSend} onCamera={onCamera} busy={busy} placeholder={placeholder} />
+      <ChatComposer onSend={onSend} busy={busy} placeholder={placeholder} />
+      </div>
+      {profile && <OaProfilePanel onBack={() => setProfile(false)} />}
     </>
   );
 }
 
-/** Chat Composer (Chat Kit): ô nhập tự giãn tới 5 dòng, Enter gửi, viền trên đổi xanh khi focus. Ô trống → nút ảnh; có chữ → nút Gửi pop. */
-function ChatComposer({ onSend, onCamera, busy, placeholder }: { onSend: (t: string) => void; onCamera: () => void; busy?: boolean; placeholder: string }) {
+/** Chat Composer (Chat Kit), chỉ nhập chữ: ô nhập tự giãn tới 5 dòng, Enter gửi, viền trên đổi xanh khi focus, nút Gửi pop khi có chữ. */
+function ChatComposer({ onSend, busy, placeholder }: { onSend: (t: string) => void; busy?: boolean; placeholder: string }) {
   const [text, setText] = useState("");
   const ref = useRef<HTMLTextAreaElement>(null);
   const has = text.trim().length > 0;
@@ -390,32 +407,16 @@ function ChatComposer({ onSend, onCamera, busy, placeholder }: { onSend: (t: str
     el.style.height = "auto";
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   }, [text]);
-  useEffect(() => {
-    const on = (e: Event) => { setText((e as CustomEvent<string>).detail); requestAnimationFrame(() => { ref.current?.focus(); const n = ref.current?.value.length ?? 0; ref.current?.setSelectionRange(n, n); }); };
-    window.addEventListener("oa-compose", on);
-    return () => window.removeEventListener("oa-compose", on);
-  }, []);
   const send = () => { if (!has || busy) return; onSend(text.trim()); setText(""); };
-  const btn = "pressable group/cb inline-flex size-10 shrink-0 items-center justify-center rounded-full text-(--chat-meta) hover:bg-[var(--color-bg-neutral-flat-hover)] hover:text-fg disabled:opacity-50";
-  const ico = "transition-transform duration-[var(--motion-base)] [transition-timing-function:var(--ease-spring)] group-hover/cb:scale-110";
   return (
-    <div data-id="zalo-oa-composer" className="flex min-h-14 shrink-0 items-end gap-1 border-t border-hair bg-(--chat-surface) px-2 py-2 transition-colors duration-[var(--motion-fast)] focus-within:border-(--color-border-accent-solid) safe-b md:pb-2">
-      <button type="button" className={btn} aria-label="Chụp thẻ cư trú" onClick={onCamera} disabled={busy}>
-        <Icon name="camera" size={24} className={ico} />
-      </button>
+    <div data-id="zalo-oa-composer" className="flex min-h-14 shrink-0 items-end gap-1 border-t border-hair bg-(--chat-surface) pl-4 pr-2 py-2 transition-colors duration-[var(--motion-fast)] focus-within:border-(--color-border-accent-solid) safe-b md:pb-2">
       <textarea ref={ref} rows={1} value={text} onChange={(e) => setText(e.target.value)} placeholder={placeholder} aria-label="Nội dung tin nhắn"
         onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }}
         className="min-h-10 flex-1 resize-none bg-transparent px-1 py-2 t-lg text-fg caret-[var(--color-content-accent-base)] outline-none placeholder:text-[var(--color-content-placeholder)]" />
-      {has ? (
-        <button type="button" onClick={send} aria-label="Gửi" disabled={busy}
-          className="pressable group/cb inline-flex size-10 shrink-0 items-center justify-center rounded-full text-[var(--color-content-accent-base)] hover:bg-[var(--color-bg-accent-flat-hover)] animate-[zen-pop_var(--motion-slow)_var(--ease-bounce)] disabled:opacity-50">
-          <Icon name="send-01" size={24} solid className="transition-transform duration-[var(--motion-base)] [transition-timing-function:var(--ease-spring)] group-hover/cb:translate-x-0.5 group-hover/cb:-rotate-12" />
-        </button>
-      ) : (
-        <span className="flex items-center animate-[zen-slide-in-right_var(--motion-slow)_var(--ease-spring)_both]">
-          <button type="button" className={btn} aria-label="Gửi ảnh" onClick={onCamera} disabled={busy}><Icon name="image-plus" size={24} className={ico} /></button>
-        </span>
-      )}
+      <button type="button" onClick={send} aria-label="Gửi" disabled={busy || !has}
+        className={`pressable group/cb inline-flex size-10 shrink-0 items-center justify-center rounded-full disabled:cursor-not-allowed ${has && !busy ? "text-[var(--color-content-accent-base)] hover:bg-[var(--color-bg-accent-flat-hover)] animate-[zen-pop_var(--motion-slow)_var(--ease-bounce)]" : "text-[var(--color-content-neutral-light)]"}`}>
+        <Icon name="send-01" size={24} solid className="transition-transform duration-[var(--motion-base)] [transition-timing-function:var(--ease-spring)] group-hover/cb:translate-x-0.5 group-hover/cb:-rotate-12" />
+      </button>
     </div>
   );
 }
@@ -436,29 +437,14 @@ function Time({ at }: { at: string }) {
 
 /** Tin đi: phải, nền xanh nhạt, bo theo cụm; tin cuối có pill "Đã nhận / Đã xem". */
 function MeRow({ m, pos, status }: { m: Msg; pos: Pos; status?: string }) {
+  if (m.kind !== "text") return null;
   const showMeta = pos === "last" || pos === "single";
   return (
     <div className={`flex flex-col items-end ${pos === "first" || pos === "single" ? "mt-3" : "mt-0.5"} ${SLIDE}`}>
-      {m.kind === "card-photo" ? (
-        <figure data-id="chat-bubble-photo" className={`w-60 overflow-hidden ${BUBBLE_OUT} ${RADIUS.out[pos]}`}>
-          <div className="m-1.5 rounded-[10px] bg-surface text-fg p-3 grid grid-cols-[1fr_44px] gap-2" aria-hidden>
-            <div className="grid gap-1.5">
-              <span className="t-sm font-semibold">在留カード</span>
-              <i className="block h-1.5 w-24 rounded-full bg-subtle" />
-              <i className="block h-1.5 w-20 rounded-full bg-subtle" />
-              <i className="block h-1.5 w-28 rounded-full bg-subtle" />
-              <span className="t-sm text-muted">特定技能1号</span>
-            </div>
-            <span className="h-14 rounded-lg bg-subtle grid place-items-center"><Icon name="user" className="text-faint" /></span>
-          </div>
-          <figcaption className="px-3 pb-2 t-sm text-(--chat-meta)">Ảnh thẻ cư trú (mẫu){showMeta && <Time at={m.at} />}</figcaption>
-        </figure>
-      ) : m.kind === "text" ? (
-        <div data-id="chat-bubble-me" className={`max-w-[78%] px-3 py-2 t-lg break-words ${BUBBLE_OUT} ${RADIUS.out[pos]}`}>
-          {m.text}
-          {showMeta && <Time at={m.at} />}
-        </div>
-      ) : null}
+      <div data-id="chat-bubble-me" className={`max-w-[78%] px-3 py-2 t-lg break-words ${BUBBLE_OUT} ${RADIUS.out[pos]}`}>
+        {m.text}
+        {showMeta && <Time at={m.at} />}
+      </div>
       {status && (
         <span key={status} className="mt-1 inline-flex items-center gap-1 rounded-full bg-(--chat-separator-bg) px-2 py-0.5 t-sm text-(--chat-separator-fg) animate-[zen-fade-in_var(--motion-base)_var(--ease-standard)_both]">
           <Icon name={status === "Đã xem" ? "check-circle" : "check"} size={12} />{status}
@@ -468,24 +454,22 @@ function MeRow({ m, pos, status }: { m: Msg; pos: Pos; status?: string }) {
   );
 }
 
-/** Tin đến từ OA. Avatar 32 chỉ đứng cạnh bong bóng tin nhắn (tin cuối của một chuỗi bong bóng), không đứng cạnh widget. Widget chiếm hết bề ngang. */
-function BotRow({ m, pos, gapTop, avatar, onStart, actions }: { m: Msg; pos: Pos; gapTop: boolean; avatar: boolean; onStart?: () => void; actions?: WidgetActions }) {
+/** Tin đến từ OA. Avatar 32 chỉ đứng cạnh bong bóng tin nhắn (tin cuối của một chuỗi bong bóng), không đứng cạnh widget sự kiện. */
+function BotRow({ m, pos, gapTop, avatar, actions, onStart }: { m: Msg; pos: Pos; gapTop: boolean; avatar: boolean; actions?: WidgetActions; onStart?: () => void }) {
   const showMeta = pos === "last" || pos === "single";
   const isBubble = m.kind === "text" || m.kind === "typing";
   return (
     <div className={`flex items-end gap-2 ${gapTop ? "mt-3" : "mt-0.5"} ${SLIDE}`}>
       {isBubble && <div className="flex w-8 shrink-0 justify-center self-end">{avatar && <OaAvatar size={32} />}</div>}
       <div className="flex min-w-0 flex-1 flex-col items-start">
-        <BotContent m={m} pos={pos} showMeta={showMeta} onStart={onStart} actions={actions} />
+        <BotContent m={m} pos={pos} showMeta={showMeta} actions={actions} onStart={onStart} />
       </div>
     </div>
   );
 }
 
-function BotContent({ m, pos, showMeta, onStart, actions }: { m: Msg; pos: Pos; showMeta: boolean; onStart?: () => void; actions?: WidgetActions }) {
+function BotContent({ m, pos, showMeta, actions, onStart }: { m: Msg; pos: Pos; showMeta: boolean; actions?: WidgetActions; onStart?: () => void }) {
   switch (m.kind) {
-    case "welcome":
-      return <WelcomeCard radius={RADIUS.in[pos]} onStart={onStart} />;
     case "typing":
       return (
         <span className={`inline-flex gap-1 px-3 py-3 ${BUBBLE_IN} ${RADIUS.in[pos]}`} aria-label="Đang soạn tin">
@@ -494,26 +478,35 @@ function BotContent({ m, pos, showMeta, onStart, actions }: { m: Msg; pos: Pos; 
       );
     case "text":
       return (
-        <div data-id="chat-bubble-bot" className={`max-w-[88%] px-3 py-2 t-lg break-words ${BUBBLE_IN} ${RADIUS.in[pos]}`}>
+        <div data-id="chat-bubble-bot" className={`max-w-[88%] px-3 py-2 t-lg break-words whitespace-pre-line ${BUBBLE_IN} ${RADIUS.in[pos]}`}>
           {m.text}
+          {m.links && (
+            <ul className="mt-1.5 grid gap-2 whitespace-normal">
+              {m.links.map((l) => (
+                <li key={l.label}>
+                  <button type="button" onClick={() => (l.group ? actions?.onOpenGroup?.(l.group) : openWeb())}
+                    className="pressable group/lk flex w-full items-start gap-1.5 text-left">
+                    <Icon name={l.group ? "users" : "arrow-up-right"} size={18} className="mt-[3px] shrink-0 text-(--chat-link)" />
+                    <span className="min-w-0">
+                      <span className="block font-medium text-(--chat-link) underline underline-offset-2 decoration-(--chat-link)/40 group-hover/lk:decoration-(--chat-link)">{l.label}</span>
+                      {l.sub && <span className="block t-sm text-(--chat-meta)">{l.sub}</span>}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
           {showMeta && <Time at={m.at} />}
         </div>
       );
-    case "evaluating":
-      return (
-        <div data-id="zalo-oa-evaluating" className={`p-4 grid gap-3 ${WIDGET} ${RADIUS.in[pos]}`} role="status">
-          <p className="t-sm font-medium flex items-center gap-2"><Icon name="stars-01" size={16} className="text-brand" />Đang đánh giá…</p>
-          <div className="h-1.5 rounded-full bg-subtle overflow-hidden" role="progressbar" aria-label="Đang đánh giá">
-            <span className="block h-full w-1/3 rounded-full bg-solid animate-[oa-indeterminate_1.1s_var(--ease-standard)_infinite]" />
-          </div>
-          <div className="flex items-center gap-3"><span className="skeleton size-14 !rounded-full" /><span className="grid gap-2 flex-1"><span className="skeleton h-3 w-2/3" /><span className="skeleton h-3 w-1/2" /></span></div>
-          {[0, 1, 2].map((i) => <span key={i} className="skeleton h-11" />)}
-        </div>
-      );
+    case "event":
+      return <EventWidget data={m.data} radius={RADIUS.in[pos]} actions={actions} />;
+    case "welcome":
+      return <WelcomeCard radius={RADIUS.in[pos]} onStart={onStart} />;
     case "assess":
-      return <AssessWidget answers={m.answers} radius={RADIUS.in[pos]} actions={actions} />;
+      return <AssessWidget answers={m.answers} radius={RADIUS.in[pos]} />;
     case "status":
-      return <StatusWidget data={m.data} radius={RADIUS.in[pos]} actions={actions} />;
+      return <StatusWidget data={m.data} radius={RADIUS.in[pos]} />;
     case "recommend":
       return <RecommendWidget data={m.data} radius={RADIUS.in[pos]} actions={actions} />;
     default:
@@ -556,25 +549,23 @@ function OaIntro() {
 }
 
 const WELCOME_STEPS = [
-  { icon: "passport", t: "Thời hạn visa và ngành nghề hiện tại", s: "Chụp thẻ cư trú, mình tự đọc" },
+  { icon: "passport", t: "Thời hạn visa và ngành nghề hiện tại", s: "Gõ hoặc bấm chọn, không cần gửi ảnh" },
   { icon: "tool-02", t: "Kỹ năng và chứng chỉ liên quan", s: "Bấm chọn, không cần gõ" },
   { icon: "marker-pin-02", t: "Thời gian nhận việc và khu vực làm việc", s: "Để chọn nhà máy gần bạn" },
 ] as const;
 
-/** Thẻ chào mừng: nói rõ 3 câu hỏi gì, nhận lại gì, rồi một nút bắt đầu. */
+/** Thẻ chào mừng: nói rõ 3 câu hỏi gì, nhận lại gì, rồi một nút bắt đầu (gửi tin “Bắt đầu tìm việc”). */
 function WelcomeCard({ radius, onStart }: { radius: string; onStart?: () => void }) {
   return (
     <article data-id="zalo-oa-widget-welcome" className={`p-4 grid gap-4 ${WIDGET} ${radius}`}>
       <div>
         <p className="t-eyebrow">Khoảng 1 phút</p>
-        <p className="t-sub mt-1">Trả lời 3 câu, nhận 3 việc hợp nhất</p>
+        <p className="t-sub mt-1">Trả lời 3 câu, nhận 3 công ty phù hợp</p>
       </div>
       <ol className="grid gap-3">
         {WELCOME_STEPS.map((x) => (
           <li key={x.t} className="flex items-center gap-3">
-            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand">
-              <Icon name={x.icon} size={20} />
-            </span>
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand"><Icon name={x.icon} size={20} /></span>
             <span className="min-w-0">
               <span className="block font-semibold">{x.t}</span>
               <span className="block t-sm text-(--chat-meta)">{x.s}</span>
@@ -584,94 +575,84 @@ function WelcomeCard({ radius, onStart }: { radius: string; onStart?: () => void
       </ol>
       <div className="flex items-center gap-3 rounded-[var(--radius-base)] bg-(--chat-canvas) px-3 py-2.5">
         <Icon name="stars-01" size={18} solid className="text-brand shrink-0" />
-        <p className="t-sm">Bạn nhận lại <b>mức phù hợp</b> và <b>3 việc đúng visa</b>, kèm lý do đạt hoặc còn thiếu.</p>
+        <p className="t-sm">Bạn nhận lại <b>3 tiêu chí</b> và <b>3 công ty phù hợp</b>, bấm “Xem chi tiết” để mở trên ViệcNhanh.</p>
       </div>
       <Button block className="t-lg" icon={onStart ? "rocket" : "check"} disabled={!onStart} onClick={onStart}>{onStart ? "Bắt đầu tìm việc" : "Đã bắt đầu"}</Button>
     </article>
   );
 }
 
-// ---- Widget: Bản đánh giá + Top 3 (BR2, BR3) ----------------------------------
-/** Dòng việc: bấm phần thông tin → mở web; nút "Nộp hồ sơ" → nộp ngay trong chat. Không hiện %, chỉ nhãn mức phù hợp. */
-function JobRow({ j, actions }: { j: OaJob; actions?: WidgetActions }) {
-  const job = `${j.title} · ${j.factory}`;
-  const done = !!actions?.applied?.includes(job);
-  const lv = fitLevel(j.fit);
+// ---- Widget: 3 tiêu chí + 3 công ty phù hợp ------------------------------------------
+/** Dòng công ty: logo · tên việc · nhà máy, khu vực, km · lương tháng; nút “Xem chi tiết” mở website (không badge, không %). */
+function JobRow({ j }: { j: OaJob }) {
   return (
-    <li className="flex items-center gap-2 rounded-2xl px-3 py-2.5 hover:bg-pale transition-colors duration-[var(--motion-fast)]">
-      <button type="button" onClick={() => openWeb()} className="pressable flex flex-1 min-w-0 items-center gap-3 text-left">
-        <FactoryLogo name={j.factory} size={36} />
-        <span className="flex-1 min-w-0">
-          <span className="block font-semibold truncate">{j.title}</span>
-          <span className="flex mt-0.5 mb-1"><FitBadge level={lv} size="xs" label={FIT_LABEL[lv]} /></span>
-          <span className="block t-sm text-muted truncate">{j.factory} · {j.area} · {j.km} km</span>
-          <span className="block t-sm font-semibold tnum" title={fmtMonthlyYen(j.pay)}>{fmtMonthly(j.pay)}</span>
-        </span>
-      </button>
-      <Button size="sm" variant={done ? "secondary" : "primary"} icon={done ? "check" : undefined} disabled={done || !actions?.onApply}
-        onClick={() => actions?.onApply?.(job, j.pay)}>{done ? "Đã nộp" : "Nộp hồ sơ"}</Button>
+    <li className="flex min-w-0 items-center gap-3 rounded-2xl px-3 py-2.5">
+      <FactoryLogo name={j.factory} size={36} />
+      <span className="flex-1 min-w-0">
+        <span className="block font-semibold truncate">{j.title}</span>
+        <span className="block t-sm text-muted truncate">{j.factory} · {j.area} · {j.km} km</span>
+        <span className="block t-sm font-semibold tnum" title={fmtMonthlyYen(j.pay)}>{fmtMonthly(j.pay)}</span>
+      </span>
+      <Button size="sm" variant="secondary" iconRight="arrow-up-right" onClick={() => openWeb()}>Xem chi tiết</Button>
     </li>
   );
 }
 
-function AssessWidget({ answers, radius = "", actions }: { answers: Answers; radius?: string; actions?: WidgetActions }) {
+function AssessWidget({ answers, radius = "" }: { answers: Answers; radius?: string }) {
   const jobs = [...top3].sort((a, b) => b.fit - a.fit).slice(0, 3);
-  const { done, total } = profile.steps;
-  // Chỉ hiện những gì người dùng đã có — không liệt kê thứ còn thiếu.
-  const chips = [
-    { ok: true, vi: answers.q1 ?? profile.visa, en: "", ja: "" },
-    ...(answers.q2 ? [answers.q2] : profile.skills).map((s) => ({ ok: true, vi: s, en: "", ja: "" })),
-    { ok: true, vi: answers.q3 ?? `${profile.start} · ${profile.area}`, en: "", ja: "" },
+  const criteria = [
+    { icon: "passport" as const, k: "Visa và ngành", v: answers.q1 ?? profile.visa },
+    { icon: "tool-02" as const, k: "Kỹ năng", v: answers.q2 ?? profile.skills[0] },
+    { icon: "marker-pin-02" as const, k: "Bắt đầu và khu vực", v: answers.q3 ?? `${profile.start} · ${profile.area}` },
   ];
   return (
     <article data-id="zalo-oa-widget-assess" className={`overflow-hidden ${WIDGET} ${radius}`}>
       <div className="p-4 grid gap-3">
-        <p className="t-eyebrow">Bản đánh giá hồ sơ</p>
-        <div className="flex items-center gap-3">
-          <ScoreRing value={(done / total) * 100} size={60} stroke={6} label={`Hồ sơ đã bổ sung ${done} trên ${total} bước`}>
-            <span className="t-sm font-semibold tnum">{done}/{total}</span>
-          </ScoreRing>
-          <div className="grid gap-0.5 min-w-0">
-            <p className="t-sub truncate">{profile.name}</p>
-            <p className="t-sm text-muted">Hồ sơ đã bổ sung {done}/{total} bước</p>
-          </div>
+        <div>
+          <p className="t-eyebrow">Gợi ý cho {profile.name}</p>
+          <p className="t-sub mt-1">3 tiêu chí của bạn</p>
         </div>
-        <MatchChips chips={chips} />
+        <ul className="grid gap-2">
+          {criteria.map((c) => (
+            <li key={c.k} className="flex items-center gap-3">
+              <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand"><Icon name={c.icon} size={18} /></span>
+              <span className="min-w-0">
+                <span className="block t-sm text-(--chat-meta)">{c.k}</span>
+                <span className="block font-medium">{c.v}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
       <div className="hair-t p-2">
-        <p className="px-3 pt-2 pb-1 t-sm font-semibold">Top 3 việc hợp với bạn</p>
+        <p className="px-3 pt-2 pb-1 t-sm font-semibold">3 công ty phù hợp với bạn</p>
         {jobs.length === 0 ? (
           <div data-id="zalo-oa-empty" className="grid justify-items-center gap-2 px-4 py-6 text-center">
             <span className="grid size-12 place-items-center rounded-full bg-subtle"><Icon name="search-md" /></span>
-            <p className="font-semibold">Chưa có việc phù hợp</p>
+            <p className="font-semibold">Chưa có công ty phù hợp</p>
             <p className="t-sm text-muted">Mình sẽ nhắn ngay khi có việc mới hợp với bạn.</p>
           </div>
         ) : (
-          <ul className="grid">{jobs.map((j) => <JobRow key={j.id} j={j} actions={actions} />)}</ul>
+          <ul className="grid grid-cols-[minmax(0,1fr)]">{jobs.map((j) => <JobRow key={j.id} j={j} />)}</ul>
         )}
         {jobs.length > 0 && jobs.length < 3 && <p className="px-3 py-2 t-sm text-muted">Đang tìm thêm việc cho bạn</p>}
-      </div>
-      <div className="px-4 pb-4">
-        <Button variant="secondary" block iconRight="arrow-up-right" onClick={() => openWeb()}>Xem chi tiết trên ViệcNhanh</Button>
       </div>
     </article>
   );
 }
 
 // ---- Widget: Cập nhật ứng tuyển (BR7) -------------------------------------------
-function StatusBadge({ s, from }: { s: StatusId; from?: boolean }) {
+function StatusBadge({ s }: { s: StatusId }) {
   const tone = STATUS_TONE[s];
-  const cls = from
-    ? "badge-outline text-muted"
-    : tone === "positive"
-      ? "bg-[var(--color-bg-positive-subtle)] text-[var(--color-content-positive-strongest)]"
-      : tone === "negative"
-        ? "bg-[var(--color-bg-negative-subtle)] text-[var(--color-content-negative-strongest)]"
-        : "bg-brand-soft text-brand";
+  const cls = tone === "positive"
+    ? "bg-[var(--color-bg-positive-subtle)] text-[var(--color-content-positive-strongest)]"
+    : tone === "negative"
+      ? "bg-[var(--color-bg-negative-subtle)] text-[var(--color-content-negative-strongest)]"
+      : "bg-brand-soft text-brand";
   return <span className={`badge badge-md ${cls}`}>{STATUS_LABEL[s]}</span>;
 }
 
-/** Khối tên việc: logo nhà máy · tên việc · nhà máy (+ dòng phụ) · lương giờ và ước tính tháng. */
+/** Khối tên việc: logo nhà máy · tên việc · nhà máy (+ dòng phụ) · lương tháng và lương giờ. */
 function JobHead({ job, pay, sub }: { job: string; pay: number; sub?: string }) {
   const { title, factory } = splitJob(job);
   return (
@@ -689,7 +670,7 @@ function JobHead({ job, pay, sub }: { job: string; pay: number; sub?: string }) 
   );
 }
 
-function StatusWidget({ data, radius = "", actions }: { data: StatusUpdate; radius?: string; actions?: WidgetActions }) {
+function StatusWidget({ data, radius = "" }: { data: StatusUpdate; radius?: string }) {
   return (
     <article data-id="zalo-oa-widget-status" className={`p-4 grid gap-3 ${WIDGET} ${radius}`}>
       <div className="flex items-center justify-between gap-2">
@@ -702,7 +683,7 @@ function StatusWidget({ data, radius = "", actions }: { data: StatusUpdate; radi
       </div>
       <InlineNote icon={data.to === "interview" ? "calendar-check" : data.to === "viewed" ? "eye" : data.to === "pending" ? "hourglass" : "info-circle"}>{data.note}</InlineNote>
       {data.upskill && <InlineNote icon="lightbulb" tone="warn">{data.upskill}</InlineNote>}
-      {data.alternatives && <ul className="grid -mx-2">{data.alternatives.map((j) => <JobRow key={j.id} j={j} actions={actions} />)}</ul>}
+      {data.alternatives && <ul className="grid grid-cols-[minmax(0,1fr)] -mx-3">{data.alternatives.map((j) => <JobRow key={j.id} j={j} />)}</ul>}
       <Button block iconRight="arrow-up-right" onClick={() => openWeb()}>Xem chi tiết</Button>
     </article>
   );
@@ -711,28 +692,18 @@ function StatusWidget({ data, radius = "", actions }: { data: StatusUpdate; radi
 // ---- Widget: Việc mới hợp với bạn (BR4) -----------------------------------------
 function RecommendWidget({ data, radius = "", actions }: { data: Recommend; radius?: string; actions?: WidgetActions }) {
   const { factory } = splitJob(data.job);
-  const applied = !!actions?.applied?.includes(data.job);
-  const lv = fitLevel(data.fit);
   return (
-    <article data-id="zalo-oa-widget-recommend" onClick={() => openWeb()}
-      className={`p-4 grid gap-3 cursor-pointer pressable ${WIDGET} ${radius}`}>
-      <div className="flex items-center justify-between gap-2">
-        <p className="t-eyebrow">Việc mới hợp với bạn</p>
-        <FitBadge level={lv} size="sm" label={FIT_LABEL[lv]} />
-      </div>
+    <article data-id="zalo-oa-widget-recommend" className={`p-4 grid gap-3 ${WIDGET} ${radius}`}>
+      <p className="t-eyebrow">Việc mới hợp với bạn</p>
       <JobHead job={data.job} pay={data.pay} sub={`${factory} · ${data.area} · cách nhà ${data.km} km`} />
-      <MatchChips chips={data.chips.map((c) => ({ ok: c.ok, vi: c.label, en: "", ja: "" }))} />
-      <div className="grid grid-cols-2 gap-2">
-        <Button variant="secondary" onClick={(e) => { e.stopPropagation(); openWeb(); }}>Xem chi tiết</Button>
-        <Button icon={applied ? "check" : undefined} iconRight={applied ? undefined : "send-01"} disabled={applied}
-          onClick={(e) => { e.stopPropagation(); if (actions?.onApply) actions.onApply(data.job, data.pay); else openWeb("Đang mở ViệcNhanh để ứng tuyển…"); }}>
-          {applied ? "Đã ứng tuyển" : "Ứng tuyển"}
-        </Button>
-      </div>
-      <button type="button" data-id="zalo-oa-open-chat" onClick={(e) => { e.stopPropagation(); if (actions?.onOpenGroup) actions.onOpenGroup(data); else compose(`Mình muốn hỏi thêm về việc ${data.job}: `); }}
-        className="pressable -mx-4 -mb-4 mt-1 flex items-center justify-center gap-1.5 border-t border-hair py-3 t-base font-medium text-(--chat-link) hover:bg-(--chat-list-active) rounded-b-[var(--radius-base)]">
-        <Icon name="message-chat-circle" size={18} />Mở box chat
-      </button>
+      <MatchChips chips={data.chips.filter((c) => c.ok).map((c) => ({ ok: true, vi: c.label, en: "", ja: "" }))} />
+      <Button block iconRight="arrow-up-right" onClick={() => openWeb()}>Xem chi tiết</Button>
+      {actions?.onOpenGroup && (
+        <button type="button" data-id="zalo-oa-open-chat" onClick={() => actions.onOpenGroup?.(data)}
+          className="pressable -mx-4 -mb-4 mt-1 flex items-center justify-center gap-1.5 border-t border-hair py-3 t-base font-medium text-(--chat-link) hover:bg-(--chat-list-active) rounded-b-[var(--radius-base)]">
+          <Icon name="message-chat-circle" size={18} />Mở box chat
+        </button>
+      )}
     </article>
   );
 }
@@ -740,7 +711,6 @@ function RecommendWidget({ data, radius = "", actions }: { data: Recommend; radi
 // ---- Kịch bản B1 · Lần đầu --------------------------------------------------------
 type Stage = "idle" | QuestionId | "evaluating" | "done";
 const START = "Bắt đầu tìm việc";
-const CARD = "Gửi ảnh thẻ cư trú";
 const SKIP = "Bỏ qua";
 const UNSURE = "Không rõ visa của mình";
 const AGAIN = "Làm lại từ đầu";
@@ -753,27 +723,9 @@ function useMessages(initial: () => NewMsg[]) {
   const [msgs, setMsgs] = useState<Msg[]>(() => initial().map((m) => ({ ...m, id: ++seq.current, at: clock() }) as Msg));
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
-  const push = useCallback((...m: NewMsg[]) => setMsgs((x) => [...x.filter((y) => y.kind !== "typing" && y.kind !== "evaluating"), ...m.map((y) => ({ ...y, id: ++seq.current, at: clock() }) as Msg)]), []);
+  const push = useCallback((...m: NewMsg[]) => setMsgs((x) => [...x.filter((y) => y.kind !== "typing"), ...m.map((y) => ({ ...y, id: ++seq.current, at: clock() }) as Msg)]), []);
   const later = useCallback((ms: number, fn: () => void) => { timers.current.push(setTimeout(fn, ms)); }, []);
   return { msgs, setMsgs, push, later };
-}
-
-/** Nộp hồ sơ ngay trong chat → từ đây OA tự gửi widget trạng thái đơn mỗi khi đổi trạng thái. */
-function useApply(push: (...m: NewMsg[]) => void, later: (ms: number, fn: () => void) => void) {
-  const [applied, setApplied] = useState<string[]>([]);
-  const sent = useRef(new Set<string>());
-  const apply = (job: string, pay: number) => {
-    if (sent.current.has(job)) return;
-    sent.current.add(job);
-    setApplied((a) => [...a, job]);
-    const factory = splitJob(job).factory;
-    push({ kind: "text", from: "me", text: `Nộp hồ sơ ${job}` });
-    later(500, () => push({ kind: "typing" }));
-    later(1200, () => push({ kind: "text", from: "bot", text: `Đã gửi hồ sơ tới ${factory}. Từ giờ mỗi khi đơn đổi trạng thái, mình sẽ nhắn bạn ngay tại đây.` }));
-    later(2200, () => push({ kind: "status", data: { job, pay, from: "pending", to: "pending", note: `Hồ sơ đã tới HR ${factory}. Nhà máy cam kết trả lời trong 24h.`, at: clock() } }));
-    later(5200, () => push({ kind: "status", data: { job, pay, from: "pending", to: "viewed", note: `HR ${factory} đang xem hồ sơ của bạn.`, at: clock() } }));
-  };
-  return { applied, apply };
 }
 
 /**
@@ -784,21 +736,24 @@ function GroupChat({ data, onBack }: { data: Recommend; onBack: () => void }) {
   const { title, factory } = splitJob(data.job);
   const posts = groupPosts(title, factory, data.area, data.km, fmtMonthly(data.pay), fmtPay(data.pay));
   const [mine, setMine] = useState<Record<string, boolean>>({});
+  const [view, setView] = useState<"chat" | "info" | "members">("chat");
   return (
     <div data-id="zalo-oa-group" className="flex flex-col flex-1 min-h-0 animate-[zen-slide-in-right_var(--motion-slow)_var(--ease-spring)_both]">
+      <div className={view === "chat" ? "contents" : "hidden"}>
       <header className="relative z-20 flex h-14 shrink-0 items-center gap-1 px-2 bg-(--chat-header-bg) bg-(image:--chat-header-gradient) text-(--chat-header-fg)">
         <button type="button" onClick={onBack} aria-label="Quay lại OA" className="pressable group/hb inline-flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-(--chat-header-fg)/15">
           <Icon name="arrow-left" size={24} className="transition-transform duration-[var(--motion-base)] group-hover/hb:-translate-x-0.5" />
         </button>
         <span className="rounded-xl ring-2 ring-(--chat-header-fg)/30"><FactoryLogo name={factory} size={40} /></span>
-        <span className="ml-2 flex min-w-0 flex-col">
+        <button type="button" onClick={() => setView("info")} aria-label="Mở thông tin nhóm" className="pressable ml-2 flex min-w-0 flex-1 flex-col text-left">
           <span className="truncate t-lg font-bold">Nhóm {title} · {factory}</span>
-          <span className="truncate t-sm text-(--chat-header-fg-muted)">Nhóm tuyển dụng · 128 thành viên</span>
-        </span>
+          <span className="truncate t-sm text-(--chat-header-fg-muted)">Cộng đồng · {GROUP_SIZE} thành viên</span>
+        </button>
+        <HeaderIcon icon="menu-01" label="Thông tin nhóm" onClick={() => setView("info")} />
       </header>
       <div className="flex items-center gap-2 px-4 py-2 bg-(--chat-surface) border-b border-hair t-sm">
         <Icon name="calendar-check" size={16} className="text-(--chat-link) shrink-0" />
-        <span className="truncate"><b>Đã ghim:</b> Phỏng vấn online thứ Ba 18/11, 10:00</span>
+        <span className="truncate"><b>Đã ghim:</b> Phỏng vấn online thứ Tư 18/11, 10:00</span>
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-3">
         <div role="separator" className="flex justify-center py-3"><span className="rounded-full bg-(--chat-separator-bg) px-3 py-1 t-sm text-(--chat-separator-fg)">Bạn đã tham gia nhóm qua ViệcNhanh Aichi</span></div>
@@ -849,8 +804,398 @@ function GroupChat({ data, onBack }: { data: Recommend; onBack: () => void }) {
         <p className="flex-1 t-sm text-(--chat-meta)">Chỉ trưởng nhóm và phó nhóm được gửi tin trong nhóm này.</p>
         <Button size="sm" variant="secondary" onClick={onBack}>Nhắn OA</Button>
       </div>
+      </div>
+      {view === "info" && <GroupInfoPanel title={`Nhóm ${title} · ${factory}`} factory={factory} onBack={() => setView("chat")} onMembers={() => setView("members")} onLeave={onBack} />}
+      {view === "members" && <MembersPanel onBack={() => setView("info")} />}
     </div>
   );
+}
+
+// ---- Side tab: chrome dùng chung (theo màn "Thông tin" của Zalo) -------------------
+const GROUP_SIZE = 128;
+const notInDemo = () => toast("Mục này chỉ là mô phỏng trong bản demo", "info-circle");
+
+function HeaderIcon({ icon, label, onClick }: { icon: "menu-01" | "edit-02" | "search-md" | "users"; label: string; onClick?: () => void }) {
+  return (
+    <button type="button" onClick={onClick} aria-label={label} title={label}
+      className="pressable group/hb inline-flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-(--chat-header-fg)/15 active:bg-(--chat-header-fg)/25">
+      <Icon name={icon} size={24} className="transition-transform duration-[var(--motion-base)] [transition-timing-function:var(--ease-spring)] group-hover/hb:scale-110" />
+    </button>
+  );
+}
+
+/** Thanh đầu side tab: nền gradient, nút quay lại, tiêu đề, tối đa 2 nút phải. */
+function PanelHeader({ title, onBack, children }: { title: string; onBack: () => void; children?: ReactNode }) {
+  return (
+    <header className="relative z-20 flex h-14 shrink-0 items-center gap-1 px-2 bg-(--chat-header-bg) bg-(image:--chat-header-gradient) text-(--chat-header-fg)">
+      <button type="button" onClick={onBack} aria-label="Quay lại" className="pressable group/hb inline-flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-(--chat-header-fg)/15">
+        <span className="inline-flex transition-transform duration-[var(--motion-base)] group-hover/hb:-translate-x-0.5"><Icon name="chevron-down" size={26} className="rotate-90" /></span>
+      </button>
+      <h2 className="flex-1 min-w-0 truncate pl-1 t-h4 font-medium">{title}</h2>
+      {children}
+    </header>
+  );
+}
+
+type RowIcon = "users" | "globe-02" | "file-check" | "bell-01" | "layout-grid-01" | "translate" | "eye" | "alert-triangle" | "x-circle" | "log-out-01" | "clock" | "marker-pin-02" | "phone-call" | "image-plus";
+/** Dòng cài đặt: icon 24 · nhãn 16 · giá trị phụ · mũi tên hoặc công tắc; đường kẻ thụt thẳng cột chữ. */
+function PanelRow({ icon, label, value, badge, danger, onClick, toggle, info }: {
+  icon: RowIcon; label: string; value?: string; badge?: string; danger?: boolean; onClick?: () => void; toggle?: { on: boolean; set: (v: boolean) => void };
+  /** Dòng chỉ hiển thị thông tin: không bấm được, không mũi tên. */
+  info?: boolean;
+}) {
+  const body = (
+    <>
+      <Icon name={icon} size={24} className={danger ? "text-[var(--color-content-negative-base)]" : "text-(--chat-meta)"} />
+      <span className="flex flex-1 min-w-0 items-center gap-2 self-stretch border-b border-hair group-last/rows:border-0">
+        <span className={`truncate t-lg ${danger ? "text-[var(--color-content-negative-base)]" : ""}`}>{label}</span>
+        {badge && <span className="badge bg-[var(--color-bg-positive-solid)] text-white">{badge}</span>}
+        <span className="flex-1" />
+        {value && <span className="t-base font-medium text-(--chat-meta)">{value}</span>}
+        {toggle ? <Toggle checked={toggle.on} onChange={toggle.set} label={label} /> : !danger && !info && <Icon name="chevron-down" size={20} className="-rotate-90 text-(--chat-meta)" />}
+      </span>
+    </>
+  );
+  const cls = "group/rows flex h-14 w-full items-center gap-4 pl-4 pr-4 text-left";
+  return toggle || info ? <div className={cls}>{body}</div> : <button type="button" onClick={onClick ?? notInDemo} className={`${cls} pressable hover:bg-(--chat-list-hover)`}>{body}</button>;
+}
+
+function PanelBlock({ children }: { children: ReactNode }) {
+  return <section className="bg-(--chat-surface) [&>*:last-child>span]:border-0">{children}</section>;
+}
+
+function RoundAction({ icon, label, onClick, on }: { icon: "search-md" | "users" | "bell-01" | "phone-call" | "globe-02" | "send-01"; label: string; onClick?: () => void; on?: boolean }) {
+  return (
+    <button type="button" onClick={onClick ?? notInDemo} className="pressable group/qa flex flex-col items-center gap-2 rounded-[var(--radius-base)] py-2">
+      <span className={`grid size-12 place-items-center rounded-full transition-transform duration-[var(--motion-base)] [transition-timing-function:var(--ease-spring)] group-hover/qa:-translate-y-0.5 ${on ? "bg-(--chat-list-active) text-(--chat-link)" : "bg-(--chat-canvas) text-fg"}`}>
+        <Icon name={icon} size={22} solid={on} />
+      </span>
+      <span key={label} className="t-base text-center animate-[zen-fade-in_var(--motion-base)_var(--ease-standard)_both]">{label}</span>
+    </button>
+  );
+}
+
+/** Ô ảnh mô phỏng (không dùng ảnh thật): khối màu + icon. */
+function MediaStrip({ onMore }: { onMore?: () => void }) {
+  const tiles = ["bg-[var(--color-bg-accent-subtle)]", "bg-[var(--color-bg-positive-subtle)]", "bg-[var(--color-bg-warning-subtle)]", "bg-[var(--color-bg-negative-subtle)]"];
+  const icons = ["building-02", "tool-02", "truck", "users"] as const;
+  return (
+    <div className="grid grid-cols-5 gap-1.5 pl-14 pr-4 pb-4">
+      {tiles.map((t, i) => (
+        <span key={t} className={`aspect-square rounded-lg grid place-items-center text-(--chat-meta) ${t}`} aria-hidden><Icon name={icons[i]} size={22} /></span>
+      ))}
+      <button type="button" onClick={onMore ?? notInDemo} aria-label="Xem tất cả ảnh, file, link" className="pressable aspect-square rounded-lg grid place-items-center bg-(--chat-canvas)"><Icon name="arrow-right" size={22} /></button>
+    </div>
+  );
+}
+
+/** Side tab hồ sơ Official Account (Chat Kit · OAProfilePanel), mở từ header. */
+function OaProfilePanel({ onBack }: { onBack: () => void }) {
+  const [follow, setFollow] = useState(true);
+  const [muted, setMuted] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const [more, setMore] = useState(false);
+  return (
+    <aside data-id="zalo-oa-profile" aria-label="Hồ sơ ViệcNhanh Aichi" className="flex flex-col flex-1 min-h-0 animate-[zen-slide-in-right_var(--motion-slow)_var(--ease-spring)_both]">
+      <PanelHeader title="Thông tin" onBack={onBack} />
+      <div className="flex-1 min-h-0 overflow-y-auto bg-(--chat-canvas) grid content-start gap-2 pb-4">
+        <PanelBlock>
+          <div className="grid justify-items-center gap-2 px-4 pt-6 pb-4 text-center">
+            <OaAvatar size={88} />
+            <h3 className="mt-1 flex items-center gap-1 t-h4">ViệcNhanh Aichi<span className="inline-flex text-(--chat-verified)"><Icon name="check-verified" size={20} solid label="Đã xác thực" /></span></h3>
+            <span className="badge badge-md bg-(--chat-list-active) text-(--chat-link)">Official Account</span>
+            <p className="t-base text-(--chat-meta)">Việc làm · Aichi · 12,4k người quan tâm</p>
+            <div className="mt-2 grid w-full grid-cols-2 gap-2">
+              <Button variant={follow ? "secondary" : "primary"} icon={follow ? "check" : "plus"} onClick={() => setFollow((v) => !v)}>
+                <span key={String(follow)} className="animate-[zen-fade-in_var(--motion-base)_var(--ease-standard)_both]">{follow ? "Đã quan tâm" : "Quan tâm"}</span>
+              </Button>
+              <Button variant="tertiary" icon="message-chat-circle" onClick={onBack}>Nhắn tin</Button>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-1 px-4 pb-4">
+            <RoundAction icon="search-md" label="Tìm tin nhắn" />
+            <RoundAction icon="globe-02" label="Website" onClick={() => openWeb()} />
+            <RoundAction icon="bell-01" label={muted ? "Bật thông báo" : "Tắt thông báo"} on={muted} onClick={() => setMuted((v) => !v)} />
+          </div>
+        </PanelBlock>
+        <PanelBlock>
+          <div className="px-4 py-3 grid gap-1">
+            <p className="t-sub">Giới thiệu</p>
+            <p key={String(more)} className={`t-base text-muted animate-[zen-fade-in_var(--motion-base)_var(--ease-standard)_both] ${more ? "" : "line-clamp-3"}`}>
+              ViệcNhanh Aichi giúp người Việt ở Aichi tìm việc đúng visa, gần nơi ở. AI chấm mức phù hợp giữa hồ sơ và tin tuyển dụng, nhà máy cam kết trả lời trong 24 giờ.
+              Miễn phí cho người lao động, không thu phí giới thiệu. Nhân viên nói tiếng Việt hỗ trợ 7h–22h mỗi ngày.
+            </p>
+            <button type="button" onClick={() => setMore((v) => !v)} className="pressable justify-self-start t-base font-medium text-(--chat-link)">{more ? "Thu gọn" : "Xem thêm"}</button>
+          </div>
+        </PanelBlock>
+        <PanelBlock>
+          <PanelRow icon="clock" label="Giờ hỗ trợ" value="7h–22h" info />
+          <PanelRow icon="marker-pin-02" label="Khu vực" value="Aichi, Nhật Bản" info />
+          <PanelRow icon="globe-02" label="Website ViệcNhanh" onClick={() => openWeb()} />
+        </PanelBlock>
+        <PanelBlock>
+          <PanelRow icon="image-plus" label="Ảnh, file, link" />
+          <MediaStrip />
+        </PanelBlock>
+        <PanelBlock>
+          <PanelRow icon="bell-01" label="Thông báo" value={muted ? "Đã tắt" : "Đang bật"} />
+          <PanelRow icon="eye" label="Ẩn trò chuyện" toggle={{ on: hidden, set: setHidden }} />
+        </PanelBlock>
+        <PanelBlock>
+          <PanelRow icon="alert-triangle" label="Báo xấu" />
+          <PanelRow icon="x-circle" label="Xoá trò chuyện" danger />
+          <PanelRow icon="log-out-01" label="Bỏ quan tâm" danger onClick={() => { setFollow(false); toast("Đã bỏ quan tâm · bạn sẽ không nhận báo việc mới", "info-circle"); }} />
+        </PanelBlock>
+      </div>
+    </aside>
+  );
+}
+
+/** Side tab "Thông tin" của nhóm/cộng đồng việc (theo màn Zalo): hành động nhanh, ảnh, thành viên, cài đặt. */
+function GroupInfoPanel({ title, factory, onBack, onMembers, onLeave }: { title: string; factory: string; onBack: () => void; onMembers: () => void; onLeave: () => void }) {
+  const [muted, setMuted] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  return (
+    <aside data-id="zalo-oa-group-info" aria-label={`Thông tin ${title}`} className="flex flex-col flex-1 min-h-0 animate-[zen-slide-in-right_var(--motion-slow)_var(--ease-spring)_both]">
+      <PanelHeader title="Thông tin" onBack={onBack}><HeaderIcon icon="edit-02" label="Đổi tên nhóm" onClick={notInDemo} /></PanelHeader>
+      <div className="flex-1 min-h-0 overflow-y-auto bg-(--chat-canvas) grid content-start gap-2 pb-4">
+        <PanelBlock>
+          <div className="grid justify-items-center gap-2 px-4 pt-6 pb-2 text-center">
+            <span className="rounded-full overflow-hidden"><FactoryLogo name={factory} size={88} /></span>
+            <h3 className="mt-1 t-h4">{title}</h3>
+            <span className="badge badge-md bg-(--chat-canvas) text-(--chat-link)">Cộng đồng</span>
+          </div>
+          <div className="grid grid-cols-3 gap-1 px-4 pb-4">
+            <RoundAction icon="search-md" label="Tìm tin nhắn" />
+            <RoundAction icon="users" label="Mời tham gia" />
+            <RoundAction icon="bell-01" label={muted ? "Bật thông báo" : "Tắt thông báo"} on={muted} onClick={() => setMuted((v) => !v)} />
+          </div>
+        </PanelBlock>
+        <PanelBlock>
+          <PanelRow icon="image-plus" label="Ảnh, file, link" />
+          <MediaStrip />
+          <PanelRow icon="users" label={`Thành viên (${GROUP_SIZE})`} onClick={onMembers} />
+          <PanelRow icon="globe-02" label="Link cộng đồng" value="Đang bật" />
+          <PanelRow icon="file-check" label="Bảng tin cộng đồng" />
+        </PanelBlock>
+        <PanelBlock>
+          <PanelRow icon="bell-01" label="Thông báo" value={muted ? "Đã tắt" : undefined} />
+          <PanelRow icon="layout-grid-01" label="Sắp xếp và phân loại" />
+          <PanelRow icon="translate" label="Dịch trò chuyện" badge="Mới" />
+          <PanelRow icon="eye" label="Ẩn trò chuyện" toggle={{ on: hidden, set: setHidden }} />
+        </PanelBlock>
+        <PanelBlock>
+          <PanelRow icon="alert-triangle" label="Báo xấu" />
+          <PanelRow icon="x-circle" label="Xoá trò chuyện" danger />
+          <PanelRow icon="log-out-01" label="Rời cộng đồng" danger onClick={() => { toast("Đã rời cộng đồng", "log-out-01"); onLeave(); }} />
+        </PanelBlock>
+      </div>
+    </aside>
+  );
+}
+
+/** Danh sách thành viên: trưởng/phó cộng đồng có huy hiệu, còn lại ghi cách tham gia. */
+function MembersPanel({ onBack }: { onBack: () => void }) {
+  const [open, setOpen] = useState<(typeof GROUP_MEMBERS)[number] | null>(null);
+  if (open) return <UserProfilePanel m={open} onBack={() => setOpen(null)} />;
+  return (
+    <aside data-id="zalo-oa-group-members" aria-label="Thành viên" className="flex flex-col flex-1 min-h-0 animate-[zen-slide-in-right_var(--motion-slow)_var(--ease-spring)_both]">
+      <PanelHeader title="Thành viên" onBack={onBack}>
+        <HeaderIcon icon="users" label="Mời thành viên" onClick={notInDemo} />
+        <HeaderIcon icon="search-md" label="Tìm thành viên" onClick={notInDemo} />
+      </PanelHeader>
+      <div className="flex-1 min-h-0 overflow-y-auto bg-(--chat-surface)">
+        <div className="flex items-center justify-between px-4 pt-4 pb-2">
+          <p className="t-base font-semibold text-(--chat-link)">Thành viên ({GROUP_SIZE})</p>
+          <button type="button" onClick={notInDemo} aria-label="Tuỳ chọn" className="pressable icon-btn sm text-(--chat-meta)"><Icon name="dots-horizontal" /></button>
+        </div>
+        <ul>
+          {GROUP_MEMBERS.map((m, i) => (
+            <li key={m.name} className={`flex items-center gap-2 pl-2 pr-4 ${SLIDE}`} style={{ animationDelay: `${i * 40}ms` }}>
+              <button type="button" onClick={() => setOpen(m)} aria-label={`Xem trang cá nhân ${m.name}`} className="pressable flex flex-1 min-w-0 items-center gap-4 rounded-[var(--radius-base)] px-2 py-2.5 text-left hover:bg-(--chat-list-hover)">
+              <span className="relative">
+                <Avatar name={m.me ? profile.name : m.name.split(" · ")[0]} size={52} />
+                {m.admin && (
+                  <span className={`absolute -bottom-0.5 -right-0.5 grid size-5 place-items-center rounded-full ring-2 ring-(--chat-surface) ${m.admin === "lead" ? "bg-[var(--color-bg-warning-solid)] text-white" : "bg-[var(--color-content-neutral-light)] text-white"}`} aria-label={m.note}>
+                    <Icon name="shield-tick" size={12} solid />
+                  </span>
+                )}
+              </span>
+              <span className="flex-1 min-w-0">
+                <span className="block truncate t-lg">{m.name}</span>
+                <span className="block truncate t-base text-(--chat-meta)">{m.note}</span>
+              </span>
+              </button>
+              {!m.me && <button type="button" onClick={notInDemo} aria-label={`Kết bạn với ${m.name}`} className="pressable icon-btn sm text-(--chat-meta)"><AddFriendIcon size={20} /></button>}
+            </li>
+          ))}
+        </ul>
+        <p className="px-4 py-4 t-sm text-(--chat-meta)">Tên thành viên là dữ liệu dựng.</p>
+      </div>
+    </aside>
+  );
+}
+
+/** Icon "kết bạn": người + dấu cộng ở góc trên phải (bộ icon của prototype không có sẵn). */
+const initials = (n: string) => { const p = n.trim().split(/\s+/); return (p.length > 1 ? p[p.length - 2][0] + p[p.length - 1][0] : p[0].slice(0, 2)).toUpperCase(); };
+
+function AddFriendIcon({ size = 22 }: { size?: number }) {
+  return (
+    <span className="relative inline-flex" style={{ width: size, height: size }} aria-hidden>
+      <Icon name="user" size={size} />
+      <span className="absolute -top-0.5 -right-1 grid place-items-center rounded-full bg-[inherit]" style={{ width: size * 0.5, height: size * 0.5 }}>
+        <Icon name="plus" size={Math.round(size * 0.5)} />
+      </span>
+    </span>
+  );
+}
+
+/** Trang cá nhân thành viên (theo màn Zalo): cover, avatar lớn, tên, ghi chú quyền riêng tư, Nhắn tin + Kết bạn. Dữ liệu dựng. */
+function UserProfilePanel({ m, onBack }: { m: (typeof GROUP_MEMBERS)[number]; onBack: () => void }) {
+  const [sent, setSent] = useState(false);
+  const name = m.me ? profile.name : m.name.split(" · ")[0];
+  const btn = "pressable inline-flex size-10 items-center justify-center rounded-full text-white [filter:drop-shadow(0_1px_2px_rgb(0_0_0/.45))] hover:bg-white/15";
+  return (
+    <aside data-id="zalo-oa-user-profile" aria-label={`Trang cá nhân ${name}`} className="relative flex flex-col flex-1 min-h-0 overflow-y-auto bg-(--chat-list-pinned) animate-[zen-slide-in-right_var(--motion-slow)_var(--ease-spring)_both]">
+      <div className="relative h-56 shrink-0 overflow-hidden bg-(--chat-header-bg) bg-(image:--chat-header-gradient)" aria-hidden>
+        <svg viewBox="0 0 390 224" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 size-full text-white">
+          <circle cx="320" cy="50" r="70" fill="currentColor" opacity=".12" /><circle cx="60" cy="190" r="90" fill="currentColor" opacity=".1" />
+          <path d="M0 170 C90 140 170 190 260 160 S360 140 390 150 V224 H0Z" fill="currentColor" opacity=".16" />
+        </svg>
+      </div>
+      <div className="absolute inset-x-0 top-0 flex items-center gap-1 px-2 h-14">
+        <button type="button" onClick={onBack} aria-label="Quay lại" className={btn}><Icon name="chevron-down" size={26} className="rotate-90" /></button>
+        <span className="flex-1" />
+        {!m.me && <button type="button" onClick={notInDemo} aria-label={`Gọi ${name}`} className={btn}><Icon name="phone" size={22} /></button>}
+        <button type="button" onClick={notInDemo} aria-label="Tuỳ chọn" className={btn}><Icon name="dots-horizontal" size={24} /></button>
+      </div>
+      <div className="relative z-10 -mt-16 grid justify-items-center gap-2 px-6 pb-6 text-center">
+        <span className="grid size-[120px] place-items-center rounded-full border-4 border-white bg-(--chat-header-bg) bg-(image:--chat-header-gradient) text-[44px] font-semibold text-white shadow-[var(--shadow-bottom-2)] animate-[zen-pop_var(--motion-slower)_var(--ease-bounce)]" aria-hidden>{initials(name)}</span>
+        <h3 className="mt-2 flex items-center gap-2 t-h3">{m.me ? `${name} (Bạn)` : name}</h3>
+        {m.admin && <span className={`badge badge-md ${m.admin === "lead" ? "bg-[var(--color-bg-warning-subtle)] text-[var(--color-content-warning-strongest)]" : "bg-brand-soft text-brand"}`}>{m.note}</span>}
+        {m.me ? (
+          <p className="t-lg text-muted">Đây là trang cá nhân của bạn trong cộng đồng.</p>
+        ) : (
+          <>
+            <p className="t-lg text-muted">Bạn chưa thể xem nhật ký của {name} khi chưa là bạn bè.</p>
+            <div className="mt-3 flex w-full items-center gap-3">
+              <button type="button" onClick={notInDemo} className="pressable flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-[var(--color-bg-accent-subtle)] hover:bg-[var(--color-bg-accent-subtle-hover)] t-lg font-semibold text-(--chat-link)">
+                <Icon name="message-chat-circle" size={22} />Nhắn tin
+              </button>
+              <button type="button" onClick={() => { setSent((v) => !v); if (!sent) toast(`Đã gửi lời mời kết bạn tới ${name}`, "user"); }} aria-pressed={sent}
+                aria-label={sent ? "Huỷ lời mời kết bạn" : `Kết bạn với ${name}`} className={`pressable grid h-12 w-16 place-items-center rounded-full ${sent ? "bg-(--chat-list-active) text-(--chat-link)" : "bg-(--chat-surface) text-fg"}`}>
+                <span key={String(sent)} className="inline-flex animate-[zen-pop_var(--motion-slow)_var(--ease-bounce)]">{sent ? <Icon name="check" size={22} /> : <AddFriendIcon size={22} />}</span>
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </aside>
+  );
+}
+
+/** Widget sự kiện (職場見学 / hội chợ). Quan tâm → thêm lịch (.ics). Không quan tâm → thu thành 1 dòng để không che tin cập nhật đơn. */
+function EventWidget({ data, radius = "", actions }: { data: OaEvent; radius?: string; actions?: WidgetActions }) {
+  const st = actions?.events?.[data.id];
+  if (st === "no") {
+    return (
+      <div data-id="zalo-oa-event-hidden" className={`w-full flex items-center gap-2 rounded-full bg-(--chat-separator-bg) px-3 py-1.5 t-sm text-(--chat-separator-fg) animate-[zen-fade-in_var(--motion-base)_var(--ease-standard)_both]`}>
+        <Icon name="eye" size={14} />
+        <span className="flex-1 min-w-0 truncate">Đã ẩn: {data.title}</span>
+        <button type="button" onClick={() => actions?.onEvent?.(data, "undo")} className="pressable font-semibold underline underline-offset-2">Hoàn tác</button>
+      </div>
+    );
+  }
+  const rows: { icon: "calendar" | "marker-pin-02" | "briefcase" | "users"; v: string }[] = [
+    { icon: "calendar", v: `${data.date} · ${data.time}` },
+    { icon: "marker-pin-02", v: `${data.place} · cách bạn ${data.km} km` },
+    { icon: "briefcase", v: data.scope },
+    { icon: "users", v: `${data.age} · ${data.who}` },
+  ];
+  return (
+    <article data-id="zalo-oa-widget-event" className={`p-4 grid gap-3 overflow-hidden ${WIDGET} ${radius}`}>
+      <EventCover data={data} />
+      <div className="flex items-center justify-between gap-2">
+        <p className="t-eyebrow">{data.type} · {data.jp}</p>
+        {data.seats && <span className="badge bg-[var(--color-bg-warning-subtle)] text-[var(--color-content-warning-strongest)]">{data.seats}</span>}
+      </div>
+      <div className="flex items-center gap-3">
+        <FactoryLogo name={data.host} />
+        <div className="min-w-0">
+          <p className="t-sub">{data.title}</p>
+          <p className="t-sm text-muted">Tổ chức: {data.host}</p>
+        </div>
+      </div>
+      <ul className="grid gap-2">
+        {rows.map((r) => (
+          <li key={r.icon} className="flex gap-2.5 t-base"><Icon name={r.icon} size={18} className="mt-0.5 shrink-0 text-(--chat-meta)" /><span className="min-w-0">{r.v}</span></li>
+        ))}
+      </ul>
+      <MatchChips chips={data.perks.map((p) => ({ ok: true, vi: p, en: "", ja: "" }))} />
+      {st === "yes" ? (
+        <div className="grid gap-2">
+          <Button block variant="secondary" icon="calendar-check" disabled>Đã thêm vào lịch</Button>
+          <button type="button" onClick={() => downloadIcs(data)} className="pressable justify-self-center t-base font-medium text-(--chat-link)">Tải lại file lịch (.ics)</button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          <Button variant="secondary" onClick={() => actions?.onEvent?.(data, "no")}>Không quan tâm</Button>
+          <Button icon="calendar-check" onClick={() => actions?.onEvent?.(data, "yes")}>Quan tâm</Button>
+        </div>
+      )}
+    </article>
+  );
+}
+
+/** Ảnh cover minh hoạ cho sự kiện (vẽ bằng SVG, không dùng ảnh thật): nhà máy cho 職場見学, gian hàng cho hội chợ. Ngày nổi trên góc. */
+function EventCover({ data }: { data: OaEvent }) {
+  const fair = data.id.startsWith("fair");
+  // "Thứ Bảy 21/11" → "Thứ 7 · 21/11"; "Chủ nhật 29/11" → "Chủ nhật · 29/11" (không viết tắt)
+  const WD: Record<string, string> = { "Thứ Hai": "Thứ 2", "Thứ Ba": "Thứ 3", "Thứ Tư": "Thứ 4", "Thứ Năm": "Thứ 5", "Thứ Sáu": "Thứ 6", "Thứ Bảy": "Thứ 7", "Chủ nhật": "Chủ nhật" };
+  const dm = data.date.split(" ").pop() ?? "";
+  const dow = WD[data.date.replace(` ${dm}`, "")] ?? data.date.replace(` ${dm}`, "");
+  return (
+    <div className="relative -mx-4 -mt-4 mb-1 h-36 overflow-hidden bg-(--chat-header-bg) bg-(image:--chat-header-gradient)" aria-hidden>
+      <svg viewBox="0 0 360 144" preserveAspectRatio="xMidYMax slice" className="absolute inset-0 size-full text-white">
+        <circle cx="300" cy="34" r="18" fill="currentColor" opacity=".35" />
+        <path d="M0 118 C70 100 140 128 220 112 S330 100 360 108 V144 H0Z" fill="currentColor" opacity=".18" />
+        {fair ? (
+          <g fill="currentColor">
+            {[24, 104, 184, 264].map((x, i) => (
+              <g key={x} opacity={i % 2 ? 0.75 : 0.95}>
+                <path d={`M${x} 92 L${x + 36} 70 L${x + 72} 92 Z`} />
+                <rect x={x + 6} y="92" width="60" height="34" rx="3" opacity=".85" />
+                <rect x={x + 22} y="104" width="28" height="22" rx="2" fill="var(--chat-header-bg)" opacity=".55" />
+              </g>
+            ))}
+            <path d="M18 70 Q180 40 342 70" stroke="currentColor" strokeWidth="2" fill="none" opacity=".6" />
+            {[60, 120, 180, 240, 300].map((x) => <path key={x} d={`M${x} ${x === 180 ? 55 : 60} l6 10 h-12z`} opacity=".8" />)}
+          </g>
+        ) : (
+          <g fill="currentColor">
+            <rect x="34" y="64" width="16" height="44" rx="2" opacity=".9" />
+            <rect x="60" y="50" width="14" height="58" rx="2" opacity=".9" />
+            <path d="M24 126 V92 L74 72 V92 L124 72 V92 L174 72 V92 L224 72 V126 Z" opacity=".95" />
+            <rect x="234" y="88" width="104" height="38" rx="3" opacity=".8" />
+            {[44, 94, 144, 194].map((x) => <rect key={x} x={x} y="100" width="22" height="14" rx="2" fill="var(--chat-header-bg)" opacity=".5" />)}
+            <rect x="248" y="100" width="76" height="6" rx="3" fill="var(--chat-header-bg)" opacity=".5" />
+            <circle cx="42" cy="44" r="9" opacity=".35" /><circle cx="56" cy="32" r="7" opacity=".25" /><circle cx="70" cy="24" r="5" opacity=".18" />
+          </g>
+        )}
+      </svg>
+      <span className="absolute left-3 top-3 badge badge-md bg-(--chat-surface) font-semibold text-fg tnum shadow-[var(--shadow-bottom-1)]">
+        <Icon name="calendar" size={14} className="text-(--chat-link)" />{dow} · {dm}
+      </span>
+      <span className="absolute right-3 bottom-3 badge badge-md bg-(--chat-surface)/90 text-fg">{data.jp}</span>
+    </div>
+  );
+}
+
+function downloadIcs(e: OaEvent) {
+  const url = URL.createObjectURL(new Blob([eventIcs(e)], { type: "text/calendar;charset=utf-8" }));
+  const a = Object.assign(document.createElement("a"), { href: url, download: `${e.id}.ics` });
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 const GREETING: NewMsg[] = [
@@ -864,24 +1209,24 @@ const GREETING: NewMsg[] = [
 /** Câu hỏi nhanh trước khi bắt đầu — trả lời các lo lắng thường gặp. */
 const FAQ: Record<string, string[]> = {
   "Có mất phí không?": ["Hoàn toàn miễn phí cho người lao động. ViệcNhanh không thu phí giới thiệu."],
-  "Cần chuẩn bị gì?": ["Bạn chỉ cần thẻ cư trú (在留カード) để chụp ở câu 1. Các câu sau chỉ cần bấm chọn."],
+  "Cần chuẩn bị gì?": ["Không cần chuẩn bị gì. Bạn chỉ cần biết loại visa của mình (dòng 在留資格 trên thẻ cư trú). Các câu sau bấm chọn hoặc gõ là xong."],
   "Hỏi người thật": ["Nhân viên nói tiếng Việt trực 7h–22h mỗi ngày. Bạn cứ nhắn ở đây, mình chuyển cho bạn ấy nhé."],
 };
 
+// ---- Kịch bản B1 · Lần đầu: chỉ trao đổi bằng chữ ---------------------------------
 function FirstRunChat() {
   const { msgs, push, later } = useMessages(() => GREETING);
   const [stage, setStage] = useState<Stage>("idle");
   const [answers, setAnswers] = useState<Answers>({});
   const [busy, setBusy] = useState(false);
   const [asked, setAsked] = useState<string[]>([]);
-  const { applied, apply } = useApply(push, later);
 
   /** Bot gõ một lúc rồi mới trả lời. */
-  const bot = (texts: string[], then?: () => void, wait = 700) => {
+  const bot = (items: (string | NewMsg)[], then?: () => void, wait = 700) => {
     setBusy(true);
     push({ kind: "typing" });
     later(wait, () => {
-      push(...texts.map((t) => ({ kind: "text" as const, from: "bot" as const, text: t })));
+      push(...items.map((t) => (typeof t === "string" ? { kind: "text" as const, from: "bot" as const, text: t } : t)));
       setBusy(false);
       then?.();
     });
@@ -889,20 +1234,21 @@ function FirstRunChat() {
 
   const ask = (q: QuestionId) => { setStage(q); bot([QUESTIONS[q].ask]); };
 
-  const advance = (from: QuestionId, a: Answers) => {
-    const nx = NEXT[from];
-    if (nx === "evaluating") {
-      setStage("evaluating");
+  /** Đủ 3 câu → 1 tin 3 tiêu chí + 1 tin 3 công ty (link ra website). */
+  const finish = (a: Answers) => {
+    setStage("evaluating");
+    bot(["Cảm ơn bạn! Mình đang đối chiếu hồ sơ với các việc đang tuyển, chờ chút nhé."], () => {
       setBusy(true);
-      later(400, () => {
-        push({ kind: "evaluating" });
-        later(1500, () => {
-          push({ kind: "assess", answers: a }, { kind: "text", from: "bot", text: "Hồ sơ đã lưu theo tài khoản Zalo của bạn. Mở ViệcNhanh trên web sẽ không phải trả lời lại 3 câu." });
-          setStage("done");
-          setBusy(false);
-        });
+      push({ kind: "typing" });
+      later(1500, () => {
+        push(
+          { kind: "assess", answers: a },
+          { kind: "text", from: "bot", text: "Hồ sơ đã lưu theo tài khoản Zalo của bạn. Mở ViệcNhanh trên web sẽ không phải trả lời lại 3 câu." },
+        );
+        setStage("done");
+        setBusy(false);
       });
-    } else ask(nx as QuestionId);
+    });
   };
 
   const restart = () => {
@@ -911,6 +1257,8 @@ function FirstRunChat() {
     ask("q1");
   };
 
+  const norm = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").toLowerCase();
+
   const handle = (raw: string, viaChip: boolean) => {
     const text = raw.trim();
     push({ kind: "text", from: "me", text });
@@ -918,49 +1266,39 @@ function FirstRunChat() {
     if (text === AGAIN) return restart();
     if (stage === "idle") {
       if (FAQ[text]) { setAsked((a) => [...a, text]); return bot([...FAQ[text], "Nếu bạn đã sẵn sàng thì bấm “Bắt đầu tìm việc” nhé."]); }
-      if (viaChip || /bat dau|tim viec|start/.test(text.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").toLowerCase())) return ask("q1");
-      return bot(["Bạn bấm “Bắt đầu tìm việc” để mình hỏi 3 câu nhé."]);
+      if (viaChip || /bat dau|tim viec|start/.test(norm(text))) return ask("q1");
+      return bot(["Bạn bấm “Bắt đầu tìm việc” hoặc gõ “bắt đầu” để mình hỏi 3 câu nhé."]);
     }
-    if (stage === "done" || stage === "evaluating") return bot(["Bấm vào việc trong bản đánh giá để xem chi tiết. Muốn trả lời lại thì chọn “Làm lại từ đầu”."]);
+    if (stage === "done" || stage === "evaluating") return bot(["Bấm “Xem chi tiết” ở công ty bạn quan tâm để mở trên ViệcNhanh. Muốn trả lời lại thì chọn “Làm lại từ đầu”."]);
 
     const q = stage;
-    if (q === "q1" && text === UNSURE) return bot(["Không sao. Bạn chụp mặt trước thẻ cư trú (在留カード), mình đọc loại visa và hạn thẻ giúp bạn."]);
+    if (q === "q1" && text === UNSURE) return bot(["Không sao. Bạn xem dòng 在留資格 trên thẻ cư trú rồi gõ lại giúp mình, ví dụ “kỹ năng đặc định sản xuất” hoặc “thực tập sinh”."]);
     const val = text === SKIP ? null : viaChip && QUESTIONS[q].chips.includes(text) ? text : parseAnswer(q, text);
     if (!val) {
       // AC2: chỉ hỏi lại đúng câu đang dở.
-      return bot([text === SKIP ? "Câu này cần để chấm điểm nên mình chưa bỏ qua được." : "Mình chưa hiểu câu trả lời này.", QUESTIONS[q].retry]);
+      return bot([text === SKIP ? "Câu này cần để tìm việc đúng cho bạn nên mình chưa bỏ qua được." : "Mình chưa hiểu câu trả lời này.", QUESTIONS[q].retry]);
     }
     const a = { ...answers, [q]: val };
     setAnswers(a);
-    if (q === "q1" && !a.card) {
-      return bot([`Đã ghi: ${val}. Bạn gửi thêm ảnh thẻ cư trú nhé, bấm biểu tượng máy ảnh hoặc ô bên dưới.`]);
-    }
-    advance(q, a);
-  };
-
-  const sendCard = () => {
-    if (stage !== "q1") { toast("Ảnh thẻ cư trú chỉ cần ở câu 1", "info-circle"); return; }
-    push({ kind: "card-photo" });
-    const a = { ...answers, card: true, q1: answers.q1 ?? "Kỹ năng đặc định · Sản xuất" };
-    setAnswers(a);
-    bot([`Đã đọc thẻ: ${a.q1}, còn hạn đến 31/03/2028.`], () => advance("q1", a), 900);
+    const nx = NEXT[q];
+    if (nx === "evaluating") finish(a); else ask(nx as QuestionId);
   };
 
   const chips =
     stage === "idle" ? [START, ...Object.keys(FAQ).filter((q) => !asked.includes(q))]
-      : stage === "q1" ? (answers.q1 ? [CARD] : [...QUESTIONS.q1.chips, UNSURE, CARD, SKIP])
+      : stage === "q1" ? [...QUESTIONS.q1.chips, UNSURE, SKIP]
         : stage === "q2" || stage === "q3" ? [...QUESTIONS[stage].chips, SKIP]
           : stage === "done" ? [AGAIN] : [];
 
-  return (
-    <Chat msgs={msgs} chips={chips} busy={busy} actions={{ onApply: apply, applied }}
-      onChip={(c) => (c === CARD ? sendCard() : handle(c, true))}
-      onSend={(t) => handle(t, false)}
-      onCamera={sendCard} />
-  );
+  return <Chat msgs={msgs} chips={chips} busy={busy} onChip={(c) => handle(c, true)} onSend={(t) => handle(t, false)} />;
 }
 
-// ---- Kịch bản B2 · Trạng thái đơn ---------------------------------------------
+const replyLater = (push: (...m: NewMsg[]) => void, later: (ms: number, fn: () => void) => void) => (t: string) => {
+  push({ kind: "text", from: "me", text: t });
+  later(600, () => push({ kind: "text", from: "bot", text: "Mình đã nhận câu hỏi. Nhân viên tiếng Việt sẽ trả lời bạn trong giờ hỗ trợ 7h–22h." }));
+};
+
+// ---- Kịch bản B2 · Trạng thái đơn: tin nhắn chữ ------------------------------------
 function StatusChat({ to }: { to: StatusTo }) {
   const data = STATUS_UPDATES[to];
   const { msgs, push, later } = useMessages(() => [
@@ -969,17 +1307,15 @@ function StatusChat({ to }: { to: StatusTo }) {
     { kind: "day", text: "Hôm nay" },
     { kind: "typing" },
   ]);
-  // Hẹn giờ riêng + tự huỷ khi effect chạy lại (StrictMode / hot reload) để widget không bị gửi 2 lần.
+  // Hẹn giờ riêng + tự huỷ khi effect chạy lại (StrictMode / hot reload) để tin không bị gửi 2 lần.
   useEffect(() => {
     const id = setTimeout(() => push({ kind: "status", data }), 800);
     return () => clearTimeout(id);
   }, [data, push]);
-  const { applied, apply } = useApply(push, later);
-  return <Chat msgs={msgs} chips={[]} onChip={() => {}} onCamera={() => toast("Ảnh thẻ cư trú chỉ cần ở lần đầu", "info-circle")} actions={{ onApply: apply, applied }}
-    onSend={(t) => { push({ kind: "text", from: "me", text: t }); later(600, () => push({ kind: "text", from: "bot", text: "Mình là trợ lý tự động. Bấm vào thẻ để xem chi tiết trên ViệcNhanh nhé." })); }} />;
+  return <Chat msgs={msgs} chips={[]} onChip={() => {}} onSend={replyLater(push, later)} />;
 }
 
-// ---- Kịch bản B2 · Gợi ý việc ≥ 85% (BR4, BR5) ---------------------------------
+// ---- Kịch bản B2 · Gợi ý việc ≥ 85% (BR4, BR5): tin nhắn chữ + link -----------------
 function RecommendChat({ mode, attempts }: { mode: RecMode; attempts: number }) {
   const { msgs, push, later } = useMessages(() => [
     { kind: "day", text: "Thứ Hai" },
@@ -988,7 +1324,6 @@ function RecommendChat({ mode, attempts }: { mode: RecMode; attempts: number }) 
   ]);
   const shown = useRef(0);
   const noted = useRef(false);
-  const { applied, apply } = useApply(push, later);
   const [group, setGroup] = useState<Recommend | null>(null);
 
   useEffect(() => {
@@ -1013,10 +1348,33 @@ function RecommendChat({ mode, attempts }: { mode: RecMode; attempts: number }) 
   return (
     <>
       <div className={group ? "hidden" : "contents"}>
-        <Chat msgs={msgs} chips={[]} onChip={() => {}} onCamera={() => toast("Ảnh thẻ cư trú chỉ cần ở lần đầu", "info-circle")} actions={{ onApply: apply, applied, onOpenGroup: setGroup }}
-          onSend={(t) => { push({ kind: "text", from: "me", text: t }); later(600, () => push({ kind: "text", from: "bot", text: "Mình đã nhận câu hỏi. Nhân viên tiếng Việt sẽ trả lời bạn trong giờ hỗ trợ 7h–22h." })); }} />
+        <Chat msgs={msgs} chips={[]} onChip={() => {}} actions={{ onOpenGroup: setGroup }} onSend={replyLater(push, later)} />
       </div>
       {group && <GroupChat data={group} onBack={() => setGroup(null)} />}
     </>
   );
+}
+
+// ---- Kịch bản · Sự kiện (widget hợp lệ của Zalo OA) --------------------------------
+function EventChat() {
+  const { msgs, push, later } = useMessages(() => [
+    { kind: "day", text: "Hôm qua" },
+    { kind: "status", data: STATUS_UPDATES.interview },
+    { kind: "day", text: "Hôm nay" },
+    { kind: "text", from: "bot", text: "Tuần này có 2 hoạt động gần bạn. Đi tham quan trước giúp bạn biết rõ chỗ làm, lương và ký túc xá trước khi nộp hồ sơ." },
+    ...EVENTS.map((e) => ({ kind: "event" as const, data: e })),
+  ]);
+  const [events, setEvents] = useState<Record<string, "yes" | "no">>({});
+
+  const onEvent = (e: OaEvent, act: "yes" | "no" | "undo") => {
+    setEvents(({ [e.id]: _, ...rest }) => (act === "undo" ? rest : { ...rest, [e.id]: act }));
+    if (act === "yes") {
+      downloadIcs(e);
+      toast("Đã thêm vào lịch · nhắc bạn trước 1 ngày", "calendar-check");
+      later(600, () => push({ kind: "typing" }));
+      later(1300, () => push({ kind: "text", from: "bot", text: `Đã ghi bạn quan tâm “${e.title}”. Mình sẽ nhắc trước 1 ngày và gửi hướng dẫn đường đi qua đây.` }));
+    }
+  };
+
+  return <Chat msgs={msgs} chips={[]} onChip={() => {}} actions={{ onEvent, events }} onSend={replyLater(push, later)} />;
 }

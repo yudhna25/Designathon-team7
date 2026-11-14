@@ -32,7 +32,7 @@ export function groupPosts(job: string, factory: string, area: string, km: numbe
       { k: "Cần tuyển", v: "5 người, nhận đến 30/11" },
     ] },
     { id: "g3", by: "deputy", at: "09:05", up: 18, seen: 81, text: "Xưởng hiện có 6 bạn người Việt. Hôm phỏng vấn có phiên dịch tiếng Việt, các bạn yên tâm nhé." },
-    { id: "g4", by: "lead", at: "10:12", up: 12, seen: 64, text: "Lịch phỏng vấn online: thứ Ba 18/11, 10:00. Bạn nào đã nộp hồ sơ sẽ nhận link riêng qua OA." },
+    { id: "g4", by: "lead", at: "10:12", up: 12, seen: 64, text: "Lịch phỏng vấn online: thứ Tư 18/11, 10:00. Bạn nào đã nộp hồ sơ sẽ nhận link riêng qua OA." },
   ];
 }
 
@@ -68,9 +68,9 @@ export const top3: OaJob[] = [
 export type QuestionId = "q1" | "q2" | "q3";
 export const QUESTIONS: Record<QuestionId, { ask: string; chips: string[]; retry: string }> = {
   q1: {
-    ask: "Câu 1/3 · Visa (tư cách lưu trú) của bạn là loại nào? Xem dòng 在留資格 trên thẻ cư trú. Không chắc thì cứ chụp thẻ, mình đọc giúp.",
+    ask: "Câu 1/3 · Visa (tư cách lưu trú) và ngành của bạn là gì? Bạn xem dòng 在留資格 trên thẻ cư trú nếu chưa chắc.",
     chips: ["Kỹ năng đặc định · Sản xuất", "Kỹ năng đặc định · Thực phẩm", "Thực tập sinh kỹ năng"],
-    retry: "Mình chưa nhận ra loại visa. Bạn chọn một ô bên dưới, gõ ví dụ “kỹ năng đặc định sản xuất”, hoặc chụp thẻ cư trú để mình đọc.",
+    retry: "Mình chưa nhận ra loại visa. Bạn chọn một ô bên dưới hoặc gõ ví dụ “kỹ năng đặc định sản xuất”.",
   },
   q2: {
     ask: "Câu 2/3 · Bạn làm được việc gì, bao nhiêu năm? Có chứng chỉ nào không?",
@@ -122,7 +122,7 @@ export const STATUS_TONE: Record<StatusId, "neutral" | "positive" | "negative"> 
 export type StatusUpdate = { job: string; pay: number; from: StatusId; to: StatusId; note: string; upskill?: string; alternatives?: OaJob[]; at: string };
 export const STATUS_UPDATES: Record<Exclude<StatusId, "pending">, StatusUpdate> = {
   viewed: { job: "Hàn MIG · Nhà máy A", pay: 1350, from: "pending", to: "viewed", note: "HR Nhà máy A đang xem hồ sơ của bạn. Cam kết trả lời trong 24h.", at: "09:12" },
-  interview: { job: "Hàn MIG · Nhà máy A", pay: 1350, from: "viewed", to: "interview", note: "Nhà máy đã duyệt hồ sơ. Lịch phỏng vấn: thứ Ba 18/11, 10:00 (online).", at: "14:30" },
+  interview: { job: "Hàn MIG · Nhà máy A", pay: 1350, from: "viewed", to: "interview", note: "Nhà máy đã duyệt hồ sơ. Lịch phỏng vấn: thứ Tư 18/11, 10:00 (online).", at: "14:30" },
   rejected: {
     job: "Tiện CNC · Nhà máy B",
     pay: 1400,
@@ -157,3 +157,48 @@ export const RECOMMENDS: Recommend[] = [
 ];
 /** Bản thử AC4: cùng việc nhưng chỉ 84% → không được gửi qua Zalo. */
 export const RECOMMEND_BELOW: Recommend = { job: "Lắp ráp · Nhà máy C", area: "Anjo", fit: 84, pay: 1250, km: 15, chips: [{ ok: true, label: "Đúng visa" }, { ok: false, label: "Xe nâng" }] };
+
+// ---- Sự kiện: tham quan nhà máy (職場見学) và hội chợ việc làm ---------------------
+export type OaEvent = {
+  id: string; type: string; jp: string; title: string; host: string; place: string; km: number;
+  date: string; time: string; start: string; end: string; scope: string; age: string; who: string; seats?: string; perks: string[];
+};
+export const EVENTS: OaEvent[] = [
+  {
+    id: "kengaku-d", type: "Tham quan nhà máy", jp: "職場見学", title: "Tham quan dây chuyền hàn · Nhà máy D", host: "Nhà máy D",
+    place: "Toyota-shi", km: 4, date: "Thứ Bảy 21/11", time: "9:30–12:00", start: "2026-11-21T09:30:00+09:00", end: "2026-11-21T12:00:00+09:00",
+    scope: "Xem dây chuyền hàn MIG, gặp tổ trưởng người Việt, hỏi về lương và ký túc xá", age: "18–35 tuổi",
+    who: "Visa Kỹ năng đặc định hoặc Thực tập sinh", seats: "Còn 12 chỗ", perks: ["Miễn phí", "Xe đưa đón từ ga Toyotashi", "Có phiên dịch"],
+  },
+  {
+    id: "fair-nagoya", type: "Hội chợ việc làm", jp: "就職フェア", title: "Hội chợ việc làm cho người Việt tại Aichi", host: "ViệcNhanh Aichi",
+    place: "Nagoya", km: 28, date: "Chủ nhật 29/11", time: "10:00–16:00", start: "2026-11-29T10:00:00+09:00", end: "2026-11-29T16:00:00+09:00",
+    scope: "25 nhà máy sản xuất, phỏng vấn tại chỗ, tư vấn đổi visa", age: "18–40 tuổi",
+    who: "Người Việt đang sống ở Aichi", perks: ["Miễn phí", "Phỏng vấn tại chỗ", "Mang theo thẻ cư trú"],
+  },
+];
+
+/** File lịch .ics cho nút "Quan tâm · thêm lịch" (nhắc trước 1 ngày). */
+export function eventIcs(e: OaEvent) {
+  const z = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  return [
+    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//ViecNhanh Aichi//Zalo OA demo//VI", "BEGIN:VEVENT",
+    `UID:${e.id}@viecnhanh-demo`, `DTSTAMP:${z(new Date().toISOString())}`, `DTSTART:${z(e.start)}`, `DTEND:${z(e.end)}`,
+    `SUMMARY:${e.title}`, `LOCATION:${e.place}, Aichi`, `DESCRIPTION:${e.type} (${e.jp}) · ${e.scope}`,
+    "BEGIN:VALARM", "TRIGGER:-P1D", "ACTION:DISPLAY", "DESCRIPTION:Nhắc lịch ViệcNhanh", "END:VALARM",
+    "END:VEVENT", "END:VCALENDAR",
+  ].join("\r\n");
+}
+
+/** Nhóm / thành viên mô phỏng cho side tab "Thông tin nhóm" (tên dựng). */
+export const GROUP_MEMBERS: { name: string; note: string; admin?: "lead" | "deputy"; me?: boolean }[] = [
+  { name: "Chị Sato · HR", note: "Trưởng cộng đồng", admin: "lead" },
+  { name: "Anh Minh · Tổ trưởng", note: "Phó cộng đồng", admin: "deputy" },
+  { name: "Chị Linh · Phiên dịch", note: "Phó cộng đồng", admin: "deputy" },
+  { name: "Trần Văn Hùng", note: "Tham gia qua link cộng đồng" },
+  { name: "Lê Thị Mai", note: "Thêm bởi Chị Sato · HR" },
+  { name: "Phạm Đức Long", note: "Tham gia qua ViệcNhanh Aichi" },
+  { name: "Nguyễn Thu Hà", note: "Tham gia qua link cộng đồng" },
+  { name: "Đỗ Quang Vinh", note: "Thêm bởi Anh Minh · Tổ trưởng" },
+  { name: "Bạn", note: "Tham gia qua ViệcNhanh Aichi", me: true },
+];
