@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ViệcNhanh · Hướng hình ảnh v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#1B22A7;--sky:#4260E6;--ink:#0D0D0D;--paper:#FAFAFA;--b1:#F1F4FC;--b2:#E0E6F6;--b4:#B9C6E9;--muted:#5B5B5B}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Be Vietnam Pro",system-ui,sans-serif;background:#ECEDF1;color:var(--ink);padding:40px 24px 80px;-webkit-font-smoothing:antialiased}
+header.top{max-width:1240px;margin:0 auto 36px}
+header.top h1{font-size:34px;letter-spacing:-.03em;line-height:1.1;font-weight:700}
+header.top p{color:var(--muted);margin-top:10px;font-size:16px;max-width:760px;line-height:1.5}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;max-width:1240px;margin:0 auto}
+@media (max-width:1100px){.grid{grid-template-columns:1fr}}
+.opt{cursor:pointer;border-radius:28px;padding:22px;background:#fff;border:2px solid transparent;transition:border-color .2s,transform .3s}
+.opt:hover{transform:translateY(-3px)} .opt.selected{border-color:var(--blue)}
+.opt h2{font-size:20px;letter-spacing:-.02em;margin-top:22px} .opt .ref{font-size:13px;color:var(--sky);font-weight:600;margin-top:4px}
+.opt p{font-size:14px;color:var(--muted);line-height:1.55;margin-top:8px}
+.phone{width:375px;max-width:100%;height:760px;margin:0 auto;border-radius:44px;overflow:hidden;position:relative;box-shadow:0 0 0 10px #0d0d0d,0 30px 60px -20px rgba(13,13,13,.5)}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace;letter-spacing:-.02em}
+.sb{height:44px;display:flex;justify-content:space-between;align-items:center;padding:0 26px;font-size:14px;font-weight:600}
+
+/* ============ 1 · WALLET (Revolut / Apple Wallet) ============ */
+.w{background:#06082E;color:#fff}
+.w .hero{padding:8px 22px 0;position:relative}
+.w .hero::before{content:"";position:absolute;inset:-120px -80px auto;height:420px;background:radial-gradient(closest-side,rgba(66,96,230,.55),transparent 70%);pointer-events:none}
+.w .eyebrow{font-size:13px;color:#AFC0F5;font-weight:500;position:relative}
+.w .big{font-size:46px;font-weight:700;letter-spacing:-.045em;line-height:1;margin-top:8px;position:relative}
+.w .big small{display:block;margin-top:6px;font-family:"Be Vietnam Pro";font-size:15px;font-weight:500;color:#AFC0F5;letter-spacing:-.01em}
+.w .sub{position:relative;margin-top:10px;display:flex;gap:8px}
+.w .pill{font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:99px;background:rgba(255,255,255,.1);backdrop-filter:blur(8px)}
+.w .stack{position:absolute;left:14px;right:14px;top:236px}
+.w .pass{border-radius:26px;padding:20px;color:#fff;position:relative;box-shadow:0 -10px 30px -12px rgba(0,0,0,.6)}
+.w .p1{background:linear-gradient(150deg,#2B33C9 0%,#1B22A7 55%,#121882 100%)}
+.w .p2{background:linear-gradient(150deg,#5B76EE,#4260E6 60%,#3149C3);height:66px;margin-top:-44px;transform:scale(.95);transform-origin:top}
+.w .p3{background:#262A6E;height:66px;transform:scale(.9);transform-origin:top}
+.w .p1{z-index:3;margin-top:-44px} .w .p2{z-index:2} .w .p3{z-index:1}
+.w .stack{display:flex;flex-direction:column;top:250px}
+.w .ph{display:flex;justify-content:space-between;align-items:flex-start}
+.w .mark{width:42px;height:42px;border-radius:12px;background:#fff;color:var(--blue);display:grid;place-items:center;font-weight:800;font-size:15px}
+.w .fit{font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);padding:6px 10px;border-radius:99px}
+.w .bars{display:flex;gap:2px}.w .bars i{width:5px;height:12px;border-radius:2px;background:#fff}
+.w h3{font-size:22px;letter-spacing:-.025em;margin-top:18px;line-height:1.15}
+.w .co{font-size:13.5px;color:#C9D4FB;margin-top:4px}
+.w .row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:22px;padding-top:16px;border-top:1px solid rgba(255,255,255,.16)}
+.w .lbl{font-size:12px;color:#DCE3FC}.w .amt{font-size:28px;font-weight:700;letter-spacing:-.035em}
+.w .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.w .chips span{font-size:12.5px;font-weight:600;padding:5px 9px;border-radius:8px;background:rgba(255,255,255,.12)}
+.w .cta{position:absolute;left:14px;right:14px;bottom:24px;height:58px;border-radius:20px;background:#fff;color:var(--blue);font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;gap:10px}
+
+/* ============ 2 · EDITORIAL SWISS (Linear / Mercury / Stripe Press) ============ */
+.e{background:var(--paper);color:var(--ink)}
+.e .wrap{padding:6px 22px 0}
+.e .rule{display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding-bottom:12px;border-bottom:1px solid var(--ink)}
+.e h3.d{font-size:44px;line-height:.98;letter-spacing:-.05em;font-weight:700;margin-top:18px}
+.e h3.d em{font-style:normal;color:var(--blue)}
+.e .lede{font-size:15px;color:var(--muted);margin-top:12px;line-height:1.5}
+.e .item{display:grid;grid-template-columns:28px 1fr auto;gap:0 12px;padding:18px 0;border-bottom:1px solid #DADADA}
+.e .n{font-size:12px;color:var(--muted);padding-top:4px}
+.e .t{font-size:18px;font-weight:700;letter-spacing:-.02em;line-height:1.2}
+.e .c{font-size:13.5px;color:var(--muted);margin-top:3px}
+.e .fit{font-size:12.5px;font-weight:700;color:var(--blue);margin-top:10px;display:flex;align-items:center;gap:8px}
+.e .seg{display:flex;gap:3px}.e .seg i{width:16px;height:4px;background:var(--blue);border-radius:2px}.e .seg i.o{background:var(--b4)}
+.e .amt{text-align:right;font-size:22px;font-weight:700;letter-spacing:-.035em}
+.e .amt small{display:block;font-size:11.5px;color:var(--muted);font-weight:500;letter-spacing:0;margin-top:2px}
+.e .ck{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:10px;font-size:12.5px;color:var(--ink)}
+.e .ck b{color:var(--blue)} .e .ck s{color:#6b6b6b;text-decoration:none}
+.e .tabbar{position:absolute;left:0;right:0;bottom:0;height:78px;border-top:1px solid var(--ink);background:var(--paper);display:grid;grid-template-columns:repeat(4,1fr);font-size:12px;font-weight:600}
+.e .tabbar div{display:flex;align-items:center;justify-content:center;color:var(--muted)} .e .tabbar .on{color:var(--ink);box-shadow:inset 0 3px 0 var(--blue)}
+
+/* ============ 3 · TACTILE (Airbnb 2025 / Duolingo) ============ */
+.t3{background:linear-gradient(180deg,#EEF2FD 0%,#FAFAFA 38%)}
+.t3 .wrap{padding:4px 18px 0}
+.t3 .hi{display:flex;align-items:center;gap:12px}
+.t3 .av{width:46px;height:46px;border-radius:50%;background:conic-gradient(from 200deg,#1B22A7,#4260E6,#9CB3F3,#1B22A7);padding:3px}
+.t3 .av div{width:100%;height:100%;border-radius:50%;background:#fff;display:grid;place-items:center;font-weight:800;color:var(--blue)}
+.t3 .hi b{font-size:20px;letter-spacing:-.025em}.t3 .hi span{display:block;font-size:13px;color:var(--muted)}
+.t3 .banner{margin-top:16px;border-radius:24px;padding:16px;background:#fff;display:flex;gap:14px;align-items:center;box-shadow:0 1px 0 #e8eaf3,0 12px 28px -18px rgba(13,13,13,.25)}
+.t3 .obj{width:62px;height:62px;flex:none;border-radius:18px;background:radial-gradient(circle at 30% 25%,#9CB3F3,#4260E6 45%,#1B22A7);position:relative;box-shadow:inset 0 -6px 12px rgba(0,0,0,.25),0 8px 16px -8px rgba(13,13,13,.45)}
+.t3 .obj::after{content:"¥";position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-weight:800;font-size:28px;text-shadow:0 2px 0 rgba(0,0,0,.2)}
+.t3 .banner b{font-size:15px}.t3 .banner p{font-size:13px;color:var(--muted);margin-top:2px;line-height:1.4}
+.t3 h4{font-size:18px;letter-spacing:-.02em;margin:22px 0 10px}
+.t3 .job{border-radius:28px;background:#fff;overflow:hidden;box-shadow:0 1px 0 #e8eaf3,0 18px 34px -22px rgba(13,13,13,.4)}
+.t3 .img{height:150px;position:relative;background:
+  radial-gradient(circle at 78% 30%,rgba(255,255,255,.35),transparent 30%),
+  repeating-linear-gradient(115deg,#2a33b8 0 18px,#232ba3 18px 36px),
+  linear-gradient(180deg,#4260E6,#1B22A7)}
+.t3 .img::after{content:"";position:absolute;left:24px;bottom:-18px;width:110px;height:110px;border-radius:30px;background:radial-gradient(circle at 35% 30%,#e8ecfb,#b9c6e9 55%,#8298d5);box-shadow:inset 0 -10px 18px rgba(27,34,167,.35),0 12px 22px -8px rgba(13,13,13,.45);transform:rotate(-8deg)}
+.t3 .tagf{position:absolute;right:14px;top:14px;background:#fff;color:var(--blue);font-weight:700;font-size:13px;padding:8px 12px;border-radius:99px;display:flex;gap:6px;align-items:center}
+.t3 .body{padding:16px 18px 18px}
+.t3 .body h5{font-size:19px;letter-spacing:-.02em}
+.t3 .body .c{font-size:13.5px;color:var(--muted);margin-top:2px}
+.t3 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.t3 .chips span{font-size:12.5px;font-weight:600;padding:6px 10px;border-radius:99px;background:var(--b1);color:var(--blue)}
+.t3 .pay{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+.t3 .pay b{font-size:24px;letter-spacing:-.035em}.t3 .pay span{font-size:12px;color:var(--muted);display:block}
+.t3 .go{height:46px;padding:0 18px;border-radius:99px;background:var(--blue);color:#fff;font-weight:700;font-size:14.5px;display:flex;align-items:center;box-shadow:0 6px 0 #10157a}
+</style></head><body>
+<header class="top">
+  <h1>Hướng hình ảnh v2: chuẩn sản phẩm global</h1>
+  <p>Cùng màn "Việc phù hợp", cùng bảng màu ViệcNhanh, font Be Vietnam Pro (vẽ dấu tiếng Việt chuẩn). Mỗi hướng ghi rõ tham chiếu. Bấm để chọn; có thể ghép (vd "khung 2, thẻ việc của 1").</p>
+</header>
+<div class="grid">
+
+<div class="opt" data-choice="wallet" onclick="toggleSelect(this)">
+  <div class="phone w">
+    <div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+    <div class="hero">
+      <div class="eyebrow">Việc hợp nhất cho Tuấn Anh</div>
+      <div class="big mono">¥221.526<small> /tháng về tay</small></div>
+      <div class="sub"><span class="pill">≈ 38,1 triệu ₫</span><span class="pill">HR trả lời ≤ 24h</span></div>
+    </div>
+    <div class="stack">
+      <div class="pass p3"></div>
+      <div class="pass p2"></div>
+      <div class="pass p1">
+        <div class="ph"><div class="mark">MP</div><div class="fit"><span class="bars"><i></i><i></i><i></i></span>Rất phù hợp</div></div>
+        <h3>Vận hành máy tiện CNC</h3>
+        <div class="co">Mikawa Precision · Toyota-shi · 13 km</div>
+        <div class="chips"><span>✓ Visa sản xuất</span><span>✓ 3 năm tiện</span><span>✓ N4</span></div>
+        <div class="row"><div><div class="lbl">Thực nhận ước tính</div><div class="amt mono">¥221.526</div></div><div class="lbl">2 ca · ký túc xá</div></div>
+      </div>
+      
+    </div>
+    <div style="position:absolute;left:22px;right:22px;bottom:100px;display:flex;justify-content:space-between;font-size:13.5px;color:#C9D4FB"><span>Vuốt để xem 2 việc khác</span><span>1 / 3</span></div>
+    <div class="cta">Ứng tuyển · 3 chạm →</div>
+  </div>
+  <h2>1 · Ví việc làm</h2>
+  <div class="ref">Tham chiếu: Apple Wallet · Revolut · Cash App</div>
+  <p>Mỗi việc là một "thẻ" xếp chồng như ví, nền xanh đêm, số tiền về tay là nhân vật chính. Cảm giác cao cấp, rất "wow" khi demo. Hợp với câu chuyện lương và ứng lương (EWA). Cần cẩn thận độ tương phản và chế độ sáng.</p>
+</div>
+
+<div class="opt" data-choice="editorial" onclick="toggleSelect(this)">
+  <div class="phone e">
+    <div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+    <div class="wrap">
+      <div class="rule"><span>ViệcNhanh · Aichi</span><span class="mono">14.11</span></div>
+      <h3 class="d">3 việc<br>hợp tay nghề<br><em>Tuấn Anh.</em></h3>
+      <p class="lede">Đúng visa, xếp theo mức phù hợp. Lương đã trừ thuế, bảo hiểm, ký túc xá.</p>
+      <div style="margin-top:14px;border-top:1px solid var(--ink)">
+        <div class="item">
+          <span class="n mono">01</span>
+          <div><div class="t">Vận hành máy tiện CNC</div><div class="c">Mikawa Precision · Toyota-shi</div>
+            <div class="fit"><span class="seg"><i></i><i></i><i></i></span>Rất phù hợp</div>
+            <div class="ck"><span><b>✓</b> Visa</span><span><b>✓</b> 3 năm tiện</span><span><b>✓</b> N4</span></div></div>
+          <div class="amt mono">¥221.526<small>/tháng</small></div>
+        </div>
+        <div class="item">
+          <span class="n mono">02</span>
+          <div><div class="t">Tiện tự động & kiểm tra trục</div><div class="c">Okazaki Axle · Okazaki-shi</div>
+            <div class="fit"><span class="seg"><i></i><i></i><i></i></span>Rất phù hợp</div></div>
+          <div class="amt mono">¥185.703<small>/tháng</small></div>
+        </div>
+        <div class="item">
+          <span class="n mono">03</span>
+          <div><div class="t">Gia công phay CNC</div><div class="c">Kariya Parts Lab · Kariya-shi</div>
+            <div class="fit"><span class="seg"><i></i><i></i><i class="o"></i></span>Có thể phù hợp</div>
+            <div class="ck"><span><b>✓</b> Visa</span><s>✗ Phay CNC</s></div></div>
+          <div class="amt mono">¥229.769<small>/tháng</small></div>
+        </div>
+      </div>
+    </div>
+    <div class="tabbar"><div class="on">Việc làm</div><div>Hồ sơ</div><div>Ví lương</div><div>Tôi</div></div>
+  </div>
+  <h2>2 · Tạp chí Thuỵ Sĩ</h2>
+  <div class="ref">Tham chiếu: Linear · Mercury · Stripe Press · Awwwards editorial</div>
+  <p>Chữ to kiểu tạp chí, lưới chặt, đường kẻ mảnh, một màu nhấn duy nhất. Rất "design-award", tinh tế, dễ đọc dữ liệu. Ít trang trí nên phải chăm từng khoảng trắng; có thể hơi "lạnh" với người lao động.</p>
+</div>
+
+<div class="opt" data-choice="tactile" onclick="toggleSelect(this)">
+  <div class="phone t3">
+    <div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+    <div class="wrap">
+      <div class="hi"><div class="av"><div>TA</div></div><div><b>Chào Tuấn Anh</b><span>Hôm nay có 2 việc rất hợp với bạn</span></div></div>
+      <div class="banner"><div class="obj"></div><div><b>Đổi việc không đứt lương</b><p>Ứng trước tới 50% lương đã làm. Không lãi, không phải vay.</p></div></div>
+      <h4>Việc hợp tay nghề</h4>
+      <div class="job">
+        <div class="img"><div class="tagf">✓ Rất phù hợp</div></div>
+        <div class="body">
+          <h5>Vận hành máy tiện CNC</h5><div class="c">Mikawa Precision · Toyota-shi · 13 km</div>
+          <div class="chips"><span>✓ Visa sản xuất</span><span>✓ 3 năm tiện</span><span>✓ N4</span></div>
+          <div class="pay"><div><span>Thực nhận ước tính</span><b class="mono">¥221.526</b></div><div class="go">Ứng tuyển</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <h2>3 · Mềm mại, có chiều sâu</h2>
+  <div class="ref">Tham chiếu: Airbnb 2025 · Duolingo · Headspace</div>
+  <p>Biểu tượng 3D mềm, thẻ bo lớn, nút có "độ nhấn" vật lý, giọng chào thân thiện. Ấm áp, dễ gần với người mệt sau ca; khu "Đổi việc không đứt lương" nổi lên đầu. Cần đầu tư hình minh hoạ 3D để không bị rẻ.</p>
+</div>
+
+</div>
+</body></html>

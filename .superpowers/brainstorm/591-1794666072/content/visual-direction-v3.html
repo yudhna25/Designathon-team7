@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ViệcNhanh · Hướng hình ảnh v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&family=Doto:wght@800&family=Noto+Serif+JP:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#1B22A7;--sky:#4260E6;--ink:#0D0D0D;--paper:#FAFAFA;--b1:#F1F4FC;--b2:#E0E6F6;--b4:#B9C6E9;--muted:#5B5B5B}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Be Vietnam Pro",system-ui,sans-serif;background:#ECEDF1;color:var(--ink);padding:40px 24px 80px;-webkit-font-smoothing:antialiased}
+header.top{max-width:940px;margin:0 auto 36px}
+header.top h1{font-size:34px;letter-spacing:-.03em;line-height:1.1;font-weight:700}
+header.top p{color:var(--muted);margin-top:10px;font-size:16px;max-width:760px;line-height:1.5}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;max-width:940px;margin:0 auto}
+@media (max-width:1100px){.grid{grid-template-columns:1fr}}
+.opt{cursor:pointer;border-radius:28px;padding:22px;background:#fff;border:2px solid transparent;transition:border-color .2s,transform .3s}
+.opt:hover{transform:translateY(-3px)} .opt.selected{border-color:var(--blue)}
+.opt h2{font-size:20px;letter-spacing:-.02em;margin-top:22px} .opt .ref{font-size:13px;color:var(--sky);font-weight:600;margin-top:4px}
+.opt p{font-size:14px;color:var(--muted);line-height:1.55;margin-top:8px}
+.phone{width:375px;max-width:100%;height:760px;margin:0 auto;border-radius:44px;overflow:hidden;position:relative;box-shadow:0 0 0 10px #0d0d0d,0 30px 60px -20px rgba(13,13,13,.5)}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace;letter-spacing:-.02em}
+.sb{height:44px;display:flex;justify-content:space-between;align-items:center;padding:0 26px;font-size:14px;font-weight:600}
+
+/* ============ 1 · WALLET (Revolut / Apple Wallet) ============ */
+.w{background:#06082E;color:#fff}
+.w .hero{padding:8px 22px 0;position:relative}
+.w .hero::before{content:"";position:absolute;inset:-120px -80px auto;height:420px;background:radial-gradient(closest-side,rgba(66,96,230,.55),transparent 70%);pointer-events:none}
+.w .eyebrow{font-size:13px;color:#AFC0F5;font-weight:500;position:relative}
+.w .big{font-size:46px;font-weight:700;letter-spacing:-.045em;line-height:1;margin-top:8px;position:relative}
+.w .big small{display:block;margin-top:6px;font-family:"Be Vietnam Pro";font-size:15px;font-weight:500;color:#AFC0F5;letter-spacing:-.01em}
+.w .sub{position:relative;margin-top:10px;display:flex;gap:8px}
+.w .pill{font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:99px;background:rgba(255,255,255,.1);backdrop-filter:blur(8px)}
+.w .stack{position:absolute;left:14px;right:14px;top:236px}
+.w .pass{border-radius:26px;padding:20px;color:#fff;position:relative;box-shadow:0 -10px 30px -12px rgba(0,0,0,.6)}
+.w .p1{background:linear-gradient(150deg,#2B33C9 0%,#1B22A7 55%,#121882 100%)}
+.w .p2{background:linear-gradient(150deg,#5B76EE,#4260E6 60%,#3149C3);height:66px;margin-top:-44px;transform:scale(.95);transform-origin:top}
+.w .p3{background:#262A6E;height:66px;transform:scale(.9);transform-origin:top}
+.w .p1{z-index:3;margin-top:-44px} .w .p2{z-index:2} .w .p3{z-index:1}
+.w .stack{display:flex;flex-direction:column;top:250px}
+.w .ph{display:flex;justify-content:space-between;align-items:flex-start}
+.w .mark{width:42px;height:42px;border-radius:12px;background:#fff;color:var(--blue);display:grid;place-items:center;font-weight:800;font-size:15px}
+.w .fit{font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);padding:6px 10px;border-radius:99px}
+.w .bars{display:flex;gap:2px}.w .bars i{width:5px;height:12px;border-radius:2px;background:#fff}
+.w h3{font-size:22px;letter-spacing:-.025em;margin-top:18px;line-height:1.15}
+.w .co{font-size:13.5px;color:#C9D4FB;margin-top:4px}
+.w .row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:22px;padding-top:16px;border-top:1px solid rgba(255,255,255,.16)}
+.w .lbl{font-size:12px;color:#DCE3FC}.w .amt{font-size:28px;font-weight:700;letter-spacing:-.035em}
+.w .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.w .chips span{font-size:12.5px;font-weight:600;padding:5px 9px;border-radius:8px;background:rgba(255,255,255,.12)}
+.w .cta{position:absolute;left:14px;right:14px;bottom:24px;height:58px;border-radius:20px;background:#fff;color:var(--blue);font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;gap:10px}
+
+
+.lead{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#fff;background:var(--blue);padding:6px 12px;border-radius:99px;margin-bottom:14px}
+
+/* ============ 4 · DOT-MATRIX HARDWARE (Nothing OS / Teenage Engineering) ============ */
+.h{background:#E9EAEE;color:#111}
+.h .wrap{padding:6px 16px 0}
+.h .bar{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#4a4a4a}
+.h .led{display:inline-flex;align-items:center;gap:6px}.h .led i{width:8px;height:8px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 3px #d6dbf4}
+.h .dot{font-family:"Doto","JetBrains Mono",monospace;font-weight:800;letter-spacing:-.02em}
+.h .panel{margin-top:14px;background:#F6F6F8;border-radius:22px;padding:18px;border:1px solid #d9dade;box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(0,0,0,.06)}
+.h .lbl{font-size:12px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.08em}
+.h .num{font-size:54px;line-height:1;color:var(--blue);margin-top:8px}
+.h .num small{font-size:20px;color:#111}
+.h .meta{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.h .meta span{font-size:12.5px;font-weight:600;border:1px solid #cfd1d6;border-radius:99px;padding:5px 10px;background:#fff}
+.h .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.h .tile{background:#F6F6F8;border-radius:18px;padding:14px;border:1px solid #d9dade}
+.h .tile .v{font-size:26px;margin-top:6px}
+.h .meter{display:flex;gap:4px;margin-top:10px}.h .meter i{flex:1;height:22px;border-radius:5px;background:var(--blue)}.h .meter i.o{background:#cfd4ea}
+.h .job{margin-top:10px;background:#111;color:#f3f3f3;border-radius:22px;padding:16px;display:flex;justify-content:space-between;align-items:center}
+.h .job b{font-size:16px;display:block}.h .job span{font-size:12.5px;color:#bdbdbd}
+.h .knob{width:52px;height:52px;border-radius:50%;background:var(--blue);display:grid;place-items:center;color:#fff;font-size:22px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.3)}
+
+/* ============ 5 · BENTO (iOS widgets / Arc / Vercel) ============ */
+.bt{background:#F4F5F9}
+.bt .wrap{padding:4px 14px 0}
+.bt .hd{display:flex;justify-content:space-between;align-items:center;padding:0 4px}
+.bt .hd b{font-size:24px;letter-spacing:-.035em}.bt .hd span{width:36px;height:36px;border-radius:50%;background:#fff;display:grid;place-items:center;font-weight:700;color:var(--blue);border:1px solid #e3e5ee}
+.bt .chipsR{display:flex;gap:6px;margin:12px 4px 0}.bt .chipsR span{font-size:13px;font-weight:600;padding:8px 12px;border-radius:99px;background:#fff;border:1px solid #e3e5ee}.bt .chipsR .on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.bt .bento{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.bt .c{background:#fff;border-radius:22px;padding:14px;border:1px solid #e8eaf2;position:relative;overflow:hidden}
+.bt .hero{grid-column:span 2;background:var(--blue);color:#fff;border:0;padding:16px}
+.bt .hero .t{font-size:19px;font-weight:700;letter-spacing:-.025em;margin-top:10px;line-height:1.2}
+.bt .hero .s{font-size:13px;color:#DCE3FC;margin-top:2px}
+.bt .hero .fit{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;font-weight:700;background:#fff;color:var(--blue);padding:5px 10px;border-radius:99px}
+.bt .k{font-size:12px;color:var(--muted);font-weight:600}
+.bt .v{font-size:24px;font-weight:700;letter-spacing:-.035em;margin-top:6px}
+.bt .v small{font-size:12px;color:var(--muted);font-weight:500;letter-spacing:0}
+.bt .ring{width:56px;height:56px;border-radius:50%;background:conic-gradient(var(--blue) 0 92%,#e3e7f6 0);display:grid;place-items:center;margin-top:8px}
+.bt .ring::after{content:"23h";width:44px;height:44px;border-radius:50%;background:#fff;display:grid;place-items:center;font-weight:700;font-size:13px}
+.bt .ck{display:flex;flex-direction:column;gap:5px;margin-top:8px;font-size:13px;font-weight:600}
+.bt .ck span{display:flex;gap:6px}.bt .ck b{color:var(--blue)}
+.bt .map{background:linear-gradient(135deg,#E3E8FA,#F4F6FD);}
+.bt .map::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(35deg,transparent 0 22px,rgba(27,34,167,.08) 22px 23px),repeating-linear-gradient(-55deg,transparent 0 30px,rgba(27,34,167,.08) 30px 31px)}
+.bt .pin{position:absolute;right:20px;top:26px;width:16px;height:16px;border-radius:50%;background:var(--blue);border:3px solid #fff;box-shadow:0 2px 6px rgba(13,13,13,.3)}
+.bt .applyB{grid-column:span 2;background:var(--ink);color:#fff;border:0;display:flex;justify-content:space-between;align-items:center;padding:16px 18px;font-weight:700;font-size:16px}
+
+/* ============ 6 · JAPANESE CALM (Muji / Kinfolk / Japan Post) ============ */
+.jp{background:#F7F5F0;color:#1a1a1a}
+.jp .wrap{padding:8px 22px 0}
+.jp .top{display:flex;justify-content:space-between;align-items:flex-start}
+.jp .vert{writing-mode:vertical-rl;font-size:13px;letter-spacing:.3em;color:#6a6458;font-family:"Noto Serif JP",serif}
+.jp h3{font-family:"Noto Serif JP","Be Vietnam Pro",serif;font-weight:600;font-size:30px;line-height:1.25;letter-spacing:-.01em;margin-top:6px}
+.jp .sub{font-size:14px;color:#5c574d;margin-top:10px;line-height:1.55}
+.jp .card{margin-top:22px;background:#fff;border-radius:6px;padding:20px 18px;position:relative;box-shadow:0 1px 0 #e7e3da,0 14px 28px -20px rgba(40,30,10,.35)}
+.jp .hanko{position:absolute;right:16px;top:16px;width:58px;height:58px;border-radius:50%;border:2.5px solid var(--blue);color:var(--blue);display:grid;place-items:center;text-align:center;font-weight:700;font-size:11.5px;line-height:1.15;transform:rotate(-10deg)}
+.jp .co{font-size:12.5px;color:#6a6458;letter-spacing:.08em;text-transform:uppercase}
+.jp .t{font-size:20px;font-weight:700;letter-spacing:-.02em;margin-top:6px;padding-right:70px;line-height:1.25}
+.jp .hr{height:1px;background:repeating-linear-gradient(90deg,#d9d3c6 0 6px,transparent 6px 10px);margin:16px 0}
+.jp .rows{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:13.5px}
+.jp .rows dt{color:#6a6458}.jp .rows dd{font-weight:600}
+.jp .amt{display:flex;justify-content:space-between;align-items:baseline}
+.jp .amt span{font-size:13px;color:#6a6458}.jp .amt b{font-size:30px;letter-spacing:-.04em}
+.jp .btn{margin-top:18px;height:54px;border-radius:4px;background:var(--blue);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:15px}
+.jp .more{margin-top:14px;font-size:13.5px;color:#5c574d;display:flex;justify-content:space-between;border-top:1px solid #e2ddd2;padding-top:12px}
+.tb2{position:absolute;left:0;right:0;bottom:0;height:80px;display:grid;grid-template-columns:repeat(4,1fr);font-size:12px;font-weight:600;padding-bottom:14px}
+.tb2 div{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}.tb2 i{width:22px;height:22px;border-radius:7px;border:2px solid currentColor;display:block}
+.h .tb2{background:#E9EAEE;color:#6a6a6a;border-top:1px solid #d6d7dc}.h .tb2 .on{color:var(--blue)}
+.bt .tb2{background:rgba(255,255,255,.9);backdrop-filter:blur(12px);color:#6a6a6a;border-top:1px solid #e3e5ee}.bt .tb2 .on{color:var(--ink)}
+.nx{display:flex;justify-content:space-between;align-items:center;border-radius:18px;padding:12px 14px;margin-top:10px;font-size:13.5px}
+.nx b{display:block;font-size:14.5px}.nx span{color:#6a6a6a;font-size:12.5px}
+</style></head><body>
+<header class="top">
+  <h1>Hướng hình ảnh v3: thêm 3 lựa chọn</h1>
+  <p>"Ví việc làm" (đang dẫn đầu) đặt cạnh 3 hướng mới để so sánh trực tiếp. Cùng màn "Việc phù hợp", cùng bảng màu ViệcNhanh. Bấm để chọn, hoặc ghép ("nền 1, ô số của 4").</p>
+</header>
+<div class="grid">
+<div class="opt selected" data-choice="wallet" onclick="toggleSelect(this)">
+<div class="lead">★ Đang cân nhắc</div>
+
+  <div class="phone w">
+    <div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+    <div class="hero">
+      <div class="eyebrow">Việc hợp nhất cho Tuấn Anh</div>
+      <div class="big mono">¥221.526<small> /tháng về tay</small></div>
+      <div class="sub"><span class="pill">≈ 38,1 triệu ₫</span><span class="pill">HR trả lời ≤ 24h</span></div>
+    </div>
+    <div class="stack">
+      <div class="pass p3"></div>
+      <div class="pass p2"></div>
+      <div class="pass p1">
+        <div class="ph"><div class="mark">MP</div><div class="fit"><span class="bars"><i></i><i></i><i></i></span>Rất phù hợp</div></div>
+        <h3>Vận hành máy tiện CNC</h3>
+        <div class="co">Mikawa Precision · Toyota-shi · 13 km</div>
+        <div class="chips"><span>✓ Visa sản xuất</span><span>✓ 3 năm tiện</span><span>✓ N4</span></div>
+        <div class="row"><div><div class="lbl">Thực nhận ước tính</div><div class="amt mono">¥221.526</div></div><div class="lbl">2 ca · ký túc xá</div></div>
+      </div>
+      
+    </div>
+    <div style="position:absolute;left:22px;right:22px;bottom:100px;display:flex;justify-content:space-between;font-size:13.5px;color:#C9D4FB"><span>Vuốt để xem 2 việc khác</span><span>1 / 3</span></div>
+    <div class="cta">Ứng tuyển · 3 chạm →</div>
+  </div>
+  
+  <h2>1 · Ví việc làm</h2>
+  <div class="ref">Tham chiếu: Apple Wallet · Revolut · Cash App</div>
+  <p>Thẻ việc xếp chồng như ví, nền xanh đêm, số tiền về tay là nhân vật chính.</p>
+</div>
+
+<div class="opt" data-choice="hardware" onclick="toggleSelect(this)">
+  <div class="phone h">
+    <div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+    <div class="wrap">
+      <div class="bar"><span class="led"><i></i>ViệcNhanh · Aichi</span><span>Ca đêm xong · 07:12</span></div>
+      <div class="panel">
+        <div class="lbl">Việc hợp nhất · về tay mỗi tháng</div>
+        <div class="num dot">¥221.526</div>
+        <div class="meta"><span>Tiện CNC</span><span>Mikawa · Toyota-shi</span><span>13 km</span></div>
+      </div>
+      <div class="grid2">
+        <div class="tile"><div class="lbl">Mức phù hợp</div><div class="meter"><i></i><i></i><i></i></div><div style="font-size:13px;font-weight:700;margin-top:8px">Rất phù hợp</div></div>
+        <div class="tile"><div class="lbl">HR trả lời</div><div class="v dot">≤24h</div></div>
+        <div class="tile"><div class="lbl">Visa</div><div style="font-size:14px;font-weight:700;margin-top:8px">✓ Sản xuất</div></div>
+        <div class="tile"><div class="lbl">Tiếng Nhật</div><div class="v dot">N4 ✓</div></div>
+      </div>
+      <div class="job"><div><b>Ứng tuyển Mikawa</b><span>3 chạm · không cần CV</span></div><div class="knob">→</div></div>
+      <div class="nx" style="background:#F6F6F8;border:1px solid #d9dade"><div><b>Tiện tự động · Okazaki</b><span>Rất phù hợp · 12 km</span></div><div class="dot" style="font-size:20px;color:var(--blue)">¥185.703</div></div>
+    </div>
+    <div class="tb2"><div class="on"><i></i>Việc làm</div><div><i></i>Hồ sơ</div><div><i></i>Ví lương</div><div><i></i>Tôi</div></div>
+  </div>
+  <h2>4 · Thiết bị công nghiệp</h2>
+  <div class="ref">Tham chiếu: Nothing OS · Teenage Engineering · Braun</div>
+  <p>Màn hình như bảng điều khiển máy: số LED dạng chấm, ô thông số, nút xoay. Chất "nhà máy" rất riêng nhưng sang, khác mọi app tuyển dụng. Phù hợp thợ máy; cần giữ chữ đủ lớn cho người mệt.</p>
+</div>
+
+<div class="opt" data-choice="bento" onclick="toggleSelect(this)">
+  <div class="phone bt">
+    <div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+    <div class="wrap">
+      <div class="hd"><b>Việc cho bạn</b><span>TA</span></div>
+      <div class="chipsR"><span class="on">Rất phù hợp · 2</span><span>Gần nhà</span><span>Có KTX</span></div>
+      <div class="bento">
+        <div class="c hero"><span class="fit">✓ Rất phù hợp</span><div class="t">Vận hành máy tiện CNC</div><div class="s">Mikawa Precision · nhà máy mới</div></div>
+        <div class="c"><div class="k">Về tay / tháng</div><div class="v mono">¥221.526</div><div class="k" style="margin-top:4px">≈ 38,1 triệu ₫</div></div>
+        <div class="c"><div class="k">HR cam kết</div><div class="ring"></div></div>
+        <div class="c"><div class="k">Bạn đạt</div><div class="ck"><span><b>✓</b>Visa sản xuất</span><span><b>✓</b>3 năm tiện</span><span><b>✓</b>N4</span></div></div>
+        <div class="c map"><div class="k" style="position:relative">Toyota-shi</div><div class="v" style="position:relative">13 km</div><div class="pin"></div></div>
+        <div class="c applyB"><span>Ứng tuyển · 3 chạm</span><span>→</span></div>
+      </div>
+      <div class="nx" style="background:#fff;border:1px solid #e8eaf2"><div><b>Tiện tự động · Okazaki</b><span>Rất phù hợp · 12 km</span></div><b class="mono">¥185.703</b></div>
+    </div>
+    <div class="tb2"><div class="on"><i></i>Việc làm</div><div><i></i>Hồ sơ</div><div><i></i>Ví lương</div><div><i></i>Tôi</div></div>
+  </div>
+  <h2>5 · Bento widget</h2>
+  <div class="ref">Tham chiếu: iOS widgets · Arc · Vercel · Apple keynote bento</div>
+  <p>Mỗi thông tin là một ô vuông: lương, cam kết 24h dạng vòng, tiêu chí đạt, bản đồ. Quét mắt cực nhanh, hiện đại, rất hợp trình bày trên slide. Rủi ro: nhiều ô dễ thành rối nếu không kỷ luật.</p>
+</div>
+
+<div class="opt" data-choice="japan" onclick="toggleSelect(this)">
+  <div class="phone jp">
+    <div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+    <div class="wrap">
+      <div class="top"><div><div style="font-size:12.5px;color:#6a6458;letter-spacing:.1em;text-transform:uppercase">Thứ Bảy · 14.11 · Aichi</div><h3>Một công việc<br>vừa vặn với<br>đôi tay bạn.</h3></div><div class="vert">愛知・求人</div></div>
+      <p class="sub">Đúng visa, đúng tay nghề. Nhà máy trả lời trong 24 giờ.</p>
+      <div class="card">
+        <div class="hanko">RẤT<br>PHÙ<br>HỢP</div>
+        <div class="co">Mikawa Precision · 三河精密</div>
+        <div class="t">Vận hành máy tiện CNC</div>
+        <div class="hr"></div>
+        <dl class="rows"><dt>Nơi làm</dt><dd>Toyota-shi · cách 13 km</dd><dt>Ca</dt><dd>2 ca luân phiên · có KTX</dd><dt>Bạn đạt</dt><dd>✓ Visa · ✓ 3 năm tiện · ✓ N4</dd></dl>
+        <div class="hr"></div>
+        <div class="amt"><span>Về tay mỗi tháng</span><b class="mono">¥221.526</b></div>
+        <div class="btn"><span>Ứng tuyển</span><span>→</span></div>
+      </div>
+      <div class="more"><span>2 việc khác hợp với bạn</span><span>Xem →</span></div>
+    </div>
+  </div>
+  <h2>6 · Nhật Bản tĩnh lặng</h2>
+  <div class="ref">Tham chiếu: Muji · Kinfolk · Japan Post · Toyota Woodyou</div>
+  <p>Giấy ngà, chữ có chân, con dấu hanko "Rất phù hợp", dòng kanji dọc. Gợi đúng bối cảnh Aichi, trang trọng và đáng tin. Rủi ro: chậm rãi, ít năng lượng; tiếng Việt với font có chân cần kiểm tra kỹ.</p>
+</div>
+
+</div></body></html>

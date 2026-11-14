@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ViệcNhanh · 4 hướng mới v5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#1B22A7;--sky:#4260E6;--ink:#0D0D0D;--paper:#FAFAFA;--b1:#F1F4FC;--b2:#E0E6F6;--b4:#B9C6E9;--muted:#5B5B5B}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Be Vietnam Pro",system-ui,sans-serif;background:#ECEDF1;color:var(--ink);padding:40px 24px 80px;-webkit-font-smoothing:antialiased}
+.top{max-width:940px;margin:0 auto 28px}.top h1{font-size:34px;letter-spacing:-.03em;line-height:1.1}
+.top p{color:var(--muted);margin-top:10px;font-size:16px;line-height:1.5}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace;letter-spacing:-.03em}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;max-width:940px;margin:0 auto}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.opt{cursor:pointer;border-radius:28px;padding:22px;background:#fff;border:2px solid transparent;transition:transform .3s}
+.opt:hover{transform:translateY(-3px)}.opt.selected{border-color:var(--blue)}
+.opt h2{font-size:20px;letter-spacing:-.02em;margin-top:22px}.opt .ref{font-size:13px;color:var(--sky);font-weight:600;margin-top:4px}
+.opt p{font-size:14px;color:var(--muted);line-height:1.55;margin-top:8px}
+.phone{width:375px;max-width:100%;height:760px;margin:0 auto;border-radius:44px;overflow:hidden;position:relative;box-shadow:0 0 0 10px #0d0d0d,0 30px 60px -20px rgba(13,13,13,.5)}
+.sb{height:44px;display:flex;justify-content:space-between;align-items:center;padding:0 26px;font-size:14px;font-weight:600;position:relative;z-index:5}
+
+/* ===== 7 · MAP-FIRST (Citymapper / Uber / Airbnb map) ===== */
+.m{background:#E7EAF2}
+.m .map{position:absolute;inset:0;background:
+  linear-gradient(115deg,transparent 46%,#fff 46% 49%,transparent 49%),
+  linear-gradient(20deg,transparent 60%,#fff 60% 62.5%,transparent 62.5%),
+  linear-gradient(160deg,transparent 30%,#D6DCEE 30% 31%,transparent 31%),
+  radial-gradient(ellipse 60% 30% at 20% 85%,#CFE3D6,transparent 70%),
+  radial-gradient(ellipse 40% 25% at 85% 20%,#CFE3D6,transparent 70%),
+  #E9ECF4}
+.m .route{position:absolute;left:62px;top:300px;width:170px;height:110px;border:4px dashed var(--blue);border-color:var(--blue) var(--blue) transparent transparent;border-radius:0 90px 0 0}
+.m .home{position:absolute;left:46px;top:394px;width:30px;height:30px;border-radius:50%;background:#fff;border:3px solid var(--ink);display:grid;place-items:center;font-size:12px;font-weight:800}
+.m .pin{position:absolute;display:flex;align-items:center;gap:6px;background:#fff;border-radius:99px;padding:6px 10px 6px 6px;font-size:13px;font-weight:700;box-shadow:0 6px 14px -6px rgba(13,13,13,.35)}
+.m .pin i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#fff;font-style:normal;font-size:11px}
+.m .pin.on{background:var(--blue);color:#fff}.m .pin.on i{background:#fff;color:var(--blue)}
+.m .search{position:absolute;left:14px;right:14px;top:52px;height:52px;border-radius:18px;background:#fff;display:flex;align-items:center;gap:10px;padding:0 16px;font-size:15px;color:var(--muted);box-shadow:0 8px 20px -12px rgba(13,13,13,.35)}
+.m .filters{position:absolute;left:14px;top:114px;display:flex;gap:6px}
+.m .filters span{background:#fff;border-radius:99px;padding:7px 12px;font-size:13px;font-weight:600;box-shadow:0 4px 10px -6px rgba(13,13,13,.3)}
+.m .filters .on{background:var(--ink);color:#fff}
+.m .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:28px 28px 0 0;padding:10px 18px 26px;box-shadow:0 -12px 30px -18px rgba(13,13,13,.45)}
+.m .grab{width:40px;height:4px;border-radius:4px;background:#d9dbe3;margin:0 auto 14px}
+.m .commute{display:flex;gap:8px;margin-top:12px}
+.m .commute div{flex:1;background:var(--b1);border-radius:14px;padding:10px}
+.m .commute b{display:block;font-size:17px;letter-spacing:-.02em}.m .commute span{font-size:12px;color:var(--muted)}
+.m .apply{margin-top:14px;height:54px;border-radius:16px;background:var(--blue);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:16px}
+
+/* ===== 8 · STORY SWIPE (Instagram Stories / TikTok / Spotify Wrapped) ===== */
+.st{background:#1B22A7;color:#fff}
+.st .bg{position:absolute;inset:0;background:
+  radial-gradient(circle at 80% 18%,rgba(255,255,255,.18),transparent 34%),
+  repeating-linear-gradient(-30deg,rgba(255,255,255,.05) 0 2px,transparent 2px 26px),
+  linear-gradient(170deg,#4260E6 0%,#1B22A7 52%,#0E1270 100%)}
+.st .seg{position:absolute;left:14px;right:14px;top:50px;display:flex;gap:4px;z-index:3}.st .seg i{flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,.35)}.st .seg i.on{background:#fff}
+.st .who{position:absolute;left:16px;right:16px;top:64px;display:flex;align-items:center;gap:10px;z-index:3;font-size:13.5px}
+.st .who span{width:34px;height:34px;border-radius:10px;background:#fff;color:var(--blue);display:grid;place-items:center;font-weight:800}
+.st .body{position:absolute;left:22px;right:22px;top:150px;z-index:3}
+.st .kick{display:inline-flex;gap:6px;align-items:center;background:#fff;color:var(--blue);font-weight:800;font-size:13px;padding:7px 12px;border-radius:99px}
+.st h3{font-size:46px;line-height:.98;letter-spacing:-.05em;font-weight:900;margin-top:18px}
+.st .pay{margin-top:26px;font-size:15px;color:#DCE3FC}
+.st .pay b{display:block;font-size:52px;color:#fff;font-weight:700;letter-spacing:-.04em;line-height:1;margin-top:6px}
+.st .facts{margin-top:22px;display:grid;gap:8px;font-size:15px;font-weight:600}
+.st .facts div{display:flex;gap:10px;align-items:center}.st .facts i{width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center;font-style:normal;font-size:12px}
+.st .up{position:absolute;left:16px;right:16px;bottom:26px;z-index:3;display:grid;grid-template-columns:1fr auto;gap:8px}
+.st .up div{height:58px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px}
+.st .up .a{background:#fff;color:var(--blue)}.st .up .s{width:58px;background:rgba(255,255,255,.16);font-size:20px}
+.st .hint{position:absolute;left:0;right:0;bottom:96px;text-align:center;font-size:12.5px;color:#DCE3FC;z-index:3}
+
+/* ===== 9 · AI COPILOT (Perplexity / Arc Search / ChatGPT) ===== */
+.ai{background:#fff}
+.ai .wrap{padding:6px 20px 0}
+.ai .q{display:inline-block;background:var(--b1);color:var(--ink);border-radius:18px 18px 18px 6px;padding:10px 14px;font-size:15px;font-weight:600}
+.ai .steps{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.ai .steps span{font-size:12.5px;font-weight:600;color:var(--muted);border:1px solid #e5e7ef;border-radius:99px;padding:5px 10px;display:flex;gap:6px;align-items:center}
+.ai .steps b{color:var(--blue)}
+.ai .ans{margin-top:16px;font-size:17px;line-height:1.55;letter-spacing:-.01em}
+.ai .ans mark{background:none;color:var(--blue);font-weight:700}
+.ai sup{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:6px;background:var(--b1);color:var(--blue);font-size:11px;font-weight:700;vertical-align:2px;margin-left:2px}
+.ai .src{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+.ai .src div{border:1px solid #e5e7ef;border-radius:16px;padding:12px}
+.ai .src .n{font-size:12px;color:var(--muted);font-weight:600}.ai .src b{display:block;font-size:14.5px;margin-top:4px;line-height:1.3}
+.ai .src .p{font-size:18px;font-weight:700;color:var(--blue);margin-top:8px}
+.ai .follow{margin-top:14px;display:grid;gap:6px}
+.ai .follow div{font-size:14px;font-weight:600;padding:11px 12px;border-radius:12px;background:var(--paper);display:flex;justify-content:space-between}
+.ai .bar{position:absolute;left:14px;right:14px;bottom:24px;height:58px;border-radius:20px;background:#fff;border:1.5px solid #dfe2ec;display:flex;align-items:center;gap:10px;padding:0 8px 0 16px;color:var(--muted);font-size:15px;box-shadow:0 10px 24px -16px rgba(13,13,13,.4)}
+.ai .bar .mic{margin-left:auto;width:42px;height:42px;border-radius:14px;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:18px}
+
+/* ===== 10 · SWITCH PLAN TIMELINE (Structured / Things 3 / Apple Fitness) ===== */
+.tl{background:#F5F6FA}
+.tl .wrap{padding:6px 20px 0}
+.tl h3{font-size:28px;letter-spacing:-.035em;line-height:1.1;margin-top:6px}
+.tl .gap{margin-top:14px;background:#fff;border-radius:20px;padding:14px;border:1px solid #e7e9f1}
+.tl .gap .k{font-size:12.5px;color:var(--muted);font-weight:600}
+.tl .money{display:flex;height:12px;border-radius:6px;overflow:hidden;margin-top:10px}
+.tl .money i:nth-child(1){flex:3;background:var(--blue)}.tl .money i:nth-child(2){flex:2;background:repeating-linear-gradient(135deg,var(--sky) 0 4px,#8CA6F1 4px 8px)}.tl .money i:nth-child(3){flex:4;background:var(--b2)}
+.tl .leg{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:6px}
+.tl .line{position:relative;margin-top:18px;padding-left:34px}
+.tl .line::before{content:"";position:absolute;left:11px;top:6px;bottom:6px;width:2px;background:linear-gradient(var(--blue) 0 40%,#d5d9e8 40%)}
+.tl .ev{position:relative;padding-bottom:16px}
+.tl .ev::before{content:"";position:absolute;left:-30px;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid #c9cee0}
+.tl .ev.done::before{background:var(--blue);border-color:var(--blue)}
+.tl .ev.now::before{border-color:var(--blue);box-shadow:0 0 0 4px #dfe5fb}
+.tl .d{font-size:12px;color:var(--muted);font-weight:600}
+.tl .t{font-size:15.5px;font-weight:700;margin-top:2px}
+.tl .x{font-size:13px;color:var(--muted);margin-top:2px}
+.tl .now .card{margin-top:8px;background:var(--blue);color:#fff;border-radius:16px;padding:12px;display:flex;justify-content:space-between;align-items:center}
+.tl .now .card b{font-size:15px}.tl .now .card span{font-size:12.5px;color:#DCE3FC;display:block}
+.tl .now .card .go{background:#fff;color:var(--blue);font-weight:800;border-radius:12px;padding:10px 12px;font-size:14px}
+</style></head><body>
+<div class="top"><h1>4 hướng mới, khác hẳn "Ví" và "Bento + LED"</h1>
+<p>Mỗi hướng đổi luôn cách người lao động <b>tiếp cận việc làm</b>, không chỉ đổi màu sắc: theo bản đồ, theo story, hỏi AI, hoặc theo kế hoạch đổi việc. Cùng bảng màu ViệcNhanh, font Be Vietnam Pro. Bấm để chọn.</p></div>
+<div class="grid">
+
+<div class="opt" data-choice="map" onclick="toggleSelect(this)">
+ <div class="phone m"><div class="map"></div>
+  <div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+  <div class="search">⌕ &nbsp;Việc gần Chiryu-shi</div>
+  <div class="filters"><span class="on">Rất phù hợp</span><span>Có KTX</span><span>Ca ngày</span></div>
+  <div class="route"></div><div class="home">⌂</div>
+  <div class="pin on" style="left:200px;top:270px"><i>✓</i>¥221k</div>
+  <div class="pin" style="left:150px;top:440px"><i style="background:var(--sky)">✓</i>¥186k</div>
+  <div class="pin" style="left:40px;top:220px"><i style="background:#9aa3c7">◐</i>¥230k</div>
+  <div class="sheet"><div class="grab"></div>
+   <div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-size:12.5px;color:var(--muted);font-weight:600">Mikawa Precision · Toyota-shi</div><div style="font-size:19px;font-weight:700;letter-spacing:-.02em;margin-top:2px">Vận hành máy tiện CNC</div></div><span style="background:var(--b1);color:var(--blue);font-weight:700;font-size:12.5px;padding:6px 10px;border-radius:99px">✓ Rất phù hợp</span></div>
+   <div class="commute"><div><b>28 phút</b><span>Tàu + xe đưa đón</span></div><div><b class="mono">¥221.526</b><span>Về tay / tháng</span></div><div><b>≤ 24h</b><span>HR trả lời</span></div></div>
+   <div class="apply">Ứng tuyển · 3 chạm</div>
+  </div>
+ </div>
+ <h2>7 · Bản đồ là trung tâm</h2><div class="ref">Citymapper · Uber · Airbnb map</div>
+ <p>Mở app thấy ngay bản đồ Aichi, mỗi nhà máy là một ghim có lương. Bottom sheet nói thời gian đi làm thật (tàu + xe đưa đón). Rất trực quan cho người mới ở Nhật; nhấn mạnh "gần nhà".</p>
+</div>
+
+<div class="opt" data-choice="story" onclick="toggleSelect(this)">
+ <div class="phone st"><div class="bg"></div>
+  <div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+  <div class="seg"><i class="on"></i><i></i><i></i></div>
+  <div class="who"><span>MP</span><div><b>Mikawa Precision</b><div style="color:#DCE3FC;font-size:12.5px">Nhà máy mới · Toyota-shi</div></div></div>
+  <div class="body">
+   <span class="kick">✓ Rất phù hợp với bạn</span>
+   <h3>Vận hành<br>máy tiện<br>CNC.</h3>
+   <div class="pay">Về tay mỗi tháng<b class="mono">¥221.526</b></div>
+   <div class="facts"><div><i>✓</i>Đúng visa sản xuất của bạn</div><div><i>✓</i>3 năm tiện CNC · cần 1 năm</div><div><i>⌂</i>Ký túc xá 1 người/phòng</div></div>
+  </div>
+  <div class="hint">Chạm phải: việc tiếp theo · Vuốt lên: chi tiết</div>
+  <div class="up"><div class="a">Ứng tuyển · 3 chạm</div><div class="s">♡</div></div>
+ </div>
+ <h2>8 · Story một chạm</h2><div class="ref">Instagram Stories · TikTok · Spotify Wrapped</div>
+ <p>Mỗi việc chiếm trọn màn hình như một story, chạm sang phải để xem việc kế. Chữ cực lớn, chỉ 3 lý do, một nút. Hợp thói quen lướt của người 23–28 tuổi và cực mạnh khi demo trên sân khấu.</p>
+</div>
+
+<div class="opt" data-choice="copilot" onclick="toggleSelect(this)">
+ <div class="phone ai">
+  <div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+  <div class="wrap">
+   <div class="q">Mình thợ tiện 3 năm, muốn lương cao hơn, gần Chiryu</div>
+   <div class="steps"><span><b>✓</b> Đọc thẻ cư trú</span><span><b>✓</b> Lọc 7 nhà máy</span><span><b>✓</b> Tính lương về tay</span></div>
+   <p class="ans">Có <mark>2 việc rất hợp</mark> với bạn. Tốt nhất là <mark>tiện CNC ở Mikawa</mark>: về tay <mark>¥221.526/tháng</mark>, cao hơn việc hiện tại khoảng 18%<sup>1</sup>. Cách nhà 28 phút, có xe đưa đón<sup>2</sup>. Một việc phay CNC trả cao hơn nhưng cần thêm kinh nghiệm phay.</p>
+   <div class="src">
+    <div><span class="n">1 · Mikawa · Toyota</span><b>Vận hành máy tiện CNC</b><div class="p mono">¥221.526</div></div>
+    <div><span class="n">2 · Okazaki Axle</span><b>Tiện tự động & kiểm tra</b><div class="p mono">¥185.703</div></div>
+   </div>
+   <div class="follow"><div>Ứng tuyển Mikawa ngay <span>→</span></div><div>Nếu có chứng chỉ phay thì sao? <span>↗</span></div></div>
+  </div>
+  <div class="bar">Hỏi bằng tiếng Việt…<span class="mic">🎙</span></div>
+ </div>
+ <h2>9 · Trợ lý AI hỏi–đáp</h2><div class="ref">Perplexity · Arc Search · ChatGPT</div>
+ <p>Người lao động nói hoặc gõ nhu cầu bằng tiếng Việt; AI trả lời một đoạn có trích dẫn [1][2] tới việc cụ thể, kèm câu hỏi gợi ý tiếp. Ăn điểm cộng AI mạnh nhất, nối thẳng brief "đăng ký bằng tin nhắn".</p>
+</div>
+
+<div class="opt" data-choice="timeline" onclick="toggleSelect(this)">
+ <div class="phone tl">
+  <div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+  <div class="wrap">
+   <div style="font-size:12.5px;color:var(--muted);font-weight:600">Kế hoạch đổi việc của Tuấn Anh</div>
+   <h3>Đổi việc trong 30 ngày,<br>không đứt lương.</h3>
+   <div class="gap"><div class="k">Tiền trong 2 tháng chuyển việc</div>
+    <div class="money"><i></i><i></i><i></i></div>
+    <div class="leg"><span>■ Lương chỗ cũ</span><span>▨ Ứng lương đã làm</span><span>□ Lương mới</span></div></div>
+   <div class="line">
+    <div class="ev done"><div class="d">Hôm nay · 14.11</div><div class="t">AI tìm được 2 việc rất hợp</div></div>
+    <div class="ev now"><div class="d">Trong 24 giờ</div><div class="t">Mikawa trả lời hồ sơ</div>
+      <div class="card"><div><b>Tiện CNC · ¥221.526</b><span>Ứng tuyển để bắt đầu đếm 24h</span></div><span class="go">Ứng tuyển</span></div></div>
+    <div class="ev"><div class="d">18.11</div><div class="t">Phỏng vấn tại nhà máy</div><div class="x">Học an toàn 8 phút trước ngày đầu</div></div>
+    <div class="ev"><div class="d">01.12</div><div class="t">Ngày làm đầu tiên</div><div class="x">Ví lương mở sau ca đầu</div></div>
+    <div class="ev"><div class="d">25.12</div><div class="t">Lương mới về tài khoản</div></div>
+   </div>
+  </div>
+ </div>
+ <h2>10 · Kế hoạch đổi việc</h2><div class="ref">Structured · Things 3 · Apple Fitness</div>
+ <p>Thay vì danh sách việc, app cho thấy cả hành trình: ứng tuyển → 24h → phỏng vấn → ngày đầu → lương về, kèm thanh tiền cho thấy khoảng trống 2 tháng được lấp bằng ứng lương. Kể đúng insight Finding 0, rất "thế cân bằng".</p>
+</div>
+
+</div></body></html>

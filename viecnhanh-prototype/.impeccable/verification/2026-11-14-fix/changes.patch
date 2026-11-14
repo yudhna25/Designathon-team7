@@ -1,0 +1,956 @@
+diff --git "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\scripts\\check-scoring.ts" "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\scripts\\check-scoring.ts"
+index 7d8d181..e253f1a 100644
+--- "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\scripts\\check-scoring.ts"
++++ "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\scripts\\check-scoring.ts"	
+@@ -1,8 +1,9 @@
+ // Self-check for the matching rules. Run: npx tsx scripts/check-scoring.ts
+ import assert from "node:assert/strict";
+ import { DEMO_PROFILE, JOBS, jobById } from "../src/lib/data";
+-import { scoreMatch, suggestImprovements } from "../src/lib/scoring";
+-import { takeHome } from "../src/lib/pay";
++import { matchChips, matchGuidance, scoreMatch, suggestImprovements } from "../src/lib/scoring";
++import { takeHome, yen } from "../src/lib/pay";
++import { hrT } from "../src/lib/hr-i18n";
+ 
+ const p = DEMO_PROFILE;
+ for (const j of JOBS) {
+@@ -26,5 +27,23 @@ assert.equal(scoreMatch(p, jobById("mikawa-cnc")!, { skills: 0, start: 0, area:
+ const pay = takeHome(jobById("mikawa-cnc")!, p.relocate);
+ assert.ok(pay.net > 150000 && pay.net < pay.gross, "take-home is plausible");
+ assert.equal(pay.gross - pay.deductions.reduce((a, d) => a + d.amount, 0), pay.net, "net = gross - deductions");
++const commuterPay = takeHome(jobById("mikawa-cnc")!, false);
++assert.equal(commuterPay.net - pay.net, 30000, "housing preference must account for both dorm and utilities");
++assert.equal(commuterPay.deductions.some((d) => d.key === "dorm" || d.key === "util"), false, "commuters do not pay dorm costs in the estimate");
++assert.match(commuterPay.housingNote, /Chưa trừ/, "the housing assumption stays visible with the amount");
++assert.equal(yen(pay.net), "¥221.526", "worker yen amounts use Vietnamese grouping consistently");
++
++const nc = jobById("okazaki-nc")!;
++const junior = { ...p, skills: { cnc_lathe: 1 }, availableInDays: 30 };
++const partial = scoreMatch(junior, nc);
++assert.equal(partial.total, 77, "regression fixture has partial fit despite meeting the visible criteria");
++assert.ok(matchChips(junior, nc, partial).every((c) => c.ok), "N4 meets this job's requirement");
++assert.doesNotMatch(matchGuidance(junior, nc, partial), /thiếu|n4/i, "do not turn the lowest weighted score into a missing N4 requirement");
++assert.match(matchGuidance(p, fork, scoreMatch(p, fork)), /Chứng chỉ xe nâng/, "genuinely missing certificates stay actionable");
++const blocked = { ...p, visa: "intern" as const };
++const blockedMatch = scoreMatch(blocked, nc);
++assert.equal(matchGuidance(blocked, nc, blockedMatch), !blockedMatch.gate.pass ? blockedMatch.gate.reason : "", "visa failure keeps the concrete gate reason");
++assert.match(hrT("ja").toastApprove("Tuấn Anh"), /面接案内/, "Japanese approval feedback means interview invitation");
++assert.doesNotMatch(hrT("ja").toastApprove("Tuấn Anh"), /採用/, "an interview invitation must not announce hiring");
+ console.log("take-home mikawa:", pay);
+ console.log("OK");
+diff --git "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\app\\globals.css" "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\app\\globals.css"
+index fb82abc..e5fa91c 100644
+--- "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\app\\globals.css"
++++ "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\app\\globals.css"	
+@@ -3,9 +3,11 @@
+ 
+ /* ViệcNhanh palette (ZEN template "Việc Nhanh"): Bold Blue primary, Light Blue secondary,
+    Soft White canvas, Jet Black text. Wired into ZEN accent tokens; html has data-emphasis="brand". */
+-:root {
++:root:not([data-theme="dark"]) {
+   --color-bg-canvas: var(--color-viecnhanh-neutral-1);
+   --color-bg-surface-alt: var(--color-viecnhanh-blue-1);
++}
++:root {
+   --color-bg-accent-solid: var(--color-viecnhanh-blue-9);
+   --color-bg-accent-solid-hover: var(--color-viecnhanh-blue-10);
+   --color-bg-accent-solid-pressed: var(--color-viecnhanh-blue-11);
+@@ -29,6 +31,7 @@
+   --brand-soft: var(--color-viecnhanh-blue-2);
+ }
+ [data-theme="dark"] {
++  color-scheme: dark;
+   --color-bg-accent-solid: var(--color-viecnhanh-sky-9);
+   --color-bg-accent-solid-hover: var(--color-viecnhanh-sky-10);
+   --color-bg-accent-solid-pressed: var(--color-viecnhanh-sky-11);
+@@ -203,7 +206,8 @@ select.input { background-image: linear-gradient(45deg, transparent 50%, current
+ /* ---------- Layout helpers ---------- */
+ .app-gutter { padding-left: var(--grid-margin-comfortable); padding-right: var(--grid-margin-comfortable); }
+ .safe-b { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+-.grid-lines { background-image: linear-gradient(var(--color-border-neutral-pale) 1px, transparent 1px), linear-gradient(90deg, var(--color-border-neutral-pale) 1px, transparent 1px); background-size: 56px 56px; }
++.modal-shell { position: fixed; inset: 0; margin: 0; padding: 0; width: 100%; height: 100%; max-width: none; max-height: none; border: 0; background: transparent; color: inherit; }
++.modal-shell::backdrop { background: transparent; }
+ .scrim { background: var(--color-bg-overlay); }
+ .no-scrollbar { scrollbar-width: none; } .no-scrollbar::-webkit-scrollbar { display: none; }
+ }
+diff --git "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\app\\page.tsx" "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\app\\page.tsx"
+index 9ceb2cd..c538a9f 100644
+--- "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\app\\page.tsx"
++++ "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\app\\page.tsx"	
+@@ -28,7 +28,7 @@ export default function Home() {
+       const io = new IntersectionObserver((entries) => {
+         for (const e of entries) if (e.isIntersecting) { gsap.to(e.target, { y: 0, autoAlpha: 1, duration: 0.9, clearProps: "transform,opacity,visibility" }); io.unobserve(e.target); }
+       }, { rootMargin: "0px 0px -10% 0px" });
+-      gsap.utils.toArray<HTMLElement>(".pillar").forEach((el) => { gsap.set(el, { y: 32, autoAlpha: 0 }); io.observe(el); });
++      gsap.utils.toArray<HTMLElement>(".pillar").forEach((el) => { gsap.set(el, { y: 32 }); io.observe(el); });
+       return () => { io.disconnect(); split.revert(); };
+     },
+     { scope: root },
+diff --git "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\app\\hr\\page.tsx" "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\app\\hr\\page.tsx"
+index 03a06c1..e36fc8c 100644
+--- "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\app\\hr\\page.tsx"
++++ "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\app\\hr\\page.tsx"	
+@@ -84,7 +84,7 @@ export default function HRCandidates() {
+                       <span><b className="block text-fg">{p.name}{a.candidateId === "me" && <span className="badge ml-2 align-middle">Demo</span>}{a.flagged && <span className="badge badge-dash ml-2 align-middle">{lang === "ja" ? "条件未達で応募" : "Applied below fit"}</span>}</b><span className="t-sm text-muted">{t.nationality[p.nationality]}</span></span>
+                     </Link>
+                   </td>
+-                  <td className="py-3 w-[190px]"><div className="pr-4"><FitPill fit={fitOf(m, s.config.threshold)} label={fitWord(m)} /><div className="flex items-center gap-2 mt-1.5"><Meter value={m.total} className="flex-1" /><span className="t-sm tnum text-muted w-9 text-right">{m.total}%</span></div></div></td>
++                  <td className="py-3 w-[190px]"><div className="pr-4"><FitPill fit={fitOf(m, s.config.threshold)} label={fitWord(m)} /><div className="flex items-center gap-2 mt-1.5"><Meter value={m.total} label={`${p.name} · ${t.th.match}`} className="flex-1" /><span className="t-sm tnum text-muted w-9 text-right">{m.total}%</span></div></div></td>
+                   <td className="py-3"><span className="badge badge-outline" lang="ja"><Icon name="check" size={12} />{VISAS[p.visa].short}</span></td>
+                   <td className="py-3 hidden xl:table-cell t-sm">{(Object.keys(p.skills) as SkillId[]).slice(0, 2).map((k) => `${SKILLS[k][lang]} ${t.years(p.skills[k] ?? 0)}`).join(" · ")}</td>
+                   <td className="py-3 tnum">{JLPT_SHORT[p.jlpt]}</td>
+diff --git "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\app\\hr\\candidates\\[id]\\page.tsx" "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\app\\hr\\candidates\\[id]\\page.tsx"
+index 56338b6..3710cd8 100644
+--- "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\app\\hr\\candidates\\[id]\\page.tsx"
++++ "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\app\\hr\\candidates\\[id]\\page.tsx"	
+@@ -10,8 +10,6 @@ import { REJECT_REASONS } from "@/lib/labels";
+ import { INTERVIEW_SLOTS, deadlineOf, displayStatus, fmtSlot, matchOf, profileOf, useApp, useNow } from "@/lib/store";
+ import { useReveal } from "@/lib/motion";
+ 
+-const STARTS = ["2026-12-01", "2026-12-08", "2026-12-15"];
+-
+ export default function Candidate() {
+   const { id } = useParams<{ id: string }>();
+   const s = useApp();
+@@ -20,7 +18,6 @@ export default function Candidate() {
+   const t = hrT(lang);
+   const a = s.apps.find((x) => x.id === id);
+   const [mode, setMode] = useState<"idle" | "approve" | "decline">("idle");
+-  const [start, setStart] = useState(STARTS[0]);
+   const [slot, setSlot] = useState(INTERVIEW_SLOTS[0]);
+   const [ivMode, setIvMode] = useState<"onsite" | "online">("onsite");
+   const [reason, setReason] = useState(REJECT_REASONS[0].id);
+@@ -38,26 +35,25 @@ export default function Candidate() {
+   const open = st === "sent" || st === "viewed";
+   const urgent = open && left < s.config.reminderH * 36e5;
+   const safety = a.candidateId === "me" ? s.safetyDone : !!s.seedSafety[a.candidateId];
+-  const fmtDate = (d: string) => new Date(d).toLocaleDateString(lang === "ja" ? "ja-JP" : "en-GB", { weekday: "short", day: "numeric", month: "short" });
+   const strongest = [...m.criteria].sort((x, y) => y.score * y.weight - x.score * x.weight)[0];
+   const weakest = [...m.criteria].sort((x, y) => x.score * x.weight - y.score * y.weight)[0];
+ 
+-  const approve = () => { s.decide(a.id, "approved", { startDate: start, interview: { slot, mode: ivMode } }); setMode("idle"); toast(t.toastApprove(p.name), "check-verified"); };
++  const approve = () => { s.decide(a.id, "approved", { interview: { slot, mode: ivMode } }); setMode("idle"); toast(t.toastApprove(p.name), "check-verified"); };
+   const decline = () => { s.decide(a.id, "rejected", { reason }); setMode("idle"); toast(t.toastDecline(p.name), "send-01"); };
+ 
+   return (
+     <div ref={root}>
+       <Link href="/hr" className="inline-flex items-center gap-2 t-sm text-muted hover:text-fg mb-5" data-reveal><Icon name="arrow-left" size={16} />{t.back}</Link>
+-      <div className="grid lg:grid-cols-[1fr_360px] gap-5 items-start">
+-        <div className="grid gap-5">
++      <div className="grid xl:grid-cols-[minmax(0,1fr)_360px] gap-5 items-start">
++        <div className="grid gap-5 min-w-0">
+           <section className="card p-6 flex flex-wrap items-center gap-5" data-reveal>
+             <Avatar name={p.name} size={64} />
+-            <div className="flex-1 min-w-[200px]">
++            <div className="flex-1 min-w-0 basis-[200px]">
+               <h1 className="t-h3">{p.name}</h1>
+               <p className="text-muted">{t.nationality[p.nationality]} · <span lang="ja">{VISAS[p.visa][lang]}</span> · {JLPT_SHORT[p.jlpt]}</p>
+               <p className="t-sm text-muted mt-1">{t.applied} {new Date(a.appliedAt).toLocaleString(lang === "ja" ? "ja-JP" : "en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
+             </div>
+-            <div className="text-center"><ScoreRing value={m.total} size={84} stroke={7} /><p className="t-sm font-semibold mt-1">{(lang === "ja" ? FIT_JA : FIT_EN)[fitOf(m, s.config.threshold)]}</p></div>
++            <div className="text-center"><ScoreRing value={m.total} size={84} stroke={7} label={lang === "ja" ? `適合度 ${m.total}%` : `${m.total}% fit`} /><p className="t-sm font-semibold mt-1">{(lang === "ja" ? FIT_JA : FIT_EN)[fitOf(m, s.config.threshold)]}</p></div>
+             <div className="w-full pt-4 hair-t"><MatchChips chips={matchChips(p, job, m)} lang={lang} /></div>
+             {a.flagged && <p className="w-full t-sm flex gap-2 rounded-xl border border-dashed border-line p-3"><Icon name="info-circle" size={16} className="mt-0.5" />{lang === "ja" ? "本人は適合レベル未達を承知の上で応募しています。" : "Applied knowing they are below “Great fit”."}</p>}
+             {a.answers && Object.keys(a.answers).length > 0 && (
+@@ -72,9 +68,9 @@ export default function Candidate() {
+             <p className="text-muted mb-5">{t.why}: <b className="text-fg">{critLabel(lang, strongest.key)}</b> ↑ · <b className="text-fg">{critLabel(lang, weakest.key)}</b> ↓</p>
+             <div className="grid gap-5">
+               {m.criteria.map((c, i) => (
+-                <div key={c.key} className="grid md:grid-cols-[180px_1fr_48px] items-center gap-x-4 gap-y-1.5">
++                <div key={c.key} className="grid md:grid-cols-[minmax(0,180px)_minmax(0,1fr)_48px] items-center gap-x-4 gap-y-1.5">
+                   <p className="font-medium">{critLabel(lang, c.key)} <span className="t-sm text-muted font-normal">· {t.weight} {c.weight}</span></p>
+-                  <div><Meter value={c.score} delay={i * 0.08} /><p className="t-sm text-muted mt-1.5">{critNote(lang, c, p, job, m.km)}</p></div>
++                  <div className="min-w-0"><Meter value={c.score} label={critLabel(lang, c.key)} delay={i * 0.08} /><p className="t-sm text-muted mt-1.5">{critNote(lang, c, p, job, m.km)}</p></div>
+                   <p className="tnum font-semibold md:text-right">{c.score}</p>
+                 </div>
+               ))}
+@@ -95,7 +91,7 @@ export default function Candidate() {
+           </section>
+         </div>
+ 
+-        <aside className="lg:sticky lg:top-24 grid gap-3" data-reveal>
++        <aside className="xl:sticky xl:top-24 grid gap-3 min-w-0" data-reveal>
+           <section className={`rounded-[24px] p-6 ${urgent ? "ink" : "card"}`} aria-live="polite">
+             {open ? (
+               <>
+@@ -115,19 +111,19 @@ export default function Candidate() {
+           {open && (
+             <section className="card p-5">
+               {mode === "idle" && (
+-                <div className="grid grid-cols-2 gap-2">
+-                  <Button size="lg" variant="tertiary" onClick={() => setMode("decline")}>{t.decline}</Button>
+-                  <Button size="lg" icon="check" onClick={() => setMode("approve")}>{t.approve}</Button>
++                <div className="flex flex-wrap gap-2">
++                  <Button size="lg" className="flex-1" variant="tertiary" onClick={() => setMode("decline")}>{t.decline}</Button>
++                  <Button size="lg" className="flex-1" icon="calendar" onClick={() => setMode("approve")}>{t.approve}</Button>
+                 </div>
+               )}
+               {mode === "approve" && (
+                 <div className="grid gap-3 animate-[zen-fade-in_var(--motion-base)_var(--ease-standard)]">
+-                  <p className="font-semibold">{lang === "ja" ? "面接日時" : "Interview slot"}</p>
+-                  <Segmented size="sm" label="Interview slot" value={slot} onChange={setSlot} options={INTERVIEW_SLOTS.map((d) => ({ value: d, label: fmtSlot(d, lang).replace(/^S+s/, "") }))} />
++                  <label htmlFor="interview-slot" className="font-semibold">{lang === "ja" ? "面接日時" : "Interview slot"}</label>
++                  <select id="interview-slot" className="input" value={slot} onChange={(e) => setSlot(e.target.value)}>
++                    {INTERVIEW_SLOTS.map((d) => <option key={d} value={d}>{fmtSlot(d, lang)}</option>)}
++                  </select>
+                   <Segmented size="sm" label="Interview mode" value={ivMode} onChange={setIvMode} options={[{ value: "onsite", label: lang === "ja" ? "工場で" : "On-site" }, { value: "online", label: "Zalo video" }]} />
+-                  <p className="font-semibold">{t.startDate}</p>
+-                  <Segmented size="sm" label={t.startDate} value={start} onChange={setStart} options={STARTS.map((d) => ({ value: d, label: fmtDate(d) }))} />
+-                  <Button size="lg" block onClick={approve}>{t.confirmApprove}</Button>
++                  <Button size="lg" block className="!h-auto min-h-[var(--button-lg-h)] !whitespace-normal py-3" onClick={approve}>{t.confirmApprove}</Button>
+                   <Button variant="flat" block onClick={() => setMode("idle")}>{lang === "ja" ? "戻る" : "Back"}</Button>
+                 </div>
+               )}
+diff --git "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\app\\worker\\analyzing\\page.tsx" "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\app\\worker\\analyzing\\page.tsx"
+index a639fbc..3b52702 100644
+--- "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\app\\worker\\analyzing\\page.tsx"
++++ "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\app\\worker\\analyzing\\page.tsx"	
+@@ -32,7 +32,7 @@ export default function Analyzing() {
+     { title: "Đọc thẻ cư trú", sub: `${VISAS[profile.visa].vi}` },
+     { title: `Kiểm tra visa với ${JOBS.length} nhà máy`, sub: hidden.length ? `Ẩn ${hidden.length} việc visa không cho phép` : "Visa hợp lệ với tất cả việc" },
+     { title: "So kỹ năng & chứng chỉ", sub: skills.join(", ") },
+-    { title: "Tính đường đi & lương thực nhận", sub: `Từ ${CITIES[profile.city].vi}, đã trừ thuế, bảo hiểm, ký túc xá` },
++    { title: "Tính đường đi & lương thực nhận", sub: `Từ ${CITIES[profile.city].vi}, đã trừ thuế và bảo hiểm; chi phí chỗ ở theo lựa chọn hồ sơ` },
+     { title: "Xếp việc theo mức phù hợp", sub: `${great.length} việc rất phù hợp` },
+   ];
+ 
+@@ -51,7 +51,7 @@ export default function Analyzing() {
+   return (
+     <div className="min-h-dvh mx-auto w-full max-w-[640px] px-5 md:px-0 pt-10 pb-36">
+       <p className="t-eyebrow mb-3 flex items-center gap-2 !text-brand"><Icon name="stars-01" solid size={16} />AI đang dựng hồ sơ</p>
+-      <h1 className="t-h2 mb-6">{done ? (great.length ? `Có ${great.length} việc rất phù hợp với bạn` : "AI đã tìm được việc cho bạn") : "Chờ một chút, AI đang đọc hồ sơ…"}</h1>
++      <h1 className="t-h2 mb-6">{done ? (great.length ? `Có ${great.length} việc rất phù hợp với bạn` : "AI đã kiểm tra hồ sơ của bạn") : "Chờ một chút, AI đang đọc hồ sơ…"}</h1>
+ 
+       <div className={`card p-5 ${done ? "hidden" : ""}`}><AIThinking steps={steps} onDone={() => setDone(true)} /></div>
+ 
+@@ -71,15 +71,15 @@ export default function Analyzing() {
+ 
+         <section data-res aria-labelledby="great-h">
+           <h2 id="great-h" className="t-h4 mb-3 flex items-center gap-2">Rất phù hợp <span className="badge badge-md bg-brand-soft text-brand tnum">{great.length}</span></h2>
+-          <ul className="grid gap-2">{great.map((r) => <JobRow key={r.j.id} r={r} />)}</ul>
+-          {!great.length && <p className="text-muted">Chưa có việc rất phù hợp. Xem các việc có thể phù hợp bên dưới.</p>}
++          <ul className="grid gap-2">{great.map((r) => <JobRow key={r.j.id} r={r} relocate={profile.relocate} />)}</ul>
++          {!great.length && <p className="text-muted">{possible.length ? "Chưa có việc rất phù hợp. Xem các việc có thể phù hợp bên dưới." : "Chưa có việc rất phù hợp. Xem tất cả việc để biết lý do và kiểm tra lại hồ sơ."}</p>}
+         </section>
+ 
+         {possible.length > 0 && (
+           <section data-res aria-labelledby="pos-h">
+             <h2 id="pos-h" className="t-h4 mb-1 flex items-center gap-2">Có thể phù hợp <span className="badge badge-md tnum">{possible.length}</span></h2>
+-            <p className="t-sm text-muted mb-3">Bổ sung kỹ năng hoặc chứng chỉ để lên mức rất phù hợp.</p>
+-            <ul className="grid gap-2">{possible.map((r) => <JobRow key={r.j.id} r={r} />)}</ul>
++            <p className="t-sm text-muted mb-3">Mức gợi ý tổng hợp nhiều tiêu chí. Bạn vẫn có thể xem và quyết định ứng tuyển.</p>
++            <ul className="grid gap-2">{possible.map((r) => <JobRow key={r.j.id} r={r} relocate={profile.relocate} />)}</ul>
+           </section>
+         )}
+ 
+@@ -97,7 +97,8 @@ export default function Analyzing() {
+   );
+ }
+ 
+-function JobRow({ r }: { r: { j: (typeof JOBS)[number]; fit: "great" | "possible" | "not" } }) {
++function JobRow({ r, relocate }: { r: { j: (typeof JOBS)[number]; fit: "great" | "possible" | "not" }; relocate: boolean }) {
++  const pay = takeHome(r.j, relocate);
+   return (
+     <li>
+       <Link href={`/worker/jobs/${r.j.id}`} className="card pressable flex items-center gap-4 p-4 hover:shadow-[var(--shadow-bottom-2)]">
+@@ -105,7 +106,8 @@ function JobRow({ r }: { r: { j: (typeof JOBS)[number]; fit: "great" | "possible
+         <span className="flex-1 min-w-0">
+           <span className="font-semibold block truncate">{r.j.title}</span>
+           <span className="t-sm text-muted block truncate">{r.j.company} · {CITIES[r.j.city].vi}</span>
+-          <span className="mt-1.5 flex flex-wrap items-center gap-2"><FitBadge level={r.fit} /><span className="t-sm font-semibold tnum">{yen(takeHome(r.j).net)}<span className="text-muted font-normal">/tháng ước tính</span></span></span>
++          <span className="mt-1.5 flex flex-wrap items-center gap-2"><FitBadge level={r.fit} /><span className="t-sm font-semibold tnum">{yen(pay.net)}<span className="text-muted font-normal">/tháng ước tính</span></span></span>
++          <span className="t-sm text-muted block mt-1">{pay.housingNote}</span>
+         </span>
+         <Icon name="chevron-right-01" className="text-faint" />
+       </Link>
+diff --git "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\app\\worker\\applications\\page.tsx" "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\app\\worker\\applications\\page.tsx"
+index 7b47541..04a0bec 100644
+--- "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\app\\worker\\applications\\page.tsx"
++++ "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\app\\worker\\applications\\page.tsx"	
+@@ -80,7 +80,7 @@ function AppCard({ a, now }: { a: Application; now: number }) {
+               <span className="t-sm text-muted">{st === "viewed" ? "HR đang xem hồ sơ · trả lời trước" : "HR phải trả lời trước"}</span>
+               <span className={`mono tnum t-h4 ${urgent ? "underline decoration-2 underline-offset-4" : ""}`} aria-label={`Còn ${fmtLeft(left)}`}>{fmtLeft(left)}</span>
+             </div>
+-            <Meter value={Math.max(0, (left / total) * 100)} className="mt-3" />
++            <Meter value={Math.max(0, (left / total) * 100)} label={`Thời gian HR còn lại cho ${job.company}`} className="mt-3" />
+             <p className="t-sm text-muted mt-2">Quá hạn, hồ sơ tự đóng và bạn nhận 3 việc khác.</p>
+           </div>
+         </>
+@@ -159,15 +159,17 @@ function Alternatives({ exclude, title }: { exclude: string; title: string }) {
+     <div className="mt-4">
+       <p className="t-sm font-semibold mb-2">{title}</p>
+       <ul className="grid gap-2">
+-        {alts.map(({ j, m }) => (
+-          <li key={j.id}>
+-            <Link href={`/worker/jobs/${j.id}`} className="flex items-center gap-3 well p-3 pressable">
+-              
+-              <span className="flex-1 min-w-0"><b className="block truncate">{j.title}</b><span className="t-sm text-muted block">{j.company} · {yen(takeHome(j).net)}/tháng ước tính</span><span className="mt-1.5 inline-block"><FitBadge level={fitOf(m, s.config.threshold)} /></span></span>
+-              <Icon name="chevron-right-01" className="text-faint" />
+-            </Link>
+-          </li>
+-        ))}
++        {alts.map(({ j, m }) => {
++          const pay = takeHome(j, p.relocate);
++          return (
++            <li key={j.id}>
++              <Link href={`/worker/jobs/${j.id}`} className="flex items-center gap-3 well p-3 pressable">
++                <span className="flex-1 min-w-0"><b className="block truncate">{j.title}</b><span className="t-sm text-muted block">{j.company} · {yen(pay.net)}/tháng ước tính</span><span className="t-sm text-muted block mt-1">{pay.housingNote}</span><span className="mt-1.5 inline-block"><FitBadge level={fitOf(m, s.config.threshold)} /></span></span>
++                <Icon name="chevron-right-01" className="text-faint" />
++              </Link>
++            </li>
++          );
++        })}
+       </ul>
+       {alts.length === 0 && <Button variant="secondary" onClick={() => location.assign("/worker/jobs")}>Xem tất cả việc</Button>}
+     </div>
+diff --git "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\app\\worker\\jobs\\layout.tsx" "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\app\\worker\\jobs\\layout.tsx"
+index 934adbe..35ba5b4 100644
+--- "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\app\\worker\\jobs\\layout.tsx"
++++ "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\app\\worker\\jobs\\layout.tsx"	
+@@ -1,7 +1,8 @@
+ "use client";
+ import { usePathname, useSearchParams } from "next/navigation";
++import Link from "next/link";
+ import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+-import { Icon } from "@/components/ui";
++import { Button, Icon } from "@/components/ui";
+ import { BellLink, Screen, TopBar } from "@/components/worker/Shell";
+ import { JobCard } from "@/components/worker/Blocks";
+ import { JOBS, VISAS } from "@/lib/data";
+@@ -64,10 +65,17 @@ function JobList({ activeId }: { activeId?: string }) {
+         <div ref={list} className="grid grid-cols-1 gap-3">
+           {visible.map(({ j, m }) => (
+             <div key={j.id} data-reveal data-flip-id={j.id}>
+-              <JobCard job={j} m={m} fit={fitOf(m, s.config.threshold)} chips={matchChips(p, j, m)} applied={applied.has(j.id)} active={activeId === j.id} highlight={!!(rescored === j.id && from)} />
++              <JobCard job={j} relocate={p.relocate} m={m} fit={fitOf(m, s.config.threshold)} chips={matchChips(p, j, m)} applied={applied.has(j.id)} active={activeId === j.id} highlight={!!(rescored === j.id && from)} />
+             </div>
+           ))}
+         </div>
++        {visible.length === 0 && (
++          <section className="card-flat p-5 grid gap-3" role="status">
++            <h2 className="t-sub">{filter === "ok" ? "Chưa có việc ở mức Rất phù hợp" : "Chưa có việc phù hợp với visa hiện tại"}</h2>
++            <p className="text-muted">{filter === "ok" ? "Bạn vẫn có thể xem các việc khác và quyết định ứng tuyển. Mức gợi ý không thay cho quyết định của bạn." : "Xem lý do các việc bị ẩn bên dưới và kiểm tra lại thông tin hồ sơ."}</p>
++            {filter === "ok" ? <Button variant="secondary" onClick={() => setFilter("all")}>Xem tất cả việc</Button> : <Link href="/worker/onboarding?edit=1" className="btn btn-secondary pressable">Kiểm tra hồ sơ</Link>}
++          </section>
++        )}
+         {hidden.length > 0 && (
+           <div className="mt-4 rounded-2xl border border-dashed border-line p-4" data-reveal>
+             <button className="w-full flex items-center justify-between gap-3 text-left" aria-expanded={showHidden} onClick={() => setShowHidden((v) => !v)}>
+diff --git "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\app\\worker\\jobs\\[id]\\page.tsx" "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\app\\worker\\jobs\\[id]\\page.tsx"
+index 36afddd..7a0959a 100644
+--- "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\app\\worker\\jobs\\[id]\\page.tsx"
++++ "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\app\\worker\\jobs\\[id]\\page.tsx"	
+@@ -7,7 +7,8 @@ import { Screen, TopBar } from "@/components/worker/Shell";
+ import { PayCard, ScoreBreakdown } from "@/components/worker/Blocks";
+ import { CITIES, JLPT_SHORT, SKILLS, VISAS, jobById } from "@/lib/data";
+ import { SHIFT_VI } from "@/lib/labels";
+-import { FIT_VI, fitOf, matchChips, scoreMatch, suggestImprovements } from "@/lib/scoring";
++import { FIT_VI, fitOf, matchChips, matchGuidance, scoreMatch, suggestImprovements } from "@/lib/scoring";
++import { takeHome, yen } from "@/lib/pay";
+ import { deadlineOf, fmtLeft, isClosed, useApp, useNow } from "@/lib/store";
+ import { gsap, useGSAP } from "@/lib/motion";
+ 
+@@ -31,11 +32,12 @@ function JobDetail() {
+   const fromFit = from ? fitOf({ ...m, total: from }, s.config.threshold) : undefined;
+   const ups = m.gate.pass && !can ? suggestImprovements(p, job, s.config.weights).slice(0, 3) : [];
+   const mine = s.apps.find((a) => a.candidateId === "me" && a.jobId === job.id && !isClosed(a, s));
+-  const hired = s.apps.some((a) => a.candidateId === "me" && a.jobId === job.id && a.status === "approved");
++  const invited = s.apps.some((a) => a.candidateId === "me" && a.jobId === job.id && a.status === "approved");
+   const best = [...m.criteria].sort((a, b) => b.score - a.score);
++  const pay = takeHome(job, p.relocate);
+ 
+   return (
+-    <Screen deps={[id]} className="lg:pt-6">
++    <Screen deps={[id]} className="pb-6 lg:pt-6 lg:pb-0">
+       <div className="lg:hidden"><TopBar back="/worker/jobs" title={job.company} sub={CITIES[job.city].vi} /></div>
+       <div className="px-5 lg:px-0 grid gap-4 max-w-[760px]">
+         <section className="card p-6 md:p-8" data-reveal>
+@@ -54,6 +56,11 @@ function JobDetail() {
+               <p className="t-sm text-muted mt-2">{fromFit ? `AI chấm lại: ${FIT_VI[fromFit]} → ${FIT_VI[fit]}` : "AI chấm từ hồ sơ của bạn"}</p>
+             </div>
+           </div>
++          <div className="mt-4 pt-4 hair-t">
++            <p className="t-sm text-muted">Thực nhận mỗi tháng · ước tính ban đầu</p>
++            <p className="t-h3 tnum mt-1">{yen(pay.net)}</p>
++            <p className="t-sm text-muted mt-1">{pay.housingNote} · xem chi tiết khấu trừ bên dưới</p>
++          </div>
+           <div className="mt-5 pt-5 hair-t"><MatchChips chips={matchChips(p, job, m)} /></div>
+         </section>
+ 
+@@ -62,8 +69,8 @@ function JobDetail() {
+           <div className="flex items-center gap-2 mb-3">
+             <span className="badge badge-solid"><Icon name="stars-01" size={14} solid />AI gợi ý</span>
+           </div>
+-          <h2 id="why-h" className="t-h4">{can ? "Vì sao việc này hợp với bạn" : m.gate.pass ? "Nâng tay nghề cho riêng việc này" : "Visa của bạn không cho phép việc này"}</h2>
+-          <p className="text-muted mt-1 mb-5">{can ? `${best[0].note}. ${best[1].note}.` : m.gate.pass ? `Còn thiếu: ${best[best.length - 1].note.charAt(0).toLowerCase() + best[best.length - 1].note.slice(1)}. Bổ sung đúng thông tin để lên mức Rất phù hợp, hoặc vẫn ứng tuyển ngay.` : !m.gate.pass ? m.gate.reason : ""}</p>
++          <h2 id="why-h" className="t-h4">{can ? "Vì sao việc này hợp với bạn" : m.gate.pass ? "Hiểu mức phù hợp của bạn" : "Visa của bạn không cho phép việc này"}</h2>
++          <p className="text-muted mt-1 mb-5">{can ? `${best[0].note}. ${best[1].note}.` : matchGuidance(p, job, m)}</p>
+           {ups.length > 0 && (
+             <ul className="grid gap-2 mb-5">
+               {ups.map((u) => (
+@@ -84,14 +91,14 @@ function JobDetail() {
+           </details>
+         </section>
+ 
+-        <div data-reveal><PayCard job={job} relocate={p.relocate} /></div>
++        <div data-reveal><PayCard key={`${job.id}-${p.relocate}`} job={job} relocate={p.relocate} /></div>
+ 
+         <section className="card p-6" data-reveal aria-labelledby="facts-h">
+           <h2 id="facts-h" className="t-h4 mb-4">Công việc</h2>
+           <dl className="grid grid-cols-2 gap-x-4 gap-y-5">
+             <Fact icon="clock" k="Ca làm" v={SHIFT_VI[job.shift]} />
+             <Fact icon="clock-fast-forward" k="Tăng ca" v={`~${job.otHours} giờ/tháng`} />
+-            <Fact icon="home-02" k="Ký túc xá" v={job.dorm !== null ? `Có · ¥${job.dorm.toLocaleString("ja-JP")}` : "Không"} />
++            <Fact icon="home-02" k="Ký túc xá" v={job.dorm !== null ? `Có · ${yen(job.dorm)}` : "Không"} />
+             <Fact icon="calendar" k="Cần bắt đầu" v={`Trong ${job.startWithinDays} ngày`} />
+             <Fact icon="tool-02" k="Kỹ năng" v={job.required.map((x) => SKILLS[x].vi).join(", ")} />
+             <Fact icon="translate" k="Tiếng Nhật" v={`Từ ${JLPT_SHORT[job.jlptMin]}`} />
+@@ -110,16 +117,16 @@ function JobDetail() {
+       {/* Sticky decision bar */}
+       <div className="fixed lg:sticky bottom-0 inset-x-0 z-20 lg:mt-4 bg-[color-mix(in_oklab,var(--color-bg-canvas)_90%,transparent)] backdrop-blur-xl border-t border-hair lg:border-0 lg:bg-transparent lg:backdrop-blur-none">
+         <div className="px-5 lg:px-0 pt-3 pb-3 safe-b max-w-[760px] lg:pb-8">
+-          {hired ? (
+-            <Button size="lg" block icon="check-verified" onClick={() => router.push("/worker/applications")}>Bạn đã được nhận · xem bước tiếp theo</Button>
++          {invited ? (
++            <Button size="lg" block icon="calendar" onClick={() => router.push("/worker/applications")}>Xem lời mời phỏng vấn</Button>
+           ) : mine ? (
+             <Button size="lg" block variant="secondary" icon="file-check" onClick={() => router.push("/worker/applications")}>Đã ứng tuyển · xem trạng thái</Button>
+           ) : can ? (
+             <Button size="lg" block onClick={() => setSheet("apply")} iconRight="arrow-right">Ứng tuyển · HR trả lời trong {s.config.deadlineH}h</Button>
+           ) : m.gate.pass ? (
+-            <div className="grid grid-cols-[1fr_auto] gap-2">
+-              <Button size="lg" icon="trend-up-01" onClick={() => router.push(`/worker/improve?job=${job.id}`)}>Cải thiện hồ sơ</Button>
+-              <Button size="lg" variant="tertiary" onClick={() => setSheet("anyway")}>Vẫn ứng tuyển</Button>
++            <div className="flex flex-wrap gap-2">
++              <Button size="lg" className="flex-1" icon="trend-up-01" onClick={() => router.push(`/worker/improve?job=${job.id}`)}>Cải thiện hồ sơ</Button>
++              <Button size="lg" className="flex-1" variant="tertiary" onClick={() => setSheet("anyway")}>Vẫn ứng tuyển</Button>
+             </div>
+           ) : (
+             <Button size="lg" block variant="secondary" disabled>Không ứng tuyển được với visa hiện tại</Button>
+@@ -162,7 +169,7 @@ function ApplySheet({ open, onClose, jobId, flagged }: { open: boolean; onClose:
+ 
+   const close = () => { onClose(); setTimeout(() => { setAppId(null); setAnswers({}); }, 400); };
+   return (
+-    <Sheet open={open} onClose={close} title={appId ? undefined : "Gửi hồ sơ cho nhà máy?"}
++    <Sheet open={open} onClose={close} title={appId ? "Đã gửi hồ sơ" : "Gửi hồ sơ cho nhà máy?"}
+       footer={appId ? (
+         <Button size="lg" block onClick={() => { close(); router.push("/worker/applications"); }} iconRight="arrow-right">Xem trạng thái hồ sơ</Button>
+       ) : (
+diff --git "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\app\\worker\\wallet\\page.tsx" "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\app\\worker\\wallet\\page.tsx"
+index 404d89b..e0889e5 100644
+--- "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\app\\worker\\wallet\\page.tsx"
++++ "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\app\\worker\\wallet\\page.tsx"	
+@@ -3,9 +3,9 @@ import Link from "next/link";
+ import { useRef, useState } from "react";
+ import { Button, Icon, InlineNote, Num, Sheet, toast } from "@/components/ui";
+ import { Screen, TopBar } from "@/components/worker/Shell";
+-import { JOBS, jobById } from "@/lib/data";
++import { JOBS } from "@/lib/data";
+ import { yen } from "@/lib/pay";
+-import { displayStatus, useApp, useNow } from "@/lib/store";
++import { useApp } from "@/lib/store";
+ import { gsap, useGSAP } from "@/lib/motion";
+ 
+ const FEE = 330; // flat transfer fee, not interest
+@@ -13,14 +13,9 @@ const SHARE = 0.5; // max share of verified earned wages
+ const SHIFTS = ["T2 17/11", "T3 18/11", "T4 19/11", "T5 20/11", "T6 21/11", "T2 24/11"];
+ 
+ export default function Wallet() {
+-  const s = useApp();
+-  const now = useNow(5000);
+-  const approved = s.apps.find((a) => a.candidateId === "me" && displayStatus(a, s, now) === "approved");
+   const [preview, setPreview] = useState(false);
+-  const job = approved ? jobById(approved.jobId)! : JOBS[0];
+-  const active = !!approved || preview;
+ 
+-  if (!active) return (
++  if (!preview) return (
+     <Screen>
+       <TopBar title="Ví lương" />
+       <div className="px-5 lg:px-0 max-w-[640px] grid gap-4">
+@@ -34,7 +29,7 @@ export default function Wallet() {
+             <li className="flex gap-3"><Icon name="check" /><span>Phí cố định {yen(FEE)}/lần. Không lãi, không phải khoản vay</span></li>
+           </ul>
+         </section>
+-        <div data-reveal><InlineNote icon="lock-01">Ví mở sau khi bạn được nhận và đi làm ca đầu tiên.</InlineNote></div>
++        <div data-reveal><InlineNote icon="lock-01">Ví mở sau khi bạn được nhận và có ca làm được nhà máy xác nhận. Lời mời phỏng vấn chưa mở ví.</InlineNote></div>
+         <div className="grid gap-2" data-reveal>
+           <Link href="/worker/applications" className="btn btn-lg btn-primary pressable">Xem hồ sơ đã gửi</Link>
+           <Button size="lg" variant="flat" onClick={() => setPreview(true)}>Xem thử với dữ liệu mẫu</Button>
+@@ -42,12 +37,12 @@ export default function Wallet() {
+       </div>
+     </Screen>
+   );
+-  return <ActiveWallet jobId={job.id} demo={!approved} />;
++  return <ActiveWallet onExit={() => setPreview(false)} />;
+ }
+ 
+-function ActiveWallet({ jobId, demo }: { jobId: string; demo: boolean }) {
++function ActiveWallet({ onExit }: { onExit: () => void }) {
+   const { withdrawals, withdraw } = useApp();
+-  const job = jobById(jobId)!;
++  const job = JOBS[0];
+   const earned = SHIFTS.length * 8 * job.hourly;
+   const taken = withdrawals.reduce((t, w) => t + w.amount, 0);
+   const available = Math.max(0, Math.floor((earned * SHARE - taken) / 1000) * 1000);
+@@ -61,8 +56,9 @@ function ActiveWallet({ jobId, demo }: { jobId: string; demo: boolean }) {
+   const pct = (n: number) => `${(n / earned) * 100}%`;
+   return (
+     <Screen>
+-      <TopBar title="Ví lương" sub={`${job.company}${demo ? " · dữ liệu mẫu" : ""}`} />
++      <TopBar title="Ví lương mẫu" sub={`${job.company} · dữ liệu mẫu`} />
+       <div className="px-5 lg:px-0 max-w-[640px] grid gap-4">
++        <div data-reveal><InlineNote icon="info-circle">Bạn đang xem ví mẫu. Ca làm, số dư và lệnh chuyển đều là mô phỏng.</InlineNote></div>
+         <section className="ink rounded-[28px] p-6" data-reveal>
+           <p className="t-sm muted-ink">Lương đã làm tháng này · {SHIFTS.length} ca đã xác nhận</p>
+           <p className="text-[44px] leading-none font-semibold tracking-[-0.045em] mt-2"><Num value={earned} format={yen} /></p>
+@@ -90,7 +86,7 @@ function ActiveWallet({ jobId, demo }: { jobId: string; demo: boolean }) {
+             <div className="flex justify-between"><dt className="text-muted">Phí chuyển cố định</dt><dd className="tnum">{yen(FEE)}</dd></div>
+             <div className="flex justify-between font-semibold"><dt>Về tài khoản Yucho ••4821</dt><dd className="tnum">{yen(Math.max(0, amt - FEE))}</dd></div>
+           </dl>
+-          <Button size="lg" block className="mt-5" disabled={amt < 1000} onClick={() => setSheet("confirm")}>Nhận {yen(Math.max(0, amt - FEE))} ngay</Button>
++          <Button size="lg" block className="mt-5" disabled={amt < 1000} onClick={() => setSheet("confirm")}>Thử nhận {yen(Math.max(0, amt - FEE))}</Button>
+         </section>
+ 
+         <div data-reveal><InlineNote icon="shield-tick"><b>Đây là lương bạn đã làm, không phải khoản vay.</b> Không lãi suất. Số đã ứng được trừ vào kỳ lương ngày 25, sau khi nhà máy trừ thuế và bảo hiểm.</InlineNote></div>
+@@ -112,26 +108,28 @@ function ActiveWallet({ jobId, demo }: { jobId: string; demo: boolean }) {
+             </>
+           )}
+         </section>
++        <Button size="lg" variant="flat" onClick={onExit}>Thoát ví mẫu</Button>
+       </div>
+ 
+-      <Sheet open={sheet !== null} onClose={() => setSheet(null)} title={sheet === "confirm" ? "Xác nhận ứng lương" : undefined}
++      <Sheet open={sheet !== null} onClose={() => setSheet(null)} title={sheet === "confirm" ? "Mô phỏng ứng lương" : "Đã mô phỏng ứng lương"}
+         footer={sheet === "confirm" ? (
+-          <Button size="lg" block onClick={() => { withdraw(amt, FEE); setSheet("done"); toast(`Đã chuyển ${yen(amt - FEE)} về Yucho`, "bank"); }}>Xác nhận</Button>
++          <Button size="lg" block onClick={() => { withdraw(amt, FEE); setSheet("done"); toast(`Đã mô phỏng chuyển ${yen(amt - FEE)}`, "bank"); }}>Xác nhận mô phỏng</Button>
+         ) : (
+           <Button size="lg" block onClick={() => setSheet(null)}>Xong</Button>
+         )}>
+         {sheet === "confirm" ? (
+           <dl className="grid gap-3 t-base">
++            <p className="t-sm text-muted">Ví mẫu · giao dịch mô phỏng</p>
+             <div className="flex justify-between"><dt className="text-muted">Số tiền ứng</dt><dd className="tnum font-semibold">{yen(amt)}</dd></div>
+             <div className="flex justify-between"><dt className="text-muted">Phí cố định</dt><dd className="tnum">−{yen(FEE)}</dd></div>
+             <div className="flex justify-between hair-t pt-3 t-sub"><dt>Bạn nhận</dt><dd className="tnum">{yen(amt - FEE)}</dd></div>
+-            <p className="t-sm text-muted">Tiền về trong khoảng 1 phút. Kỳ lương 25/12 sẽ trừ {yen(amt)}.</p>
++            <p className="t-sm text-muted">Ví dụ: tài khoản nhận {yen(amt - FEE)}, kỳ lương sau trừ {yen(amt)}. Bản demo không chuyển tiền.</p>
+           </dl>
+         ) : (
+           <div className="text-center py-6">
+             <span className="mx-auto grid size-16 place-items-center rounded-full ink animate-[zen-pop_var(--motion-slow)_var(--ease-bounce)]"><Icon name="check" size={32} /></span>
+-            <p className="t-h3 mt-4">Đã gửi lệnh chuyển</p>
+-            <p className="text-muted mt-1">Tiền sẽ vào tài khoản Yucho ••4821.</p>
++            <p className="t-h3 mt-4">Đã thử ứng lương</p>
++            <p className="text-muted mt-1">Ví mẫu đã cập nhật. Không có tiền được chuyển tới Yucho ••4821.</p>
+           </div>
+         )}
+       </Sheet>
+diff --git "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\components\\DemoPanel.tsx" "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\components\\DemoPanel.tsx"
+index f753079..f81b624 100644
+--- "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\components\\DemoPanel.tsx"
++++ "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\components\\DemoPanel.tsx"	
+@@ -1,13 +1,13 @@
+ "use client";
+ import Link from "next/link";
+ import { useRouter } from "next/navigation";
+-import { useEffect, useRef, useState } from "react";
++import { useEffect, useLayoutEffect, useRef, useState } from "react";
+ import { DEMO_PROFILE, jobById } from "@/lib/data";
+ import { DEFAULT_WEIGHTS, type Weights } from "@/lib/scoring";
+ import { DEFAULT_CONFIG, displayStatus, useApp, useNow } from "@/lib/store";
+ import { gsap, useGSAP } from "@/lib/motion";
+ import { STATUS_VI } from "@/lib/labels";
+-import { Button, Icon, Segmented, toast } from "./ui";
++import { Button, containDialogFocus, Icon, Segmented, toast } from "./ui";
+ 
+ const SCREENS: { group: string; items: { href: string; label: string; needsProfile?: boolean }[] }[] = [
+   {
+@@ -70,11 +70,20 @@ function Drawer({ onClose }: { onClose: () => void }) {
+   const s = useApp();
+   const now = useNow(500);
+   const router = useRouter();
++  const dialog = useRef<HTMLDialogElement>(null);
+   const panel = useRef<HTMLDivElement>(null);
+   const scrim = useRef<HTMLDivElement>(null);
+   const closing = useRef(false);
+   const [confirmReset, setConfirmReset] = useState(false);
+ 
++  useLayoutEffect(() => {
++    const el = dialog.current!;
++    const prev = document.body.style.overflow;
++    el.showModal();
++    document.body.style.overflow = "hidden";
++    return () => { el.close(); document.body.style.overflow = prev; };
++  }, []);
++
+   useGSAP(() => {
+     gsap.from(scrim.current, { autoAlpha: 0, duration: 0.3 });
+     gsap.from(panel.current, { xPercent: 104, duration: 0.7, ease: "expo.out" });
+@@ -87,11 +96,6 @@ function Drawer({ onClose }: { onClose: () => void }) {
+     gsap.to(scrim.current, { autoAlpha: 0, duration: 0.2 });
+     gsap.to(panel.current, { xPercent: 104, duration: 0.35, ease: "power2.in", onComplete: onClose });
+   };
+-  useEffect(() => {
+-    const k = (e: KeyboardEvent) => e.key === "Escape" && close();
+-    window.addEventListener("keydown", k);
+-    return () => window.removeEventListener("keydown", k);
+-  });
+ 
+   const go = (href: string, needsProfile?: boolean) => {
+     if (needsProfile && !s.profile) {
+@@ -110,7 +114,7 @@ function Drawer({ onClose }: { onClose: () => void }) {
+   const wSum = Object.values(s.config.weights).reduce((a, b) => a + b, 0);
+ 
+   return (
+-    <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-label="Bảng điều khiển demo">
++    <dialog ref={dialog} className="modal-shell" aria-modal="true" aria-label="Bảng điều khiển demo" onKeyDown={containDialogFocus} onCancel={(e) => { e.preventDefault(); close(); }}>
+       <div ref={scrim} className="absolute inset-0 scrim" onClick={close} />
+       <div ref={panel} className="absolute right-0 top-0 bottom-0 w-full max-w-[420px] bg-surface shadow-[var(--shadow-bottom-4)] flex flex-col" data-type="base-16">
+         <header className="flex items-center justify-between px-5 h-16 hair-b shrink-0">
+@@ -170,7 +174,7 @@ function Drawer({ onClose }: { onClose: () => void }) {
+                 <p className="mb-2 text-muted">{jobById(mine.jobId)?.company} · trạng thái: <b className="text-fg">{mineStatus && STATUS_VI[mineStatus]}</b></p>
+                 <div className="grid grid-cols-3 gap-2">
+                   <Button size="sm" variant="secondary" disabled={mineStatus !== "sent"} onClick={() => s.markViewed(mine.id)}>HR xem</Button>
+-                  <Button size="sm" variant="secondary" disabled={!(mineStatus === "sent" || mineStatus === "viewed")} onClick={() => s.decide(mine.id, "approved", { startDate: "2026-12-01", interview: { slot: "2026-11-18T10:00", mode: "onsite" } })}>Duyệt</Button>
++                  <Button size="sm" variant="secondary" disabled={!(mineStatus === "sent" || mineStatus === "viewed")} onClick={() => s.decide(mine.id, "approved", { interview: { slot: "2026-11-18T10:00", mode: "onsite" } })}>Mời phỏng vấn</Button>
+                   <Button size="sm" variant="secondary" disabled={!(mineStatus === "sent" || mineStatus === "viewed")} onClick={() => s.decide(mine.id, "rejected", { reason: "filled" })}>Từ chối</Button>
+                 </div>
+               </>
+@@ -220,7 +224,7 @@ function Drawer({ onClose }: { onClose: () => void }) {
+           </section>
+         </div>
+       </div>
+-    </div>
++    </dialog>
+   );
+ }
+ 
+diff --git "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\components\\ui.tsx" "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\components\\ui.tsx"
+index 353a8a2..92020cd 100644
+--- "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\components\\ui.tsx"
++++ "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\components\\ui.tsx"	
+@@ -1,5 +1,5 @@
+ "use client";
+-import { useEffect, useId, useLayoutEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
++import { useEffect, useId, useLayoutEffect, useRef, useState, type ButtonHTMLAttributes, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
+ import { createPortal } from "react-dom";
+ import { create } from "zustand";
+ import { ICONS, type IconName } from "./icons.data";
+@@ -38,7 +38,7 @@ export function Button({ variant = "primary", size = "md", block, loading, icon,
+ /** Animated number (count-up). */
+ export function Num({ value, format = (n: number) => Math.round(n).toLocaleString("ja-JP"), className = "", duration = 1 }: { value: number; format?: (n: number) => string; className?: string; duration?: number }) {
+   const ref = useRef<HTMLSpanElement>(null);
+-  const last = useRef(0);
++  const last = useRef(value);
+   useGSAP(
+     () => {
+       const o = { v: last.current };
+@@ -52,7 +52,7 @@ export function Num({ value, format = (n: number) => Math.round(n).toLocaleStrin
+     },
+     { dependencies: [value] },
+   );
+-  return <span ref={ref} className={`tnum ${className}`}>{format(last.current)}</span>;
++  return <span ref={ref} className={`tnum ${className}`}>{format(value)}</span>;
+ }
+ 
+ /** Match score ring — the hero element of the AI scoring. */
+@@ -76,11 +76,11 @@ export function ScoreRing({ value, size = 64, stroke = 6, label, muted, children
+   );
+ }
+ 
+-export function Meter({ value, className = "", delay = 0 }: { value: number; className?: string; delay?: number }) {
++export function Meter({ value, label, className = "", delay = 0 }: { value: number; label: string; className?: string; delay?: number }) {
+   const bar = useRef<HTMLElement>(null);
+   useGSAP(() => { gsap.fromTo(bar.current, { scaleX: 0 }, { scaleX: Math.max(0, Math.min(1, value / 100)), duration: 1.2, delay, ease: "expo.out" }); }, { dependencies: [value] });
+   return (
+-    <div className={`meter ${className}`} role="meter" aria-valuenow={value} aria-valuemin={0} aria-valuemax={100}>
++    <div className={`meter ${className}`} role="meter" aria-label={label} aria-valuenow={value} aria-valuemin={0} aria-valuemax={100}>
+       <i ref={bar} />
+     </div>
+   );
+@@ -110,44 +110,56 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
+   return <button type="button" role="switch" aria-checked={checked} aria-label={label} className="toggle" onClick={() => onChange(!checked)} />;
+ }
+ 
++export function containDialogFocus(e: ReactKeyboardEvent<HTMLDialogElement>) {
++  if (e.key !== "Tab") return;
++  const controls = Array.from(e.currentTarget.querySelectorAll<HTMLElement>("button, a[href], input, select, textarea, summary, [tabindex]"))
++    .filter((el) => el.tabIndex >= 0 && !el.matches(":disabled") && el.getClientRects().length > 0);
++  const first = controls[0], last = controls[controls.length - 1];
++  const outside = !controls.some((el) => el === document.activeElement);
++  if (e.shiftKey && (outside || document.activeElement === first)) { e.preventDefault(); last?.focus(); }
++  else if (!e.shiftKey && (outside || document.activeElement === last)) { e.preventDefault(); first?.focus(); }
++}
++
+ /** Bottom sheet on phones, centered dialog from 744px. ZEN rule: overlays on mobile use Bottom Sheet. */
+ export function Sheet({ open, onClose, title, children, footer }: { open: boolean; onClose: () => void; title?: ReactNode; children: ReactNode; footer?: ReactNode }) {
+   const [mounted, setMounted] = useState(open);
++  const dialog = useRef<HTMLDialogElement>(null);
+   const panel = useRef<HTMLDivElement>(null);
+   const scrim = useRef<HTMLDivElement>(null);
+   const titleId = useId();
+   const closing = useRef(false);
+   useEffect(() => { if (open) { closing.current = false; setMounted(true); } }, [open]);
+ 
++  useLayoutEffect(() => {
++    const el = dialog.current;
++    if (!mounted || !el) return;
++    const prev = document.body.style.overflow;
++    el.showModal();
++    document.body.style.overflow = "hidden";
++    const initial = el.querySelector<HTMLElement>("[autofocus]") ?? el.querySelector<HTMLElement>("button:not(:disabled), input:not(:disabled), select:not(:disabled), [tabindex='0']");
++    initial?.focus({ preventScroll: true });
++    return () => { el.close(); document.body.style.overflow = prev; };
++  }, [mounted]);
++
+   useGSAP(
+     () => {
+       if (!mounted || !panel.current) return;
+       const desktop = window.matchMedia("(min-width: 744px)").matches;
+       if (open) {
+         gsap.fromTo(scrim.current, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4, ease: "power2.out" });
+-        gsap.fromTo(panel.current, desktop ? { y: 24, scale: 0.96, autoAlpha: 0 } : { yPercent: 100 }, desktop ? { y: 0, scale: 1, autoAlpha: 1, duration: 0.6 } : { yPercent: 0, duration: 0.7, ease: "expo.out" });
+-        panel.current.querySelector<HTMLElement>("button, input, select, [tabindex]")?.focus({ preventScroll: true });
++        gsap.fromTo(panel.current, desktop ? { y: 24, scale: 0.96 } : { yPercent: 100 }, desktop ? { y: 0, scale: 1, duration: 0.6 } : { yPercent: 0, duration: 0.7, ease: "expo.out" });
+       } else if (!closing.current) {
+         closing.current = true;
+         gsap.to(scrim.current, { autoAlpha: 0, duration: 0.25, ease: "power2.in" });
+-        gsap.to(panel.current, { ...(desktop ? { y: 16, autoAlpha: 0, scale: 0.98 } : { yPercent: 100 }), duration: 0.32, ease: "power2.in", onComplete: () => setMounted(false) });
++        gsap.to(panel.current, { ...(desktop ? { y: 16, autoAlpha: 0, scale: 0.98 } : { yPercent: 100 }), duration: 0.32, ease: "power2.in", onComplete: () => { dialog.current?.close(); setMounted(false); } });
+       }
+     },
+-    { dependencies: [open, mounted] },
++    { dependencies: [open, mounted], revertOnUpdate: true },
+   );
+ 
+-  useEffect(() => {
+-    if (!open) return;
+-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+-    window.addEventListener("keydown", onKey);
+-    const prev = document.body.style.overflow;
+-    document.body.style.overflow = "hidden";
+-    return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
+-  }, [open, onClose]);
+-
+   if (!mounted) return null;
+   return createPortal(
+-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center" role="dialog" aria-modal="true" aria-labelledby={title ? titleId : undefined}>
++    <dialog ref={dialog} className="modal-shell open:flex items-end md:items-center justify-center" aria-modal="true" aria-labelledby={title ? titleId : undefined} aria-label={title ? undefined : "Thông báo"} onKeyDown={containDialogFocus} onCancel={(e) => { e.preventDefault(); onClose(); }}>
+       <div ref={scrim} className="absolute inset-0 scrim backdrop-blur-[2px]" onClick={onClose} />
+       <div ref={panel} className="relative w-full md:max-w-[480px] max-h-[92dvh] overflow-auto bg-surface rounded-t-[28px] md:rounded-[28px] shadow-[var(--shadow-bottom-4)]">
+         <div className="md:hidden mx-auto mt-2 h-1 w-10 rounded-full bg-subtle" aria-hidden />
+@@ -160,7 +172,7 @@ export function Sheet({ open, onClose, title, children, footer }: { open: boolea
+         <div className="px-6 pt-3 pb-4">{children}</div>
+         {footer && <div className="sticky bottom-0 bg-surface px-6 pt-2 pb-6 safe-b">{footer}</div>}
+       </div>
+-    </div>,
++    </dialog>,
+     document.body,
+   );
+ }
+@@ -177,11 +189,12 @@ export const toast = (text: string, icon: IconBase = "check-circle") => useToast
+ function ToastItem({ t }: { t: Toast }) {
+   const ref = useRef<HTMLDivElement>(null);
+   const drop = useToasts((s) => s.drop);
+-  useGSAP(() => {
+-    const tl = gsap.timeline();
+-    tl.from(ref.current, { y: -24, autoAlpha: 0, scale: 0.94, duration: 0.6, ease: "back.out(1.6)" })
+-      .to(ref.current, { y: -12, autoAlpha: 0, duration: 0.3, ease: "power2.in", delay: 3.2, onComplete: () => drop(t.id) });
+-  });
++  useGSAP(() => { gsap.from(ref.current, { y: -24, scale: 0.94, duration: 0.6, ease: "back.out(1.6)" }); });
++  useEffect(() => {
++    // Keep reading time independent of the animation-speed setting.
++    const id = setTimeout(() => drop(t.id), 5000);
++    return () => clearTimeout(id);
++  }, [drop, t.id]);
+   return (
+     <div ref={ref} role="status" className="pointer-events-auto flex items-center gap-3 rounded-full ink pl-3 pr-5 py-2.5 shadow-[var(--shadow-bottom-3)] max-w-[92vw]">
+       {t.icon && <Icon name={t.icon} solid />}
+diff --git "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\components\\worker\\Blocks.tsx" "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\components\\worker\\Blocks.tsx"
+index 97b1b8d..6d66088 100644
+--- "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\components\\worker\\Blocks.tsx"
++++ "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\components\\worker\\Blocks.tsx"	
+@@ -65,7 +65,7 @@ export function ScoreBreakdown({ m, compact }: { m: Match; compact?: boolean })
+             <p className="font-medium">{CRITERIA_VI[c.key]}</p>
+             <span className={`t-sm font-semibold ${c.score >= 75 ? "text-brand" : "text-muted"}`}>{c.score >= 75 ? "Tốt" : c.score >= 50 ? "Tạm được" : "Còn thiếu"}</span>
+           </div>
+-          <Meter value={c.score} delay={0.1 + i * 0.08} />
++          <Meter value={c.score} label={CRITERIA_VI[c.key]} delay={0.1 + i * 0.08} />
+           <p className="t-sm text-muted mt-1.5">{c.note}</p>
+         </div>
+       ))}
+@@ -84,6 +84,7 @@ export function PayCard({ job, relocate }: { job: Job; relocate: boolean }) {
+           <h2 id="pay-h" className="t-eyebrow mb-2">Thực nhận mỗi tháng · ước tính</h2>
+           <p className="text-[40px] leading-none font-semibold tracking-[-0.04em]"><Num value={pay.net} format={(n) => yen(n)} /></p>
+           <p className="text-muted mt-2">{vnd(pay.net)} · tỷ giá tham khảo</p>
++          <p className="t-sm text-muted mt-1">{pay.housingNote}</p>
+         </div>
+         <Icon name="coins-hand" size={28} className="text-faint" />
+       </div>
+@@ -112,13 +113,13 @@ export function PayCard({ job, relocate }: { job: Job; relocate: boolean }) {
+         <div className="flex justify-between gap-4 pt-2.5 hair-t t-sub"><dt>Thực nhận</dt><dd className="tnum">{yen(pay.net)}</dd></div>
+       </dl>
+       <p className="mt-4 t-sm flex gap-2"><Icon name="award-01" size={18} />Cộng thêm <b className="tnum">{yen(pay.bonus)}</b> thưởng chuyên cần nếu đi làm đủ ngày.</p>
+-      <p className="mt-1 t-sm text-muted">Ước tính theo giờ làm thường gặp, có thể chênh ±5%. Lương trả tháng, ngày 25.</p>
++      <p className="mt-1 t-sm text-muted">Ước tính theo giờ làm thường gặp, có thể chênh ±5%. Đã tính thuế cư trú giả định, chưa xét thời gian cư trú. Lương trả tháng, ngày 25.</p>
+     </section>
+   );
+ }
+ 
+-export function JobCard({ job, m, chips, fit, applied, active, highlight }: { job: Job; m: Match; chips: Chip[]; fit: Fit; applied?: boolean; active?: boolean; highlight?: boolean }) {
+-  const pay = takeHome(job);
++export function JobCard({ job, relocate, m, chips, fit, applied, active, highlight }: { job: Job; relocate: boolean; m: Match; chips: Chip[]; fit: Fit; applied?: boolean; active?: boolean; highlight?: boolean }) {
++  const pay = takeHome(job, relocate);
+   const ref = useRef<HTMLAnchorElement>(null);
+   useGSAP(() => {
+     if (!highlight) return;
+@@ -139,13 +140,14 @@ export function JobCard({ job, m, chips, fit, applied, active, highlight }: { jo
+           {highlight && <span className="badge badge-md badge-solid">Vừa chấm lại</span>}
+         </div>
+       </div>
+-      <h3 className="t-sub mt-3">{job.title}</h3>
++      <h2 className="t-sub mt-3">{job.title}</h2>
+       <p className="t-sm text-muted">{job.company} · {CITIES[job.city].vi} · {SHIFT_VI[job.shift]}{job.dorm !== null ? " · có ký túc xá" : ""}</p>
+       <div className="mt-3"><MatchChips chips={chips} max={4} /></div>
+       <div className="mt-4 pt-3 hair-t flex items-baseline justify-between gap-3">
+         <span className="t-sm text-muted">Thực nhận ước tính</span>
+         <span className="text-[20px] leading-7 font-semibold tracking-[-0.03em] tnum">{yen(pay.net)}<span className="t-sm font-normal text-muted">/tháng</span></span>
+       </div>
++      <p className="t-sm text-muted mt-1">{pay.housingNote}</p>
+       {m.gate.pass ? null : <p className="t-sm text-muted mt-2">{m.gate.reason}</p>}
+     </Link>
+   );
+diff --git "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\lib\\hr-i18n.ts" "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\lib\\hr-i18n.ts"
+index 5e0e16f..5085eb0 100644
+--- "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\lib\\hr-i18n.ts"
++++ "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\lib\\hr-i18n.ts"	
+@@ -31,16 +31,16 @@ const T = {
+     myNumber: "My Number",
+     declared: "Declared",
+     bank: "Bank account",
+-    afterApprove: "Collected after approval",
++    afterApprove: "Collected after hiring",
+     safety: "Safety training (Art. 59)",
+     safetyDone: "Completed",
+-    safetyTodo: "Assigned on approval",
++    safetyTodo: "Required before the first shift",
+     decideWithin: "Decide within",
+     autoClose: "If no decision, the application auto-closes and the worker is shown other jobs.",
+-    approve: "Approve",
++    approve: "Invite",
+     decline: "Decline",
+     startDate: "Start date",
+-    confirmApprove: "Approve & send interview invite",
++    confirmApprove: "Send interview invite",
+     reason: "Reason (shared with the worker, kindly worded)",
+     confirmDecline: "Send decision",
+     decided: (s: string) => `Decision sent · ${s}`,
+@@ -49,7 +49,7 @@ const T = {
+     commute: (km: number) => (km <= 1 ? "same city" : `${km} km commute`),
+     nationality: { VN: "Vietnam", ID: "Indonesia", PH: "Philippines" },
+     you: "Sato · HR",
+-    toastApprove: (n: string) => `Interview invite sent to ${n} · in-app + Zalo OA`,
++    toastApprove: (n: string) => `Interview invite saved for ${n}`,
+     toastDecline: (n: string) => `Decision sent to ${n}`,
+     empty: "No applicants for this post yet.",
+     years: (y: number) => (y === 0 ? "<1 yr" : `${y} yr${y > 1 ? "s" : ""}`),
+@@ -83,13 +83,13 @@ const T = {
+     afterApprove: "採用後に登録",
+     safety: "安全衛生教育（第59条）",
+     safetyDone: "修了",
+-    safetyTodo: "採用後に配信",
++    safetyTodo: "初出勤前に受講が必要",
+     decideWithin: "判定期限まで",
+     autoClose: "期限までに判定がない場合、応募は自動終了し、本人には他の求人が表示されます。",
+-    approve: "採用する",
++    approve: "面接に招待",
+     decline: "見送る",
+     startDate: "勤務開始日",
+-    confirmApprove: "承認して面接案内を送信",
++    confirmApprove: "面接案内を送信",
+     reason: "理由（本人に丁寧な表現で伝わります）",
+     confirmDecline: "判定を送信",
+     decided: (s: string) => `判定送信済み・${s}`,
+@@ -98,7 +98,7 @@ const T = {
+     commute: (km: number) => (km <= 1 ? "同じ市内" : `通勤 ${km}km`),
+     nationality: { VN: "ベトナム", ID: "インドネシア", PH: "フィリピン" },
+     you: "佐藤・人事",
+-    toastApprove: (n: string) => `${n}さんを採用・Zaloで通知しました`,
++    toastApprove: (n: string) => `${n}さんへの面接案内を保存しました`,
+     toastDecline: (n: string) => `${n}さんに判定を送信しました`,
+     empty: "この求人への応募はまだありません。",
+     years: (y: number) => (y === 0 ? "1年未満" : `${y}年`),
+diff --git "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\lib\\motion.ts" "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\lib\\motion.ts"
+index 555c6ce..8747382 100644
+--- "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\lib\\motion.ts"
++++ "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\lib\\motion.ts"	
+@@ -31,7 +31,7 @@ export function enter(targets: gsap.TweenTarget, from: gsap.TweenVars, to: gsap.
+   const end: gsap.TweenVars = { autoAlpha: 1, ease: "expo.out", clearProps: "transition,transform,opacity,visibility", ...to };
+   for (const k of ["x", "y", "xPercent", "yPercent"]) if (k in from && !(k in end)) end[k] = 0;
+   if ("scale" in from && !("scale" in end)) end.scale = 1;
+-  return gsap.fromTo(targets, { autoAlpha: 0, transition: "none", ...from }, end);
++  return gsap.fromTo(targets, { transition: "none", ...from }, end);
+ }
+ 
+ /** Apply the Demo "motion" setting + prefers-reduced-motion to GSAP. */
+diff --git "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\lib\\pay.ts" "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\lib\\pay.ts"
+index d7b02e2..0f076a6 100644
+--- "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\lib\\pay.ts"
++++ "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\lib\\pay.ts"	
+@@ -4,7 +4,7 @@ export type Line = { key: string; label: string; amount: number; hint?: string }
+ 
+ // shortcut: flat-rate estimate of Japanese payroll (SI ≈ 14.8%, income tax ≈ 3% after SI, resident tax flat);
+ // replace with the client's real payroll rules when integrating.
+-export function takeHome(job: Job, usesDorm = true) {
++export function takeHome(job: Job, usesDorm: boolean) {
+   const regularH = 8 * 21;
+   const earnings: Line[] = [
+     { key: "base", label: "Lương cơ bản", amount: job.hourly * regularH, hint: `¥${fmt(job.hourly)}/giờ × ${regularH} giờ` },
+@@ -17,15 +17,16 @@ export function takeHome(job: Job, usesDorm = true) {
+   const deductions: Line[] = [
+     { key: "si", label: "Bảo hiểm xã hội", amount: si, hint: "Y tế, hưu trí, thất nghiệp" },
+     { key: "tax", label: "Thuế thu nhập", amount: Math.round((gross - si) * 0.03), hint: "Khấu trừ tại nguồn" },
+-    { key: "resident", label: "Thuế cư trú", amount: 9000, hint: "Từ năm thứ 2" },
++    { key: "resident", label: "Thuế cư trú", amount: 9000, hint: "Giả định trong ước tính" },
+   ];
+   if (job.dorm !== null && usesDorm) deductions.push({ key: "dorm", label: "Ký túc xá", amount: job.dorm });
+   if (job.dorm !== null && usesDorm) deductions.push({ key: "util", label: "Điện nước", amount: 8000, hint: "Ước tính" });
+   const net = gross - deductions.reduce((a, l) => a + l.amount, 0);
+-  return { earnings, deductions, gross, net, bonus: job.attendanceBonus };
++  const housingNote = job.dorm !== null && usesDorm ? "Đã trừ ký túc xá và điện nước" : "Chưa trừ chi phí chỗ ở";
++  return { earnings, deductions, gross, net, bonus: job.attendanceBonus, housingNote };
+ }
+ 
+-export const fmt = (n: number) => Math.round(n).toLocaleString("ja-JP");
++export const fmt = (n: number) => Math.round(n).toLocaleString("vi-VN");
+ export const yen = (n: number) => `¥${fmt(n)}`;
+ export const yenK = (n: number) => `¥${Math.round(n / 1000)}k`;
+ export const vnd = (n: number) => {
+diff --git "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\lib\\scoring.ts" "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\lib\\scoring.ts"
+index 2e0fa27..ece2cd7 100644
+--- "a/C:\\Users\\Admin\\AppData\\Local\\Temp\\viecnhanh-impeccable-fix-20261114-original\\src\\lib\\scoring.ts"
++++ "b/C:\\Users\\Admin\\Documents\\duytva\\Designathon\\Leaf it to us\\viecnhanh-prototype\\src\\lib\\scoring.ts"	
+@@ -117,7 +117,7 @@ export function suggestImprovements(p: Profile, job: Job, w: Weights = DEFAULT_W
+   if (p.availableInDays > job.startWithinDays || p.availableInDays > 14)
+     out.push({ id: "start", label: "Bắt đầu sớm hơn (2 tuần)", detail: "Nếu công ty cũ đồng ý cho nghỉ sớm", apply: (q) => ({ ...q, availableInDays: Math.min(q.availableInDays, 14) }) });
+   if (!p.relocate && job.dorm !== null)
+-    out.push({ id: "relocate", label: "Sẵn sàng ở ký túc xá", detail: `Ký túc xá ¥${job.dorm.toLocaleString("ja-JP")}/tháng`, apply: (q) => ({ ...q, relocate: true }) });
++    out.push({ id: "relocate", label: "Sẵn sàng ở ký túc xá", detail: `Ký túc xá ¥${job.dorm.toLocaleString("vi-VN")}/tháng`, apply: (q) => ({ ...q, relocate: true }) });
+   // Required skill + its cert unlock together (e.g. forklift): bundle them so the gain is honest.
+   if (job.certs.length && job.required.some((s) => p.skills[s] === undefined)) {
+     const skills = job.required.filter((s) => p.skills[s] === undefined);
+@@ -172,3 +172,12 @@ export function matchChips(p: Profile, job: Job, m: Match): Chip[] {
+   out.push({ ok: st, vi: st ? "Kịp ngày bắt đầu" : "Bắt đầu trễ", en: st ? "Start date OK" : "Late start", ja: st ? "開始日OK" : "開始が遅い" });
+   return out;
+ }
++
++/** Explain unmet criteria separately from the weighted recommendation. */
++export function matchGuidance(p: Profile, job: Job, m: Match): string {
++  if (!m.gate.pass) return m.gate.reason;
++  const unmet = matchChips(p, job, m).filter((c) => !c.ok);
++  return unmet.length
++    ? `Cần xem lại: ${unmet.map((c) => c.vi).join("; ")}. Bạn vẫn có thể ứng tuyển để HR xem xét.`
++    : "Bạn đạt các tiêu chí đang hiển thị. Mức gợi ý còn xét kinh nghiệm, thời điểm và khoảng cách. Bạn vẫn có thể ứng tuyển.";
++}

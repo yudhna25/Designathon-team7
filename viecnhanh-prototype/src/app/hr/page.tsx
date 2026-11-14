@@ -1,0 +1,154 @@
+"use client";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
+import { Avatar, Icon, Meter, Num } from "@/components/ui";
+import { JLPT_SHORT, KEY_JOB_ID, SKILLS, VISAS, jobById, type SkillId } from "@/lib/data";
+import { fmtLeftShort, hrT } from "@/lib/hr-i18n";
+import { FIT_EN, FIT_JA, fitOf } from "@/lib/scoring";
+import { deadlineOf, displayStatus, matchOf, profileOf, useApp, useNow, type DisplayStatus } from "@/lib/store";
+import { useReveal } from "@/lib/motion";
+
+export default function HRCandidates() {
+  const s = useApp();
+  const now = useNow(1000);
+  const router = useRouter();
+  const t = hrT(s.config.hrLang);
+  const lang = s.config.hrLang;
+  const [showEx, setShowEx] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  useReveal(root);
+  const job = jobById(KEY_JOB_ID)!;
+
+  const rows = s.apps
+    .filter((a) => a.jobId === KEY_JOB_ID)
+    .map((a) => ({ a, p: profileOf(a.candidateId, s.profile)!, m: matchOf(a, s.profile, s.config.weights, now)!, st: displayStatus(a, s, now), left: deadlineOf(a, s) - now }))
+    .filter((r) => r.p && r.m);
+  const excluded = rows.filter((r) => !r.m.gate.pass);
+  const fitRank = { great: 0, possible: 1, not: 2 } as const;
+  const ranked = rows.filter((r) => r.m.gate.pass).sort((x, y) => rank(x.st) - rank(y.st) || fitRank[fitOf(x.m, s.config.threshold)] - fitRank[fitOf(y.m, s.config.threshold)] || y.m.total - x.m.total);
+  const fitWord = (m: (typeof rows)[number]["m"]) => (lang === "ja" ? FIT_JA : FIT_EN)[fitOf(m, s.config.threshold)];
+  const open = ranked.filter((r) => r.st === "sent" || r.st === "viewed");
+  const due = open.filter((r) => r.left < s.config.reminderH * 36e5);
+  const fresh = ranked.filter((r) => now - r.a.appliedAt < 864e5).length;
+  const approved = ranked.filter((r) => r.st === "approved").length;
+
+  return (
+    <div ref={root}>
+      <div className="flex flex-wrap items-end justify-between gap-4 mb-6" data-reveal>
+        <div>
+          <p className="t-eyebrow mb-2">{job.companyJa} · {lang === "ja" ? "豊田市" : "Toyota-shi"} · {t.headcount(job.headcount)}</p>
+          <h1 className="t-h2">{lang === "ja" ? job.titleJa : job.titleEn}</h1>
+        </div>
+        <p className="t-sm text-muted flex items-center gap-2"><Icon name="shield-tick" size={16} />{t.sortedBy}</p>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5" data-reveal>
+        <Kpi label={t.kpi.fresh} value={fresh} icon="users-check" />
+        <Kpi label={t.kpi.pending} value={open.length} icon="hourglass" />
+        <Kpi label={t.kpi.due(s.config.reminderH)} value={due.length} icon="alert-triangle" strong={due.length > 0} />
+        <Kpi label={t.kpi.approved} value={approved} icon="check-verified" />
+      </div>
+
+      {due.length > 0 && (
+        <div className="ink rounded-2xl p-4 md:px-5 flex flex-wrap items-center gap-3 mb-5" role="alert" data-reveal>
+          <Icon name="bell-01" solid className="animate-[zen-squash_1.2s_var(--ease-spring)_infinite]" />
+          <p className="flex-1 min-w-[200px] font-medium">{t.remind(due.length, s.config.reminderH)}</p>
+          <button className="btn btn-sm pressable bg-[var(--color-bg-inverse-solid)] text-[var(--color-content-neutral-strongest)]" onClick={() => router.push(`/hr/candidates/${due.sort((a, b) => a.left - b.left)[0].a.id}`)}>{t.reviewNow}</button>
+        </div>
+      )}
+
+      {/* Desktop table */}
+      <div className="hidden md:block card overflow-hidden" data-reveal>
+        <table className="w-full t-base">
+          <thead>
+            <tr className="text-left t-sm text-muted hair-b">
+              <th className="font-medium py-3 pl-5">{t.th.cand}</th>
+              <th className="font-medium py-3">{t.th.match}</th>
+              <th className="font-medium py-3">{t.th.visa}</th>
+              <th className="font-medium py-3 hidden xl:table-cell">{t.th.skills}</th>
+              <th className="font-medium py-3">{t.th.jlpt}</th>
+              <th className="font-medium py-3 hidden lg:table-cell">{t.th.start}</th>
+              <th className="font-medium py-3">{t.th.left}</th>
+              <th className="font-medium py-3 pr-5">{t.th.status}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ranked.map(({ a, p, m, st, left }) => {
+              const isDue = (st === "sent" || st === "viewed") && left < s.config.reminderH * 36e5;
+              return (
+                <tr key={a.id} onClick={() => router.push(`/hr/candidates/${a.id}`)} className={`cursor-pointer hair-b last:border-0 hover:bg-pale transition-colors ${st === "expired" || st === "rejected" ? "text-muted" : ""} ${a.candidateId === "me" ? "bg-pale" : ""}`}>
+                  <td className="py-3 pl-5">
+                    <Link href={`/hr/candidates/${a.id}`} className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                      <Avatar name={p.name} size={36} />
+                      <span><b className="block text-fg">{p.name}{a.candidateId === "me" && <span className="badge ml-2 align-middle">Demo</span>}{a.flagged && <span className="badge badge-dash ml-2 align-middle">{lang === "ja" ? "条件未達で応募" : "Applied below fit"}</span>}</b><span className="t-sm text-muted">{t.nationality[p.nationality]}</span></span>
+                    </Link>
+                  </td>
+                  <td className="py-3 w-[190px]"><div className="pr-4"><FitPill fit={fitOf(m, s.config.threshold)} label={fitWord(m)} /><div className="flex items-center gap-2 mt-1.5"><Meter value={m.total} label={`${p.name} · ${t.th.match}`} className="flex-1" /><span className="t-sm tnum text-muted w-9 text-right">{m.total}%</span></div></div></td>
+                  <td className="py-3"><span className="badge badge-outline" lang="ja"><Icon name="check" size={12} />{VISAS[p.visa].short}</span></td>
+                  <td className="py-3 hidden xl:table-cell t-sm">{(Object.keys(p.skills) as SkillId[]).slice(0, 2).map((k) => `${SKILLS[k][lang]} ${t.years(p.skills[k] ?? 0)}`).join(" · ")}</td>
+                  <td className="py-3 tnum">{JLPT_SHORT[p.jlpt]}</td>
+                  <td className="py-3 hidden lg:table-cell">{t.days(p.availableInDays)}</td>
+                  <td className="py-3 tnum">{st === "sent" || st === "viewed" ? <span className={isDue ? "font-semibold text-fg underline decoration-2 underline-offset-4" : ""}>{fmtLeftShort(left, lang)}</span> : "—"}</td>
+                  <td className="py-3 pr-5"><StatusBadge st={st} label={t.status[st]} /></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        {ranked.length === 0 && <p className="p-8 text-center text-muted">{t.empty}</p>}
+      </div>
+
+      {/* Mobile cards */}
+      <ul className="md:hidden grid gap-3">
+        {ranked.map(({ a, p, m, st, left }) => (
+          <li key={a.id} data-reveal>
+            <Link href={`/hr/candidates/${a.id}`} className="card p-4 flex items-center gap-3 pressable">
+              <Avatar name={p.name} size={40} />
+              <span className="flex-1 min-w-0">
+                <b className="block truncate">{p.name}</b>
+                <span className="t-sm text-muted">{VISAS[p.visa].short} · {JLPT_SHORT[p.jlpt]} · {st === "sent" || st === "viewed" ? fmtLeftShort(left, lang) : t.status[st]}</span>
+              </span>
+              <FitPill fit={fitOf(m, s.config.threshold)} label={fitWord(m)} />
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      {excluded.length > 0 && (
+        <div className="mt-5 rounded-2xl border border-dashed border-line p-4" data-reveal>
+          <button className="w-full flex items-center justify-between gap-3 text-left" aria-expanded={showEx} onClick={() => setShowEx((v) => !v)}>
+            <span className="flex items-center gap-3"><Icon name="shield-tick" /><span><b>{t.excluded(excluded.length)}</b><span className="block t-sm text-muted">{t.excludedHint}</span></span></span>
+            <Icon name="chevron-down" className={`transition-transform duration-[var(--motion-base)] ${showEx ? "rotate-180" : ""}`} />
+          </button>
+          {showEx && (
+            <ul className="mt-3 grid md:grid-cols-3 gap-2 t-sm animate-[zen-fade-in_var(--motion-base)_var(--ease-standard)]">
+              {excluded.map(({ a, p }) => <li key={a.id} className="well p-3"><b>{p.name}</b><span className="block text-muted" lang="ja">{VISAS[p.visa][lang]}</span></li>)}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const rank = (st: DisplayStatus) => (st === "sent" || st === "viewed" ? 0 : st === "approved" ? 1 : 2);
+
+function StatusBadge({ st, label }: { st: DisplayStatus; label: string }) {
+  const cls = st === "sent" ? "badge-solid" : st === "viewed" ? "" : st === "approved" ? "badge-outline" : "badge-dash";
+  return <span className={`badge ${cls}`}>{st === "approved" && <Icon name="check" size={12} />}{label}</span>;
+}
+
+function Kpi({ label, value, icon, strong }: { label: string; value: number; icon: "users-check" | "hourglass" | "alert-triangle" | "check-verified"; strong?: boolean }) {
+  return (
+    <div className={`rounded-[20px] p-4 ${strong ? "ink" : "card"}`}>
+      <div className="flex items-center justify-between"><span className={`t-sm ${strong ? "muted-ink" : "text-muted"}`}>{label}</span><Icon name={icon} size={18} className="opacity-60" /></div>
+      <p className="t-h2 mt-2 tnum"><Num value={value} /></p>
+    </div>
+  );
+}
+
+function FitPill({ fit, label }: { fit: "great" | "possible" | "not"; label: string }) {
+  // Utilities (not .ink) so the brand colour wins over .badge in the components layer.
+  return <span className={`badge badge-md ${fit === "great" ? "bg-solid text-[var(--color-content-on-accent)]" : fit === "possible" ? "bg-brand-soft text-brand" : "badge-dash text-muted"}`}>{fit === "great" && <Icon name="check-verified" size={14} solid />}{label}</span>;
+}

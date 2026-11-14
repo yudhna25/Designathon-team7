@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ViệcNhanh · 4 hướng mới v7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#1B22A7;--sky:#4260E6;--ink:#0D0D0D;--paper:#FAFAFA;--b1:#F1F4FC;--b2:#E0E6F6;--b4:#B9C6E9;--muted:#5B5B5B}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Be Vietnam Pro",system-ui,sans-serif;background:#ECEDF1;color:var(--ink);padding:40px 24px 80px;-webkit-font-smoothing:antialiased}
+.top{max-width:940px;margin:0 auto 28px}.top h1{font-size:34px;letter-spacing:-.03em;line-height:1.1}
+.top p{color:var(--muted);margin-top:10px;font-size:16px;line-height:1.5}
+.lead{max-width:940px;margin:0 auto 24px;background:#fff;border-radius:20px;padding:14px 18px;font-size:14px;display:flex;gap:10px;align-items:center}
+.lead b{background:var(--blue);color:#fff;border-radius:99px;padding:4px 10px;font-size:12.5px}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace;letter-spacing:-.03em}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;max-width:940px;margin:0 auto}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.opt{cursor:pointer;border-radius:28px;padding:22px;background:#fff;border:2px solid transparent;transition:transform .3s}
+.opt:hover{transform:translateY(-3px)}.opt.selected{border-color:var(--blue)}
+.opt h2{font-size:20px;letter-spacing:-.02em;margin-top:22px}.opt .ref{font-size:13px;color:var(--sky);font-weight:600;margin-top:4px}
+.opt p{font-size:14px;color:var(--muted);line-height:1.55;margin-top:8px}
+.phone{width:375px;max-width:100%;height:760px;margin:0 auto;border-radius:44px;overflow:hidden;position:relative;box-shadow:0 0 0 10px #0d0d0d,0 30px 60px -20px rgba(13,13,13,.5)}
+.sb{height:44px;display:flex;justify-content:space-between;align-items:center;padding:0 26px;font-size:14px;font-weight:600;position:relative;z-index:5}
+
+/* ===== 15 · SKILL QUEST (Duolingo path / Nike Run Club) ===== */
+.q{background:#F3F5FC}
+.q .wrap{padding:6px 18px 0}
+.q .hd{display:flex;justify-content:space-between;align-items:center}
+.q .lvl{display:flex;gap:10px;align-items:center}.q .lvl .bd{width:46px;height:46px;border-radius:14px;background:var(--blue);color:#fff;display:grid;place-items:center;font-weight:900;font-size:18px;box-shadow:0 4px 0 #10157a}
+.q .lvl b{font-size:16px;display:block}.q .lvl span{font-size:12.5px;color:var(--muted)}
+.q .xp{height:10px;border-radius:99px;background:var(--b2);overflow:hidden;margin-top:12px}.q .xp i{display:block;height:100%;width:68%;background:var(--sky);border-radius:99px}
+.q .path{position:relative;margin-top:16px;height:330px}
+.q .node{position:absolute;width:74px;height:74px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;text-align:center;line-height:1.15}
+.q .node.done{background:var(--blue);color:#fff;box-shadow:0 6px 0 #10157a}
+.q .node.now{background:#fff;color:var(--blue);border:4px solid var(--blue);box-shadow:0 6px 0 #B9C6E9}
+.q .node.lock{background:#E3E6F0;color:#4a4f66;box-shadow:0 6px 0 #cfd3e1}
+.q .tip{position:absolute;background:var(--ink);color:#fff;border-radius:12px;padding:8px 10px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.q svg{position:absolute;inset:0}
+.q .job{background:#fff;border-radius:22px;padding:14px;border:1px solid #e3e6f0;display:flex;justify-content:space-between;align-items:center}
+.q .job b{font-size:15.5px;display:block}.q .job span{font-size:12.5px;color:var(--muted)}
+.q .job span.go,.q .go{background:var(--blue);color:#fff;border-radius:14px;padding:12px 14px;font-weight:800;font-size:14px;box-shadow:0 4px 0 #10157a}
+
+/* ===== 16 · ISOMETRIC FACTORY (Monument Valley / Stripe Sessions illus) ===== */
+.iso{background:linear-gradient(180deg,#E8ECFB 0%,#F7F8FD 60%)}
+.iso .wrap{padding:6px 20px 0}
+.iso h3{font-size:26px;letter-spacing:-.035em;line-height:1.15}
+.iso .sub{font-size:14px;color:var(--muted);margin-top:6px}
+.iso .scene{position:relative;height:300px;margin-top:6px}
+.iso .blk{position:absolute;transform-style:preserve-3d}
+.iso .cube{position:absolute;width:var(--w);height:var(--h)}
+.iso .face-t,.iso .face-l,.iso .face-r{position:absolute}
+.iso .b{position:absolute;left:var(--x);top:var(--y);width:120px;height:120px}
+.iso .b .t{position:absolute;left:0;top:0;width:120px;height:60px;background:var(--c1);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.iso .b .l{position:absolute;left:0;top:30px;width:60px;height:var(--hh);background:var(--c2);clip-path:polygon(0 0,100% 50%,100% 100%,0 calc(100% - 30px))}
+.iso .b .r{position:absolute;left:60px;top:30px;width:60px;height:var(--hh);background:var(--c3);clip-path:polygon(0 50%,100% 0,100% calc(100% - 30px),0 100%)}
+.iso .label{position:absolute;background:#fff;border-radius:14px;padding:8px 10px;font-size:12.5px;font-weight:700;box-shadow:0 8px 18px -10px rgba(13,13,13,.4);display:flex;gap:6px;align-items:center}
+.iso .label i{width:18px;height:18px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-style:normal;font-size:10px}
+.iso .card{background:#fff;border-radius:24px;padding:16px;box-shadow:0 18px 34px -24px rgba(13,13,13,.45)}
+.iso .card .row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:10px}
+.iso .card b.n{font-size:30px;letter-spacing:-.04em}
+.iso .go{background:var(--blue);color:#fff;border-radius:16px;padding:14px 16px;font-weight:700}
+
+/* ===== 17 · BROADSHEET (NYT / The Browser Company newsletter / Japanese 新聞) ===== */
+.np{background:#F4F1E9;color:#151515}
+.np .wrap{padding:4px 18px 0}
+.np .mast{text-align:center;border-bottom:3px double #151515;padding-bottom:8px}
+.np .mast .nm{font-family:"Playfair Display",serif;font-weight:900;font-size:34px;letter-spacing:-.02em}
+.np .mast .dt{display:flex;justify-content:space-between;font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-top:4px;border-top:1px solid #151515;padding-top:5px}
+.np .head{font-family:"Playfair Display",serif;font-weight:900;font-size:30px;line-height:1.08;margin-top:14px}
+.np .deck{font-size:14px;line-height:1.5;margin-top:8px;color:#3a3a3a}
+.np .cols{display:grid;grid-template-columns:1.3fr 1fr;gap:14px;margin-top:14px;border-top:1px solid #151515;padding-top:12px}
+.np .ad{border:1.5px solid #151515;padding:12px;background:#fff}
+.np .ad .k{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.np .ad b{display:block;font-family:"Playfair Display",serif;font-size:19px;line-height:1.15;margin-top:6px}
+.np .ad .n{font-size:24px;font-weight:700;margin-top:8px;color:var(--blue)}
+.np .ad .s{font-size:12.5px;color:#3a3a3a;margin-top:4px;line-height:1.4}
+.np .side{font-size:13px;line-height:1.5}
+.np .side h4{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid #151515;padding-bottom:4px;margin-bottom:6px}
+.np .side li{list-style:none;padding:6px 0;border-bottom:1px dotted #8b877c;display:flex;justify-content:space-between}
+.np .btn{margin-top:14px;background:var(--blue);color:#fff;text-align:center;padding:14px;font-weight:800;letter-spacing:.02em}
+
+/* ===== 18 · COMMUNITY PROOF (Strava / BeReal / Glassdoor) ===== */
+.cm{background:#fff}
+.cm .wrap{padding:6px 18px 0}
+.cm .t{font-size:24px;font-weight:800;letter-spacing:-.035em;line-height:1.15}
+.cm .faces{display:flex;margin-top:14px}
+.cm .faces span{width:44px;height:44px;border-radius:50%;border:3px solid #fff;margin-left:-10px;display:grid;place-items:center;font-weight:800;font-size:13px;color:#fff}
+.cm .faces span:first-child{margin-left:0}
+.cm .crowd{font-size:14px;margin-top:8px}.cm .crowd b{color:var(--blue)}
+.cm .job{margin-top:16px;border-radius:24px;border:1px solid #e6e8f0;overflow:hidden}
+.cm .job .hd{padding:14px 16px;background:var(--b1);display:flex;justify-content:space-between;align-items:center}
+.cm .job .hd b{font-size:16px}.cm .job .hd span{font-size:12.5px;color:var(--blue);font-weight:700}
+.cm .quote{padding:14px 16px;border-top:1px solid #eef0f6;display:flex;gap:12px}
+.cm .quote .av{width:36px;height:36px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;font-weight:800;font-size:12px}
+.cm .quote p{font-size:14px;line-height:1.45}.cm .quote .who{font-size:12.5px;color:var(--muted);margin-top:4px}
+.cm .stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #eef0f6}
+.cm .stats div{padding:12px 8px;text-align:center;border-right:1px solid #eef0f6}.cm .stats div:last-child{border-right:0}
+.cm .stats b{display:block;font-size:17px;letter-spacing:-.02em}.cm .stats span{font-size:12px;color:var(--muted)}
+.cm .btn{margin:14px 16px 16px;height:52px;border-radius:16px;background:var(--blue);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center}
+</style></head><body>
+<div class="top"><h1>4 hướng mới nữa (v7)</h1>
+<p>Chưa trùng với 14 hướng trước. Mỗi hướng là một "ý tưởng lớn" khác nhau: tiến bộ tay nghề, minh hoạ nhà máy, báo giấy rao vặt, cộng đồng người Việt. Bấm để chọn.</p></div>
+<div class="lead"><b>Top 1</b>Ví + Bento (v4 · C) · Trợ lý AI hỏi–đáp đã ghi làm tính năng</div>
+<div class="grid">
+
+<div class="opt" data-choice="quest" onclick="toggleSelect(this)">
+ <div class="phone q"><div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+  <div class="wrap">
+   <div class="hd"><div class="lvl"><span class="bd">3</span><div><b>Thợ tiện bậc 3</b><span>Còn 1 chứng chỉ để lên bậc 4</span></div></div><span style="font-weight:800;color:var(--blue)">¥ +34k</span></div>
+   <div class="xp"><i></i></div>
+   <div class="path">
+    <svg viewBox="0 0 339 330" preserveAspectRatio="none"><path d="M70 290 C 200 270, 260 220, 200 170 S 60 110, 150 50" fill="none" stroke="#C9D0EA" stroke-width="8" stroke-dasharray="2 14" stroke-linecap="round"/></svg>
+    <div class="node done" style="left:34px;top:250px">Tiện<br>CNC</div>
+    <div class="node done" style="left:160px;top:140px">Visa<br>✓</div>
+    <div class="node now" style="left:60px;top:70px">Việc<br>mới</div>
+    <div class="node lock" style="left:190px;top:4px">Tổ<br>trưởng</div>
+    <div class="tip" style="left:142px;top:88px">Mikawa: +¥34k/tháng</div>
+   </div>
+   <div class="job"><div><b>Tiện CNC · Mikawa</b><span>Rất phù hợp · ¥221.526/tháng</span></div><span class="go">Ứng tuyển</span></div>
+  </div>
+ </div>
+ <h2>15 · Lộ trình tay nghề</h2><div class="ref">Duolingo path · Nike Run Club</div>
+ <p>Biến đổi việc thành bước tiến trên lộ trình nghề: bậc thợ, chứng chỉ mở khoá, lương tăng ở mỗi nấc. Gợi cảm giác "đi lên" thay vì "nhảy việc". Rất hợp tính năng gợi ý nâng tay nghề.</p>
+</div>
+
+<div class="opt" data-choice="isometric" onclick="toggleSelect(this)">
+ <div class="phone iso"><div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+  <div class="wrap">
+   <h3>Nhà máy mới ở Toyota-shi<br>đang chờ bạn.</h3>
+   <div class="sub">Mikawa Precision · 120 người · mở 12/2026</div>
+   <div class="scene">
+    <div class="b" style="--x:30px;--y:110px;--hh:120px;--c1:#9CB3F3;--c2:#4260E6;--c3:#1B22A7"><div class="t"></div><div class="l"></div><div class="r"></div></div>
+    <div class="b" style="--x:130px;--y:70px;--hh:170px;--c1:#C8D5F9;--c2:#5C76C7;--c3:#1A2499"><div class="t"></div><div class="l"></div><div class="r"></div></div>
+    <div class="b" style="--x:220px;--y:140px;--hh:90px;--c1:#E0E6F6;--c2:#8298D5;--c3:#5C76C7"><div class="t"></div><div class="l"></div><div class="r"></div></div>
+    <div class="label" style="left:8px;top:40px"><i>✓</i>Xưởng tiện CNC</div>
+    <div class="label" style="left:196px;top:30px"><i>⌂</i>Ký túc xá</div>
+    <div class="label" style="left:170px;top:250px"><i>→</i>28 phút từ nhà</div>
+   </div>
+   <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:17px">Vận hành máy tiện CNC</b><span style="font-size:12.5px;font-weight:700;color:var(--blue);background:var(--b1);padding:5px 9px;border-radius:99px">✓ Rất phù hợp</span></div>
+    <div class="row"><div><div style="font-size:12.5px;color:var(--muted)">Về tay mỗi tháng</div><b class="n mono">¥221.526</b></div><span class="go">Ứng tuyển</span></div>
+   </div>
+  </div>
+ </div>
+ <h2>16 · Nhà máy isometric</h2><div class="ref">Monument Valley · Stripe Sessions · Linear illustrations</div>
+ <p>Mỗi nhà máy có một minh hoạ khối isometric bằng màu ViệcNhanh: xưởng, ký túc xá, đường đi. Người lao động "nhìn thấy" nơi mình sẽ làm trước khi tới. Rất đẹp trên slide; cần đầu tư minh hoạ cho từng nhà máy.</p>
+</div>
+
+<div class="opt" data-choice="broadsheet" onclick="toggleSelect(this)">
+ <div class="phone np"><div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+  <div class="wrap">
+   <div class="mast"><div class="nm">ViệcNhanh</div><div class="dt"><span>Aichi · Số 314</span><span>Thứ Bảy 14.11.2026</span></div></div>
+   <div class="head">Nhà máy mới Toyota-shi tuyển 120 thợ tiện, trả lời trong 24 giờ</div>
+   <p class="deck">Bạn đạt cả ba tiêu chí chính. Lương đã trừ thuế, bảo hiểm và ký túc xá.</p>
+   <div class="cols">
+    <div class="ad"><div class="k">✓ Rất phù hợp</div><b>Vận hành máy tiện CNC</b><div class="n mono">¥221.526</div><div class="s">Mikawa Precision · 13 km · 2 ca · có KTX</div></div>
+    <div class="side"><h4>Rao vặt khác</h4><ul><li><span>Tiện tự động</span><b class="mono">186k</b></li><li><span>Phay CNC</span><b class="mono">230k</b></li><li><span>Xe nâng</span><b class="mono">172k</b></li></ul></div>
+   </div>
+   <div class="btn">ỨNG TUYỂN · 3 CHẠM</div>
+  </div>
+ </div>
+ <h2>17 · Báo giấy rao vặt</h2><div class="ref">NYT · Japanese 新聞 · Monocle</div>
+ <p>App như một tờ báo buổi sáng cá nhân hoá: tiêu đề chữ có chân, cột rao vặt, khung việc nổi bật. Gợi đúng thói quen đọc "tin tuyển dụng" của người lao động, độc lạ, rất nhớ. Rủi ro: cảm giác cũ nếu làm không khéo.</p>
+</div>
+
+<div class="opt" data-choice="community" onclick="toggleSelect(this)">
+ <div class="phone cm"><div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+  <div class="wrap">
+   <div class="t">12 người Việt đang làm<br>ở nhà máy này</div>
+   <div class="faces"><span style="background:#1B22A7">H</span><span style="background:#4260E6">M</span><span style="background:#121882">K</span><span style="background:#293D90">T</span><span style="background:#0D0D0D">+8</span></div>
+   <div class="crowd"><b>3 người</b> cùng quê Nghệ An · <b>2 người</b> từng là thực tập sinh như bạn</div>
+   <div class="job">
+    <div class="hd"><div><b>Tiện CNC · Mikawa</b><div style="font-size:12.5px;color:var(--muted)">Toyota-shi · ¥221.526/tháng</div></div><span>✓ Rất phù hợp</span></div>
+    <div class="quote"><span class="av" style="background:#1B22A7">H</span><div><p>"Tăng ca đúng như mô tả, KTX sạch, trưởng ca có người nói tiếng Việt."</p><div class="who">Hùng · làm ở đây 8 tháng · đã xác minh</div></div></div>
+    <div class="stats"><div><b>4,6★</b><span>12 đánh giá</span></div><div><b>96%</b><span>Lương đúng hứa</span></div><div><b>11h</b><span>HR trả lời TB</span></div></div>
+    <div class="btn">Ứng tuyển · 3 chạm</div>
+   </div>
+  </div>
+ </div>
+ <h2>18 · Cộng đồng người Việt</h2><div class="ref">Strava clubs · Glassdoor · Golden Dreams (Issara)</div>
+ <p>Thay vì AI nói "hợp", người cùng cảnh nói: có bao nhiêu người Việt đang làm, cùng quê, đánh giá đã xác minh, "lương đúng hứa". Đánh trúng Finding 0 (tin bạn bè hơn quảng cáo). Rủi ro: cần dữ liệu thật để không bị coi là bịa.</p>
+</div>
+
+</div></body></html>

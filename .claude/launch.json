@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "viecnhanh",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "viecnhanh-prototype", "run", "dev", "--", "-p", "6868"],
+      "port": 6868
+    }
+  ]
+}

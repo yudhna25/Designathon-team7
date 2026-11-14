@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ViệcNhanh · 4 hướng mới v6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#1B22A7;--sky:#4260E6;--ink:#0D0D0D;--paper:#FAFAFA;--b1:#F1F4FC;--b2:#E0E6F6;--b4:#B9C6E9;--muted:#5B5B5B}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Be Vietnam Pro",system-ui,sans-serif;background:#ECEDF1;color:var(--ink);padding:40px 24px 80px;-webkit-font-smoothing:antialiased}
+.top{max-width:940px;margin:0 auto 28px}.top h1{font-size:34px;letter-spacing:-.03em;line-height:1.1}
+.top p{color:var(--muted);margin-top:10px;font-size:16px;line-height:1.5}
+.lead{max-width:940px;margin:0 auto 24px;background:#fff;border-radius:20px;padding:14px 18px;font-size:14px;display:flex;gap:10px;align-items:center}
+.lead b{background:var(--blue);color:#fff;border-radius:99px;padding:4px 10px;font-size:12.5px}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace;letter-spacing:-.03em}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;max-width:940px;margin:0 auto}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.opt{cursor:pointer;border-radius:28px;padding:22px;background:#fff;border:2px solid transparent;transition:transform .3s}
+.opt:hover{transform:translateY(-3px)}.opt.selected{border-color:var(--blue)}
+.opt h2{font-size:20px;letter-spacing:-.02em;margin-top:22px}.opt .ref{font-size:13px;color:var(--sky);font-weight:600;margin-top:4px}
+.opt p{font-size:14px;color:var(--muted);line-height:1.55;margin-top:8px}
+.phone{width:375px;max-width:100%;height:760px;margin:0 auto;border-radius:44px;overflow:hidden;position:relative;box-shadow:0 0 0 10px #0d0d0d,0 30px 60px -20px rgba(13,13,13,.5)}
+.sb{height:44px;display:flex;justify-content:space-between;align-items:center;padding:0 26px;font-size:14px;font-weight:600;position:relative;z-index:5}
+
+/* ===== 11 · NEO-BRUTALIST (Gumroad / Figma Config / Poolsuite) ===== */
+.nb{background:#FFF8E6}
+.nb .wrap{padding:6px 18px 0}
+.nb h3{font-size:34px;font-weight:900;letter-spacing:-.045em;line-height:1}
+.nb .tagline{display:inline-block;margin-top:12px;background:var(--ink);color:#FFF8E6;font-weight:700;font-size:13px;padding:6px 10px;transform:rotate(-1.5deg)}
+.nb .card{margin-top:20px;background:#fff;border:2.5px solid var(--ink);border-radius:18px;box-shadow:6px 6px 0 var(--ink);padding:16px}
+.nb .card .top2{display:flex;justify-content:space-between;align-items:center}
+.nb .badge{border:2px solid var(--ink);background:#C8F17A;font-weight:800;font-size:12.5px;padding:5px 10px;border-radius:99px}
+.nb .co{font-size:13px;font-weight:600}
+.nb .t{font-size:22px;font-weight:800;letter-spacing:-.03em;margin-top:12px;line-height:1.15}
+.nb .pay{margin-top:12px;background:var(--blue);color:#fff;border:2.5px solid var(--ink);border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:flex-end}
+.nb .pay b{font-size:30px;letter-spacing:-.04em}.nb .pay span{font-size:12.5px;font-weight:600}
+.nb .ck{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.nb .ck span{border:2px solid var(--ink);border-radius:8px;padding:4px 8px;font-size:12.5px;font-weight:700;background:#FFF8E6}
+.nb .btn{margin-top:14px;height:56px;border:2.5px solid var(--ink);border-radius:14px;background:#FFD43B;box-shadow:4px 4px 0 var(--ink);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px}
+.nb .next{margin-top:18px;background:#fff;border:2.5px solid var(--ink);border-radius:18px;padding:12px 14px;display:flex;justify-content:space-between;font-weight:700;font-size:14px;box-shadow:4px 4px 0 var(--ink)}
+
+/* ===== 12 · LIQUID GLASS (iOS 26 / visionOS) ===== */
+.lg{background:#0B0F3D;color:#fff}
+.lg .bg{position:absolute;inset:0;background:
+  radial-gradient(ellipse 70% 40% at 10% 10%,#4260E6 0%,transparent 70%),
+  radial-gradient(ellipse 60% 45% at 95% 45%,#1B22A7 0%,transparent 70%),
+  radial-gradient(ellipse 80% 40% at 30% 95%,#7E9AF0 0%,transparent 70%),#0B0F3D}
+.lg .wrap{position:relative;z-index:2;padding:6px 16px 0}
+.lg .glass{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);border-radius:28px;box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+.lg .hello{padding:16px;display:flex;justify-content:space-between;align-items:center}
+.lg .hello b{font-size:20px;letter-spacing:-.025em}.lg .hello span{font-size:13px;color:#DCE3FC;display:block}
+.lg .main{margin-top:12px;padding:20px}
+.lg .fit{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.9);color:var(--blue);padding:6px 11px;border-radius:99px}
+.lg .t{font-size:24px;font-weight:700;letter-spacing:-.03em;margin-top:14px;line-height:1.15}
+.lg .co{font-size:13.5px;color:#DCE3FC;margin-top:4px}
+.lg .num{font-size:46px;font-weight:700;letter-spacing:-.045em;margin-top:18px;line-height:1}
+.lg .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.lg .row3 div{padding:12px;border-radius:20px}
+.lg .row3 b{display:block;font-size:16px}.lg .row3 span{font-size:12px;color:#DCE3FC}
+.lg .cta{margin-top:12px;height:58px;border-radius:22px;background:rgba(255,255,255,.95);color:var(--blue);font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center}
+.lg .dock{position:absolute;left:24px;right:24px;justify-content:space-between;bottom:22px;z-index:3;display:flex;gap:6px;padding:8px}
+.lg .dock span{white-space:nowrap;padding:10px 14px;border-radius:99px;font-size:13px;font-weight:600;color:#DCE3FC}.lg .dock .on{background:rgba(255,255,255,.9);color:var(--blue)}
+
+/* ===== 13 · CHART-FIRST (Robinhood / Apple Stocks) ===== */
+.ch{background:#fff}
+.ch .wrap{padding:6px 20px 0}
+.ch .k{font-size:13px;color:var(--muted);font-weight:600}
+.ch .big{font-size:48px;font-weight:700;letter-spacing:-.045em;line-height:1;margin-top:6px}
+.ch .delta{display:inline-flex;gap:6px;align-items:center;margin-top:8px;font-weight:700;font-size:14px;color:var(--blue);background:var(--b1);padding:5px 10px;border-radius:99px}
+.ch svg{display:block;margin-top:16px}
+.ch .range{display:flex;gap:4px;margin-top:6px}
+.ch .range span{flex:1;text-align:center;padding:8px 0;border-radius:10px;font-size:13px;font-weight:600;color:var(--muted)}.ch .range .on{background:var(--ink);color:#fff}
+.ch .list{margin-top:16px;border-top:1px solid #eceef4}
+.ch .it{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid #eceef4}
+.ch .it b{font-size:15.5px;display:block}.ch .it span{font-size:12.5px;color:var(--muted)}
+.ch .pill{min-width:92px;text-align:center;border-radius:10px;padding:8px 10px;font-weight:700;font-size:14px;color:#fff;background:var(--blue)}
+.ch .pill.s{background:var(--sky)}.ch .pill.g{background:#B9C6E9;color:var(--blue)}
+.ch .it span.pill{color:#fff;font-size:14px}.ch .it span.pill.g{color:var(--blue)}
+
+/* ===== 14 · SWIPE DECK (Tinder / Hinge / Bumble) ===== */
+.sw{background:#F2F3F8}
+.sw .wrap{padding:6px 16px 0}
+.sw .hd{display:flex;justify-content:space-between;align-items:center}
+.sw .hd b{font-size:22px;letter-spacing:-.03em}.sw .hd span{font-size:13px;font-weight:700;color:var(--blue);background:var(--b1);padding:6px 10px;border-radius:99px}
+.sw .deck{position:relative;height:520px;margin-top:16px}
+.sw .cd{position:absolute;inset:0;border-radius:30px;background:#fff;box-shadow:0 20px 40px -24px rgba(13,13,13,.45);overflow:hidden}
+.sw .cd.b2{transform:translateY(16px) scale(.94);opacity:.7}.sw .cd.b3{transform:translateY(30px) scale(.88);opacity:.45}
+.sw .cd.f{transform:rotate(-3deg) translateX(-8px)}
+.sw .cover{height:200px;background:radial-gradient(circle at 75% 25%,rgba(255,255,255,.3),transparent 35%),repeating-linear-gradient(115deg,#2a33b8 0 16px,#232ba3 16px 32px),linear-gradient(#4260E6,#1B22A7);position:relative}
+.sw .mk{position:absolute;left:18px;bottom:-24px;width:56px;height:56px;border-radius:16px;background:#fff;color:var(--blue);display:grid;place-items:center;font-weight:800;font-size:18px;box-shadow:0 8px 16px -8px rgba(13,13,13,.4)}
+.sw .stamp{position:absolute;right:18px;top:18px;border:3px solid #fff;color:#fff;font-weight:900;font-size:15px;padding:6px 10px;border-radius:10px;transform:rotate(10deg);letter-spacing:.04em}
+.sw .in{padding:34px 18px 18px}
+.sw .t{font-size:22px;font-weight:800;letter-spacing:-.03em}
+.sw .co{font-size:13.5px;color:var(--muted);margin-top:2px}
+.sw .num{font-size:34px;font-weight:700;letter-spacing:-.04em;margin-top:14px;color:var(--blue)}
+.sw .ck{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.sw .ck span{font-size:12.5px;font-weight:600;padding:6px 10px;border-radius:99px;background:var(--b1);color:var(--blue)}
+.sw .acts{position:absolute;left:0;right:0;bottom:26px;display:flex;justify-content:center;gap:18px;align-items:center}
+.sw .acts div{border-radius:50%;display:grid;place-items:center;background:#fff;box-shadow:0 10px 20px -10px rgba(13,13,13,.4);font-weight:800}
+.sw .acts .x{width:58px;height:58px;font-size:20px;color:var(--muted)}.sw .acts .y{width:74px;height:74px;background:var(--blue);color:#fff;font-size:15px}.sw .acts .s{width:58px;height:58px;font-size:18px;color:var(--blue)}
+.sw .lab{position:absolute;left:0;right:0;bottom:6px;display:flex;justify-content:center;gap:118px;font-size:12px;color:var(--muted);font-weight:600}
+</style></head><body>
+<div class="top"><h1>4 hướng mới nữa (v6)</h1>
+<p>Khác với Ví, Bento + LED và 4 hướng v5. Cùng màn "Việc phù hợp", bảng màu ViệcNhanh, font Be Vietnam Pro. Bấm để chọn.</p></div>
+<div class="lead"><b>Top 1</b>Ví + Bento (v4 · C) vẫn đang dẫn đầu · Trợ lý AI hỏi–đáp đã ghi làm tính năng</div>
+<div class="grid">
+
+<div class="opt" data-choice="brutalist" onclick="toggleSelect(this)">
+ <div class="phone nb"><div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+  <div class="wrap">
+   <h3>Có 2 việc<br>hợp tay nghề!</h3>
+   <span class="tagline">Đúng visa · lương về tay rõ ràng</span>
+   <div class="card">
+    <div class="top2"><span class="co">Mikawa Precision · Toyota</span><span class="badge">✓ Rất phù hợp</span></div>
+    <div class="t">Vận hành máy tiện CNC</div>
+    <div class="pay"><div><span>Về tay mỗi tháng</span><br><b class="mono">¥221.526</b></div><span>≈ 38,1tr ₫</span></div>
+    <div class="ck"><span>✓ Visa</span><span>✓ 3 năm tiện</span><span>✓ N4</span><span>13 km</span></div>
+    <div class="btn">Ứng tuyển · 3 chạm →</div>
+   </div>
+   <div class="next"><span>Tiện tự động · Okazaki</span><span class="mono">¥185.703</span></div>
+  </div>
+ </div>
+ <h2>11 · Neo-brutalist vui nhộn</h2><div class="ref">Gumroad · Figma Config · Poolsuite</div>
+ <p>Viền đen dày, bóng đổ lệch (ZEN có sẵn token shadow-neo), màu khối mạnh, chữ to vui. Trẻ trung, nổi bật giữa 12 đội, dễ nhớ. Rủi ro: hơi "chơi" so với chuyện lương và visa.</p>
+</div>
+
+<div class="opt" data-choice="liquid-glass" onclick="toggleSelect(this)">
+ <div class="phone lg"><div class="bg"></div><div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+  <div class="wrap">
+   <div class="glass hello"><div><b>Chào Tuấn Anh</b><span>2 việc rất hợp hôm nay</span></div><span style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.9);color:var(--blue);display:grid;place-items:center;font-weight:800">TA</span></div>
+   <div class="glass main">
+    <span class="fit">✓ Rất phù hợp</span>
+    <div class="t">Vận hành máy tiện CNC</div><div class="co">Mikawa Precision · Toyota-shi</div>
+    <div class="num mono">¥221.526</div><div class="co">Về tay mỗi tháng · ≈ 38,1 triệu ₫</div>
+   </div>
+   <div class="row3"><div class="glass"><b>≤ 24h</b><span>HR trả lời</span></div><div class="glass"><b>13 km</b><span>Có xe đón</span></div><div class="glass"><b>3/3</b><span>Tiêu chí</span></div></div>
+   <div class="cta">Ứng tuyển · 3 chạm</div>
+  </div>
+  <div class="glass dock"><span class="on">Việc làm</span><span>Hồ sơ</span><span>Ví</span><span>Tôi</span></div>
+ </div>
+ <h2>12 · Kính lỏng (Liquid Glass)</h2><div class="ref">iOS 26 · visionOS · Apple Music</div>
+ <p>Các lớp kính mờ trên nền gradient xanh ViệcNhanh, thanh điều hướng nổi. Cực kỳ "2026", sang và mượt. Rủi ro: độ tương phản trên kính phải kiểm kỹ; nặng hiệu năng trên máy yếu.</p>
+</div>
+
+<div class="opt" data-choice="chart" onclick="toggleSelect(this)">
+ <div class="phone ch"><div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+  <div class="wrap">
+   <div class="k">Nếu đổi sang Mikawa · về tay mỗi tháng</div>
+   <div class="big mono">¥221.526</div>
+   <span class="delta">▲ ¥34.000 so với việc hiện tại</span>
+   <svg viewBox="0 0 335 150" width="100%" height="150" aria-label="Biểu đồ thu nhập 6 tháng">
+    <line x1="0" y1="120" x2="335" y2="120" stroke="#eceef4"/><line x1="0" y1="70" x2="335" y2="70" stroke="#eceef4"/>
+    <polyline points="0,95 60,95 110,95 150,135 190,135 230,60 335,58" fill="none" stroke="#B9C6E9" stroke-width="3" stroke-dasharray="6 6"/>
+    <polyline points="0,95 60,95 110,95 150,96 190,96 230,60 335,56" fill="none" stroke="#1B22A7" stroke-width="3.5" stroke-linejoin="round"/>
+    <rect x="150" y="96" width="40" height="40" fill="#4260E6" opacity=".14"/>
+    <circle cx="335" cy="56" r="5" fill="#1B22A7"/>
+    <text x="150" y="148" font-size="11" fill="#5B5B5B" font-family="Be Vietnam Pro">Ứng lương lấp khoảng trống</text>
+   </svg>
+   <div class="range"><span>1T</span><span class="on">6T</span><span>1N</span><span>Tất cả</span></div>
+   <div class="list">
+    <div class="it"><div><b>Tiện CNC · Mikawa</b><span>Rất phù hợp · 13 km</span></div><span class="pill mono">¥221.526</span></div>
+    <div class="it"><div><b>Tiện tự động · Okazaki</b><span>Rất phù hợp · 12 km</span></div><span class="pill s mono">¥185.703</span></div>
+    <div class="it"><div><b>Phay CNC · Kariya</b><span>Có thể phù hợp · 5 km</span></div><span class="pill g mono">¥229.769</span></div>
+   </div>
+  </div>
+ </div>
+ <h2>13 · Biểu đồ thu nhập</h2><div class="ref">Robinhood · Apple Stocks · Wise</div>
+ <p>Mở đầu bằng "nếu đổi việc, thu nhập 6 tháng tới thế nào": đường nét đứt là đứt lương khi không có ứng lương, đường liền là có ViệcNhanh. Kể thẳng Finding 0 bằng một hình. Mỗi việc như một "mã cổ phiếu" có giá.</p>
+</div>
+
+<div class="opt" data-choice="swipe" onclick="toggleSelect(this)">
+ <div class="phone sw"><div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+  <div class="wrap">
+   <div class="hd"><b>Việc cho bạn</b><span>1 / 3</span></div>
+   <div class="deck">
+    <div class="cd b3"></div><div class="cd b2"></div>
+    <div class="cd f"><div class="cover"><div class="mk">MP</div><div class="stamp">HỢP ✓</div></div>
+     <div class="in"><div class="t">Vận hành máy tiện CNC</div><div class="co">Mikawa Precision · Toyota-shi · 13 km</div>
+      <div class="num mono">¥221.526<span style="font-size:13px;color:var(--muted);font-weight:500;font-family:'Be Vietnam Pro'"> /tháng về tay</span></div>
+      <div class="ck"><span>✓ Visa sản xuất</span><span>✓ 3 năm tiện</span><span>✓ N4</span><span>✓ Có KTX</span></div></div></div>
+   </div>
+  </div>
+  <div class="acts"><div class="x">✕</div><div class="y">Ứng<br>tuyển</div><div class="s">☆</div></div>
+  <div class="lab"><span>Bỏ qua</span><span>Lưu</span></div>
+ </div>
+ <h2>14 · Quẹt thẻ việc</h2><div class="ref">Tinder · Hinge · Bumble</div>
+ <p>Chồng thẻ việc, quẹt phải để ứng tuyển, trái để bỏ qua, sao để lưu. Nhanh, vui, một tay, hợp người 23–28 tuổi. Rủi ro: quyết định đổi việc là chuyện lớn, quẹt có thể bị xem là xem nhẹ.</p>
+</div>
+
+</div></body></html>

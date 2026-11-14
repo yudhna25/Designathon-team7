@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ViệcNhanh · Vòng cuối v8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#1B22A7;--sky:#4260E6;--ink:#0D0D0D;--paper:#FAFAFA;--b1:#F1F4FC;--b2:#E0E6F6;--b4:#B9C6E9;--muted:#5B5B5B}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Be Vietnam Pro",system-ui,sans-serif;background:#ECEDF1;color:var(--ink);padding:40px 24px 80px;-webkit-font-smoothing:antialiased}
+.top{max-width:940px;margin:0 auto 28px}.top h1{font-size:34px;letter-spacing:-.03em;line-height:1.1}.top p{color:var(--muted);margin-top:10px;font-size:16px;line-height:1.5}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace;letter-spacing:-.03em}
+.led{font-family:"JetBrains Mono",monospace;font-weight:800;letter-spacing:-.03em;-webkit-mask-image:radial-gradient(circle at center,#000 62%,transparent 66%);mask-image:radial-gradient(circle at center,#000 62%,transparent 66%);-webkit-mask-size:3px 3px;mask-size:3px 3px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;max-width:940px;margin:0 auto}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.opt{border-radius:28px;padding:22px;background:#fff}
+.opt h2{font-size:20px;letter-spacing:-.02em;margin-top:22px}.opt .ref{font-size:13px;color:var(--sky);font-weight:600;margin-top:4px}.opt p{font-size:14px;color:var(--muted);line-height:1.55;margin-top:8px}
+.phone{width:375px;height:760px;margin:0 auto;border-radius:44px;overflow:hidden;position:relative;box-shadow:0 0 0 10px #0d0d0d,0 30px 60px -20px rgba(13,13,13,.5)}
+.sb{height:44px;display:flex;justify-content:space-between;align-items:center;padding:0 26px;font-size:14px;font-weight:600;position:relative;z-index:5}
+.tbar{position:absolute;left:0;right:0;bottom:0;height:80px;display:grid;grid-template-columns:repeat(4,1fr);font-size:12px;font-weight:600;padding-bottom:14px;border-top:1px solid #e3e5ee;background:rgba(255,255,255,.94);color:#6a6a6a}
+.tbar div{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}.tbar i{width:22px;height:22px;border-radius:7px;border:2px solid currentColor}.tbar .on{color:var(--blue)}
+
+/* ===== TOP 1 · Ví + Bento + cộng đồng ===== */
+.t1{background:#F4F5F9}
+.t1 .wrap{padding:4px 14px 0}
+.t1 .hd{display:flex;justify-content:space-between;align-items:center;padding:0 4px}.t1 .hd b{font-size:22px;letter-spacing:-.035em}
+.t1 .av{width:34px;height:34px;border-radius:50%;background:#fff;color:var(--blue);border:1px solid #e3e5ee;display:grid;place-items:center;font-weight:700;font-size:13px}
+.t1 .passw{position:relative;margin-top:22px}
+.t1 .passw::before,.t1 .passw::after{content:"";position:absolute;left:14px;right:14px;height:22px;border-radius:22px 22px 0 0}
+.t1 .passw::before{top:-16px;background:#B9C6E9;left:28px;right:28px}.t1 .passw::after{top:-8px;background:#4260E6}
+.t1 .pass{position:relative;z-index:1;border-radius:26px;padding:18px;color:#fff;background:linear-gradient(150deg,#2B33C9 0%,#1B22A7 55%,#121882 100%)}
+.t1 .row{display:flex;justify-content:space-between;align-items:center}
+.t1 .mk{width:40px;height:40px;border-radius:12px;background:#fff;color:var(--blue);display:grid;place-items:center;font-weight:800}
+.t1 .fit{font-size:12.5px;font-weight:700;background:rgba(255,255,255,.16);padding:6px 10px;border-radius:99px}
+.t1 .pass h3{font-size:20px;letter-spacing:-.025em;margin-top:12px}.t1 .pass .s{font-size:13px;color:#DCE3FC;margin-top:2px}
+.t1 .pass .num{font-size:42px;line-height:1;margin-top:12px}
+.t1 .dots{display:flex;gap:5px;justify-content:center;margin-top:10px}.t1 .dots i{width:6px;height:6px;border-radius:50%;background:#C9CEE0}.t1 .dots i.on{width:18px;border-radius:6px;background:var(--blue)}
+.t1 .bento{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.t1 .c{background:#fff;border:1px solid #e8eaf2;border-radius:20px;padding:12px}
+.t1 .k{font-size:12px;color:var(--muted);font-weight:600}
+.t1 .ring{width:54px;height:54px;border-radius:50%;background:conic-gradient(var(--blue) 0 92%,var(--b2) 0);display:grid;place-items:center;margin-top:6px}
+.t1 .ring span{width:42px;height:42px;border-radius:50%;background:#fff;display:grid;place-items:center;font-weight:800;font-size:13px}
+.t1 .ck{display:flex;flex-direction:column;gap:4px;margin-top:6px;font-size:13px;font-weight:600}
+.t1 .comm{grid-column:span 2;display:flex;align-items:center;gap:12px}
+.t1 .faces{display:flex}.t1 .faces span{width:32px;height:32px;border-radius:50%;border:2px solid #fff;margin-left:-8px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:11.5px}.t1 .faces span:first-child{margin-left:0}
+.t1 .comm b{font-size:14px;display:block}.t1 .comm small{font-size:12.5px;color:var(--muted)}
+.t1 .comm .star{margin-left:auto;font-size:18px;font-weight:800;color:var(--blue)}
+.t1 .go{grid-column:span 2;background:var(--blue);color:#fff;border:0;display:flex;justify-content:space-between;font-weight:700;font-size:16px;padding:16px 18px;border-radius:18px}
+
+/* ===== TOP 1 · màn nâng tay nghề (lộ trình) ===== */
+.t1b{background:#F4F5F9}
+.t1b .wrap{padding:4px 16px 0}
+.t1b .back{font-size:14px;font-weight:600;color:var(--muted)}
+.t1b h3{font-size:24px;letter-spacing:-.035em;line-height:1.15;margin-top:10px}
+.t1b .now{display:inline-flex;gap:6px;align-items:center;margin-top:10px;font-size:12.5px;font-weight:700;color:var(--blue);background:var(--b1);padding:6px 10px;border-radius:99px}
+.t1b .path{position:relative;margin-top:18px;padding-left:46px}
+.t1b .path::before{content:"";position:absolute;left:21px;top:22px;bottom:22px;width:4px;border-radius:4px;background:linear-gradient(var(--blue) 0 34%,#d5d9e8 34%)}
+.t1b .st{position:relative;background:#fff;border:1px solid #e8eaf2;border-radius:20px;padding:14px;margin-bottom:10px}
+.t1b .st .dot{position:absolute;left:-40px;top:14px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px}
+.t1b .done .dot{background:var(--blue);color:#fff}.t1b .cur .dot{background:#fff;border:3px solid var(--blue);color:var(--blue)}.t1b .lock .dot{background:#E3E6F0;color:#4a4f66}
+.t1b .cur{border:2px solid var(--blue)}
+.t1b .st b{font-size:15.5px;display:block}.t1b .st span{font-size:13px;color:var(--muted)}
+.t1b .gain span{color:var(--blue)}
+.t1b .gain{margin-top:10px;display:flex;justify-content:space-between;align-items:center;background:var(--b1);border-radius:12px;padding:10px 12px;font-size:13px;font-weight:700;color:var(--blue)}
+.t1b .acts{position:absolute;left:16px;right:16px;bottom:26px;display:grid;gap:8px}
+.t1b .acts div{height:54px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15.5px}
+.t1b .acts .p{background:var(--blue);color:#fff}.t1b .acts .s{background:#fff;border:1.5px solid #d9dce8;color:var(--ink)}
+
+/* ===== 19 · Kinetic poster ===== */
+.kp{background:#1B22A7;color:#fff}
+.kp .wrap{padding:6px 18px 0}
+.kp .tag{font-size:12.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#DCE3FC}
+.kp .huge{font-size:72px;font-weight:900;letter-spacing:-.055em;line-height:1.02;margin-top:18px}
+.kp .huge .o{color:transparent;-webkit-text-stroke:2px #fff}
+.kp .money{font-size:58px;margin-top:22px;line-height:1}
+.kp .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}.kp .meta span{font-size:13px;font-weight:700;border:1.5px solid rgba(255,255,255,.55);border-radius:99px;padding:6px 11px}
+.kp .marq{position:absolute;left:0;right:0;bottom:104px;white-space:nowrap;overflow:hidden;font-weight:900;font-size:26px;letter-spacing:-.03em;color:#8CA6F1;border-top:1px solid rgba(255,255,255,.25);border-bottom:1px solid rgba(255,255,255,.25);padding:10px 0}
+.kp .cta{position:absolute;left:18px;right:18px;bottom:26px;height:60px;border-radius:99px;background:#fff;color:var(--blue);font-weight:900;font-size:17px;display:flex;align-items:center;justify-content:center}
+
+/* ===== 20 · Activity rings ===== */
+.rg{background:#fff}
+.rg .wrap{padding:6px 20px 0}
+.rg .k{font-size:13px;color:var(--muted);font-weight:600}
+.rg h3{font-size:24px;letter-spacing:-.035em;margin-top:4px}
+.rg .rings{position:relative;width:230px;height:230px;margin:18px auto 0}
+.rg .rings div{position:absolute;border-radius:50%;display:grid;place-items:center}
+.rg .r1{inset:0;background:conic-gradient(var(--blue) 0 90%,#E0E6F6 0)}.rg .r1::after{content:"";position:absolute;inset:20px;border-radius:50%;background:#fff}
+.rg .r2{inset:26px;background:conic-gradient(var(--sky) 0 72%,#E6ECFC 0);z-index:1}.rg .r2::after{content:"";position:absolute;inset:20px;border-radius:50%;background:#fff}
+.rg .r3{inset:52px;background:conic-gradient(#8CA6F1 0 96%,#EEF1FD 0);z-index:2}.rg .r3::after{content:"";position:absolute;inset:20px;border-radius:50%;background:#fff}
+.rg .mid{position:absolute;inset:0;display:grid;place-items:center;z-index:3;text-align:center}
+.rg .mid b{font-size:22px;display:block}.rg .mid span{font-size:12px;color:var(--muted)}
+.rg .leg{display:grid;gap:8px;margin-top:18px}
+.rg .leg div{display:flex;align-items:center;gap:10px;font-size:14px}.rg .leg i{width:12px;height:12px;border-radius:50%}
+.rg .leg b{margin-left:auto}
+.rg .go{margin-top:16px;height:54px;border-radius:16px;background:var(--blue);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:16px}
+
+/* ===== 21 · Ticket machine 券売機 ===== */
+.tm{background:#E9EBF2}
+.tm .wrap{padding:6px 14px 0}
+.tm .hd{background:var(--ink);color:#fff;border-radius:18px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+.tm .hd b{font-size:15px}.tm .hd span{font-size:12.5px;color:#cfd3e6}
+.tm .keys{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.tm .key{background:#fff;border-radius:16px;padding:12px;border-bottom:5px solid #c7cbd8;min-height:118px;display:flex;flex-direction:column;justify-content:space-between}
+.tm .key.hot{background:var(--blue);color:#fff;border-bottom-color:#10157a;grid-column:span 2;min-height:140px}
+.tm .key .k{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.tm .key b{font-size:16px;line-height:1.2;display:block;margin-top:6px}
+.tm .key .p{font-size:22px;margin-top:8px}
+.tm .key.hot .p{font-size:34px}
+.tm .key .f{font-size:12.5px;font-weight:700;color:var(--blue)}.tm .key.hot .f{color:#DCE3FC}
+.tm .key.lk{background:#F2F3F7;color:#4a4f66}
+.tm .slot{margin-top:10px;background:var(--ink);color:#fff;border-radius:16px;height:56px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px}
+
+/* ===== 22 · Split-flap board ===== */
+.sf{background:#0F1012;color:#F3F3F3}
+.sf .wrap{padding:6px 14px 0}
+.sf .title{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#bfc3d6}
+.sf h3{font-size:26px;letter-spacing:-.03em;margin-top:8px}
+.sf .board{margin-top:14px;background:#1a1b1f;border-radius:16px;padding:10px;border:1px solid #2a2b31}
+.sf .hrow{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:6px;font-size:11.5px;color:#9a9eb2;font-weight:700;letter-spacing:.08em;padding:0 4px 6px}
+.sf .line{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:6px;margin-top:6px}
+.sf .fl{display:flex;gap:2px}
+.sf .fl i{flex:1;height:30px;border-radius:4px;background:linear-gradient(#2b2d33 0 49%,#111 49% 51%,#25272c 51%);display:grid;place-items:center;font-style:normal;font-family:"JetBrains Mono",monospace;font-weight:800;font-size:13px;color:#F3F3F3}
+.sf .fl.ok i{color:#9CB3F3}
+.sf .sel{outline:2px solid var(--sky);outline-offset:3px;border-radius:6px}
+.sf .detail{margin-top:14px;background:#1a1b1f;border:1px solid #2a2b31;border-radius:16px;padding:14px}
+.sf .detail b{font-size:16px}.sf .detail .s{font-size:13px;color:#bfc3d6;margin-top:2px}
+.sf .go{margin-top:12px;height:54px;border-radius:14px;background:var(--sky);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px}
+</style></head><body>
+<div class="top"><h1>Vòng cuối: Top 1 đã ghép + 4 hướng cuối</h1><p>Top 1 = Ví + Bento, thêm ô "Cộng đồng người Việt" và màn "Lộ trình tay nghề".</p></div>
+<div class="grid">
+
+<div class="opt" id="m-top1-home">
+ <div class="phone t1"><div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+  <div class="wrap">
+   <div class="hd"><b>Việc cho bạn</b><span class="av">TA</span></div>
+   <div class="passw"><div class="pass">
+    <div class="row"><span class="mk">MP</span><span class="fit">✓ Rất phù hợp</span></div>
+    <h3>Vận hành máy tiện CNC</h3><div class="s">Mikawa Precision · Toyota-shi · 13 km</div>
+    <div class="num led">¥221.526</div><div class="s" style="margin-top:4px">Về tay mỗi tháng · ≈ 38,1 triệu ₫</div>
+   </div></div>
+   <div class="dots"><i class="on"></i><i></i><i></i></div>
+   <div class="bento">
+    <div class="c"><div class="k">HR cam kết</div><div class="ring"><span class="mono">23h</span></div></div>
+    <div class="c"><div class="k">Bạn đạt</div><div class="ck"><span>✓ Visa sản xuất</span><span>✓ 3 năm tiện</span><span>✓ N4</span></div></div>
+    <div class="c comm"><div class="faces"><span style="background:#1B22A7">H</span><span style="background:#4260E6">M</span><span style="background:#121882">K</span><span style="background:#0D0D0D">+9</span></div><div><b>12 người Việt đang làm</b><small>"Tăng ca đúng mô tả" · Hùng</small></div><span class="star">4,6★</span></div>
+    <div class="go">Ứng tuyển · 3 chạm<span>→</span></div>
+   </div></div>
+  <div class="tbar"><div class="on"><i></i>Việc làm</div><div><i></i>Hồ sơ</div><div><i></i>Ví lương</div><div><i></i>Tôi</div></div>
+ </div>
+</div>
+
+<div class="opt" id="m-top1-path">
+ <div class="phone t1b"><div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+  <div class="wrap">
+   <div class="back">← Gia công phay CNC · Kariya</div>
+   <h3>Còn 1 bước để<br>rất phù hợp với việc này</h3>
+   <span class="now">◐ Hiện tại: Có thể phù hợp</span>
+   <div class="path">
+    <div class="st done"><span class="dot">✓</span><b>Tiện CNC · 3 năm</b><span>Đã có trong hồ sơ</span></div>
+    <div class="st cur"><span class="dot">2</span><b>Thêm kinh nghiệm phay CNC</b><span>Từ 2 năm, kể cả ở Việt Nam</span><div class="gain"><span>Mở khoá</span><span>→ Rất phù hợp</span></div></div>
+    <div class="st lock"><span class="dot">3</span><b>Chứng chỉ kỹ năng cấp 3</b><span>Không bắt buộc · +¥12k/tháng ở bậc sau</span></div>
+   </div>
+  </div>
+  <div class="acts"><div class="p">Cập nhật kinh nghiệm phay</div><div class="s">Vẫn ứng tuyển ngay</div></div>
+ </div>
+</div>
+
+<div class="opt" id="m-19">
+ <div class="phone kp"><div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+  <div class="wrap">
+   <div class="tag">Mikawa Precision · Toyota-shi · ✓ Rất phù hợp</div>
+   <div class="huge">TIỆN<br><span class="o">CNC</span><br>24H.</div>
+   <div class="money led">¥221.526</div>
+   <div class="meta"><span>về tay / tháng</span><span>2 ca · KTX</span><span>13 km</span></div>
+   <p style="margin-top:22px;font-size:15px;line-height:1.5;color:#DCE3FC">Bạn đạt đủ 3 tiêu chí: visa sản xuất, 3 năm tiện, tiếng Nhật N4.</p>
+  </div>
+  <div class="marq">ĐÚNG VISA · ĐÚNG TAY NGHỀ · TRẢ LỜI 24H · ĐÚNG VISA · ĐÚNG TAY NGHỀ</div>
+  <div class="cta">Ứng tuyển · 3 chạm</div>
+ </div>
+</div>
+
+<div class="opt" id="m-20">
+ <div class="phone rg"><div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+  <div class="wrap">
+   <div class="k">Mikawa Precision · Toyota-shi</div><h3>Vận hành máy tiện CNC</h3>
+   <div class="rings"><div class="r1"></div><div class="r2"></div><div class="r3"></div><div class="mid"><div><b class="mono">¥221k</b><span>về tay/tháng</span></div></div></div>
+   <div class="leg">
+    <div><i style="background:var(--blue)"></i>Mức phù hợp<b>Rất phù hợp</b></div>
+    <div><i style="background:var(--sky)"></i>Lương so với hiện tại<b>+18%</b></div>
+    <div><i style="background:#8CA6F1"></i>HR cam kết còn<b class="mono">23h</b></div>
+   </div>
+   <div class="go">Ứng tuyển · 3 chạm</div>
+  </div>
+  <div class="tbar"><div class="on"><i></i>Việc làm</div><div><i></i>Hồ sơ</div><div><i></i>Ví lương</div><div><i></i>Tôi</div></div>
+ </div>
+</div>
+
+<div class="opt" id="m-21">
+ <div class="phone tm"><div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+  <div class="wrap">
+   <div class="hd"><div><b>券売機 · Máy chọn việc</b><br><span>Chạm một nút, HR trả lời 24h</span></div><span>TA</span></div>
+   <div class="keys">
+    <div class="key hot"><div class="k">✓ Rất phù hợp · Mikawa</div><b>Vận hành máy tiện CNC</b><div class="p led">¥221.526</div></div>
+    <div class="key"><div><div class="f">✓ Rất phù hợp</div><b>Tiện tự động · Okazaki</b></div><div class="p mono">¥185.703</div></div>
+    <div class="key"><div><div class="f">◐ Có thể</div><b>Phay CNC · Kariya</b></div><div class="p mono">¥229.769</div></div>
+    <div class="key lk"><div><div class="k">Cần chứng chỉ</div><b>Xe nâng · Anjo</b></div><div class="p mono">¥172k</div></div>
+    <div class="key lk"><div><div class="k">Cần chứng chỉ</div><b>Hàn CO₂ · Okazaki</b></div><div class="p mono">¥240k</div></div>
+   </div>
+   <div class="slot">Ứng tuyển việc đã chọn</div>
+  </div>
+ </div>
+</div>
+
+<div class="opt" id="m-22">
+ <div class="phone sf"><div class="sb"><span>9:41</span><span>●●● 5G</span></div>
+  <div class="wrap">
+   <div class="title"><span>Aichi · Bảng việc</span><span>07:12</span></div>
+   <h3>3 chuyến việc<br>hợp với bạn hôm nay</h3>
+   <div class="board">
+    <div class="hrow"><span>VIỆC</span><span>NƠI</span><span>VỀ TAY</span></div>
+    <div class="line sel"><div class="fl ok"><i>T</i><i>I</i><i>Ệ</i><i>N</i><i>✓</i></div><div class="fl"><i>T</i><i>O</i><i>Y</i></div><div class="fl"><i>2</i><i>2</i><i>1</i><i>K</i></div></div>
+    <div class="line"><div class="fl ok"><i>T</i><i>Ự</i><i>Đ</i><i>Ộ</i><i>✓</i></div><div class="fl"><i>O</i><i>K</i><i>A</i></div><div class="fl"><i>1</i><i>8</i><i>6</i><i>K</i></div></div>
+    <div class="line"><div class="fl"><i>P</i><i>H</i><i>A</i><i>Y</i><i>◐</i></div><div class="fl"><i>K</i><i>A</i><i>R</i></div><div class="fl"><i>2</i><i>3</i><i>0</i><i>K</i></div></div>
+   </div>
+   <div class="detail"><b>Vận hành máy tiện CNC · Mikawa</b><div class="s">✓ Rất phù hợp · 2 ca · KTX · khởi hành trong 24h</div>
+    <div class="go">Lên chuyến · Ứng tuyển</div></div>
+   <div class="detail" style="display:flex;justify-content:space-between;align-items:center"><div><b>Ví lương</b><div class="s">Ứng trước tới 50% lương đã làm</div></div><b class="mono" style="color:#9CB3F3">¥0 lãi</b></div>
+  </div>
+  <div class="tbar" style="background:#0F1012;border-top-color:#2a2b31;color:#9a9eb2"><div class="on" style="color:#fff"><i></i>Việc làm</div><div><i></i>Hồ sơ</div><div><i></i>Ví lương</div><div><i></i>Tôi</div></div>
+ </div>
+</div>
+
+</div></body></html>

@@ -1,0 +1,20 @@
+# deps & builds
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# secrets — never commit (Vercel OIDC token lives here)
+.env*
+.vercel/
+
+# local tool state
+.superpowers/brainstorm/.last-*
+.superpowers/brainstorm/*/state/
+**/.impeccable/hook.cache.json
+**/.impeccable/live/
+**/*.pid
+**/*.log
+.claude/settings.local.json
+*.lnk

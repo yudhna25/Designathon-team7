@@ -1,0 +1,97 @@
+<h2>Hướng hình ảnh nào hợp ViệcNhanh nhất?</h2>
+<p class="subtitle">Cùng một màn "Việc phù hợp" trên điện thoại, cùng bảng màu ViệcNhanh (Bold Blue #1B22A7 · Light Blue #4260E6). Chỉ khác "thế giới" hình ảnh. Bấm để chọn, có thể ghi chú thêm ở terminal.</p>
+
+<style>
+  .phone{width:300px;margin:0 auto;border-radius:34px;padding:10px;background:#0d0d0d;box-shadow:0 20px 50px -20px rgba(0,0,0,.45)}
+  .scr{border-radius:26px;overflow:hidden;height:560px;position:relative;font-family:Inter,system-ui,sans-serif;font-size:13px;color:#0d0d0d}
+  .mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+  /* A — Blueprint */
+  .a{background:#1B22A7;color:#fff;background-image:linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px);background-size:20px 20px}
+  .a .hd{padding:18px 16px 10px}
+  .a .tag{font-size:10px;letter-spacing:.12em;opacity:.75}
+  .a h4{font-size:22px;line-height:1.1;margin:6px 0 0;font-weight:700;letter-spacing:-.02em}
+  .a .card{margin:10px 12px;background:#FAFAFA;color:#0d0d0d;border-radius:4px;padding:12px;position:relative;border-left:4px solid #4260E6}
+  .a .dim{display:flex;justify-content:space-between;font-size:10px;color:#5b5b5b;border-top:1px dashed #b9c6e9;margin-top:8px;padding-top:6px}
+  .a .fit{display:inline-block;font-size:10px;font-weight:700;background:#1B22A7;color:#fff;padding:3px 7px;border-radius:2px;letter-spacing:.06em}
+  .a .pay{font-size:22px;font-weight:700;margin-top:6px}
+  /* B — Zalo-native chat */
+  .b{background:#e9eef8}
+  .b .top{background:#1B22A7;color:#fff;padding:14px 14px 12px;display:flex;gap:10px;align-items:center}
+  .b .av{width:32px;height:32px;border-radius:50%;background:#fff;color:#1B22A7;display:grid;place-items:center;font-weight:800}
+  .b .bub{margin:10px 12px 0;background:#fff;border-radius:18px 18px 18px 6px;padding:12px;box-shadow:0 2px 6px rgba(27,34,167,.08)}
+  .b .me{margin:10px 12px 0 60px;background:#4260E6;color:#fff;border-radius:18px 18px 6px 18px;padding:10px 12px}
+  .b .chip{display:inline-block;background:#f1f4fc;color:#1B22A7;border-radius:99px;padding:3px 9px;font-size:11px;margin:4px 4px 0 0;font-weight:600}
+  .b .btn{display:block;text-align:center;margin-top:10px;background:#1B22A7;color:#fff;border-radius:99px;padding:9px;font-weight:700}
+  /* C — Payslip / receipt editorial */
+  .c{background:#FAFAFA}
+  .c .hd{padding:18px 16px 6px}
+  .c h4{font-size:30px;line-height:1;margin:0;letter-spacing:-.04em;font-weight:800}
+  .c .rc{margin:12px;background:#fff;padding:14px 14px 18px;position:relative;box-shadow:0 1px 0 #ececec;
+    -webkit-mask:radial-gradient(circle 6px at 6px 100%,#0000 98%,#000) 0 0/12px 100% repeat-x;mask:radial-gradient(circle 6px at 6px 100%,#0000 98%,#000) 0 0/12px 100% repeat-x}
+  .c .row{display:flex;justify-content:space-between;padding:3px 0;font-size:12px}
+  .c .big{font-size:34px;font-weight:800;letter-spacing:-.04em;color:#1B22A7}
+  .c .rule{border-top:1px dashed #cecece;margin:8px 0}
+  .c .stamp{position:absolute;right:10px;top:10px;border:2px solid #1B22A7;color:#1B22A7;font-weight:800;font-size:10px;padding:3px 6px;transform:rotate(6deg);letter-spacing:.08em}
+</style>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:20px;background:#f3f3f3">
+      <div class="phone"><div class="scr a">
+        <div class="hd"><div class="tag mono">AICHI · 2 VIỆC HỢP TAY NGHỀ</div><h4>Bản vẽ việc làm<br>của Tuấn Anh</h4></div>
+        <div class="card">
+          <span class="fit">● RẤT PHÙ HỢP</span>
+          <div style="font-weight:700;font-size:15px;margin-top:8px">Vận hành máy tiện CNC</div>
+          <div style="font-size:11px;color:#5b5b5b">Mikawa Precision · Toyota-shi</div>
+          <div class="pay mono">¥221.526<span style="font-size:11px;font-weight:400;color:#5b5b5b"> /tháng</span></div>
+          <div class="dim mono"><span>✓ VISA</span><span>✓ 3 NĂM</span><span>✓ N4</span><span>13 KM</span></div>
+        </div>
+        <div class="card" style="opacity:.92">
+          <span class="fit" style="background:#e0e6f6;color:#1B22A7">◐ CÓ THỂ PHÙ HỢP</span>
+          <div style="font-weight:700;font-size:15px;margin-top:8px">Gia công phay CNC</div>
+          <div class="dim mono"><span>✓ VISA</span><span>✗ PHAY</span><span>✓ N4</span><span>5 KM</span></div>
+        </div>
+      </div></div>
+    </div>
+    <div class="card-body"><h3>A · Bản vẽ kỹ thuật (Blueprint)</h3><p>Lưới bản vẽ CNC, số liệu mono như thước đo, thẻ như phiếu gia công. Chất "nhà máy Aichi" rõ nhất, khác hẳn app tuyển dụng thường. Rủi ro: lạnh, kỹ thuật nếu lạm dụng.</p></div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:20px;background:#f3f3f3">
+      <div class="phone"><div class="scr b">
+        <div class="top"><div class="av">V</div><div><div style="font-weight:700">ViệcNhanh Aichi</div><div style="font-size:10px;opacity:.8">Zalo OA · trả lời trong 24h</div></div></div>
+        <div class="bub"><b>Chào Tuấn Anh 👋</b><br>Có 1 việc rất hợp tay nghề của bạn, gần nhà 13 km:</div>
+        <div class="bub">
+          <div style="font-weight:800;font-size:15px">Vận hành máy tiện CNC</div>
+          <div style="font-size:11px;color:#5b5b5b">Mikawa Precision · Toyota-shi</div>
+          <div style="font-size:22px;font-weight:800;margin-top:6px;color:#1B22A7">¥221.526<span style="font-size:11px;font-weight:500;color:#5b5b5b"> thực nhận/tháng</span></div>
+          <span class="chip">✓ Visa sản xuất</span><span class="chip">✓ 3 năm tiện</span><span class="chip">✓ N4</span>
+          <span class="btn">Ứng tuyển · 3 chạm</span>
+        </div>
+        <div class="me">Lương này đã trừ ký túc xá chưa?</div>
+      </div></div>
+    </div>
+    <div class="card-body"><h3>B · Tin nhắn thân thuộc (Zalo-native)</h3><p>Mọi thứ như một cuộc trò chuyện: bong bóng, avatar, câu hỏi tự nhiên. Khớp "đăng ký bằng tin nhắn" của brief và key feature thông báo Zalo. Rủi ro: dễ bị xem là "giống Zalo", ít bản sắc riêng.</p></div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:20px;background:#f3f3f3">
+      <div class="phone"><div class="scr c">
+        <div class="hd"><div style="font-size:11px;color:#5b5b5b;font-weight:600">Việc hợp với bạn hôm nay</div><h4>Lương thật,<br>về tay bao nhiêu.</h4></div>
+        <div class="rc">
+          <span class="stamp">RẤT PHÙ HỢP</span>
+          <div style="font-weight:700;font-size:15px;padding-right:80px">Vận hành máy tiện CNC</div>
+          <div style="font-size:11px;color:#5b5b5b">Mikawa Precision · Toyota-shi</div>
+          <div class="rule"></div>
+          <div class="row"><span>Lương + tăng ca</span><span class="mono">¥315.240</span></div>
+          <div class="row" style="color:#5b5b5b"><span>Thuế, BH, ký túc xá</span><span class="mono">−¥93.714</span></div>
+          <div class="rule"></div>
+          <div style="font-size:11px;color:#5b5b5b">Thực nhận / tháng</div>
+          <div class="big mono">¥221.526</div>
+          <div style="font-size:11px;color:#5b5b5b">≈ 38,1 triệu ₫ · ✓ Visa ✓ 3 năm ✓ N4</div>
+        </div>
+      </div></div>
+    </div>
+    <div class="card-body"><h3>C · Phiếu lương minh bạch (Payslip)</h3><p>Thẻ việc là một tờ phiếu lương có răng cưa, con số thực nhận to nhất màn hình, con dấu "Rất phù hợp". Đánh thẳng vào insight tin cậy và khoảng trống lương. Rủi ro: ít chỗ cho thông tin khác trên thẻ.</p></div>
+  </div>
+</div>

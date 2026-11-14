@@ -1,0 +1,217 @@
+@import "tailwindcss";
+@import "../styles/zen-tokens.css";
+
+/* ViệcNhanh palette (ZEN template "Việc Nhanh"): Bold Blue primary, Light Blue secondary,
+   Soft White canvas, Jet Black text. Wired into ZEN accent tokens; html has data-emphasis="brand". */
+:root:not([data-theme="dark"]) {
+  --color-bg-canvas: var(--color-viecnhanh-neutral-1);
+  --color-bg-surface-alt: var(--color-viecnhanh-blue-1);
+}
+:root {
+  --color-bg-accent-solid: var(--color-viecnhanh-blue-9);
+  --color-bg-accent-solid-hover: var(--color-viecnhanh-blue-10);
+  --color-bg-accent-solid-pressed: var(--color-viecnhanh-blue-11);
+  --color-bg-accent-subtle: var(--color-viecnhanh-blue-2);
+  --color-bg-accent-subtle-hover: var(--color-viecnhanh-blue-3);
+  --color-bg-accent-subtle-pressed: var(--color-viecnhanh-blue-4);
+  --color-bg-accent-flat-hover: var(--color-viecnhanh-blue-2);
+  --color-bg-accent-ghost-hover: var(--color-viecnhanh-blue-2);
+  --color-bg-active-accent-solid: var(--color-viecnhanh-blue-9);
+  --color-bg-active-accent-subtle: var(--color-viecnhanh-blue-2);
+  --color-border-accent-solid: var(--color-viecnhanh-blue-9);
+  --color-border-accent-subtle: var(--color-viecnhanh-blue-4);
+  --color-border-active-accent-solid: var(--color-viecnhanh-blue-9);
+  --color-border-active-accent-subtle: var(--color-viecnhanh-blue-4);
+  --color-content-accent-strongest: var(--color-viecnhanh-blue-12);
+  --color-content-accent-base: var(--color-viecnhanh-blue-9);
+  --color-content-accent-light: var(--color-viecnhanh-sky-9);
+  --color-content-on-accent: #fff;
+  --color-focus-accent-solid: var(--color-viecnhanh-sky-9);
+  --brand-2: var(--color-viecnhanh-sky-9);
+  --brand-soft: var(--color-viecnhanh-blue-2);
+}
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg-accent-solid: var(--color-viecnhanh-sky-9);
+  --color-bg-accent-solid-hover: var(--color-viecnhanh-sky-10);
+  --color-bg-accent-solid-pressed: var(--color-viecnhanh-sky-11);
+  --color-bg-accent-subtle: color-mix(in oklab, var(--color-viecnhanh-sky-9) 18%, transparent);
+  --color-bg-accent-subtle-hover: color-mix(in oklab, var(--color-viecnhanh-sky-9) 26%, transparent);
+  --color-bg-active-accent-solid: var(--color-viecnhanh-sky-9);
+  --color-border-accent-solid: var(--color-viecnhanh-sky-8);
+  --color-border-active-accent-solid: var(--color-viecnhanh-sky-8);
+  --color-content-accent-strongest: var(--color-viecnhanh-sky-3);
+  --color-content-accent-base: var(--color-viecnhanh-sky-6);
+  --color-content-accent-light: var(--color-viecnhanh-sky-7);
+  --color-focus-accent-solid: var(--color-viecnhanh-sky-7);
+  --brand-2: var(--color-viecnhanh-sky-7);
+  --brand-soft: color-mix(in oklab, var(--color-viecnhanh-sky-9) 18%, transparent);
+}
+
+/* Short Tailwind aliases on top of ZEN semantic tokens.
+   Palette later = set data-emphasis="brand" + edit --color-*-accent-* in zen-tokens.css. */
+@theme inline {
+  --color-canvas: var(--color-bg-canvas);
+  --color-surface: var(--color-bg-surface);
+  --color-surface-alt: var(--color-bg-surface-alt);
+  --color-pale: var(--color-bg-neutral-pale);
+  --color-subtle: var(--color-bg-neutral-subtle);
+  --color-solid: var(--color-bg-accent-solid);
+  --color-brand: var(--color-content-accent-base);
+  --color-brand-soft: var(--brand-soft);
+  --color-on-solid: var(--color-content-inverse-strongest);
+  --color-fg: var(--color-content-neutral-strongest);
+  --color-muted: var(--color-content-neutral-base);
+  --color-faint: var(--color-content-neutral-light);
+  --color-line: var(--color-border-neutral-subtle);
+  --color-hair: var(--color-border-neutral-pale);
+  --color-line-strong: var(--color-border-neutral-solid);
+  --color-pos: var(--color-content-positive-base);
+  --color-neg: var(--color-content-negative-base);
+  --color-warn: var(--color-content-warning-base);
+  --font-sans: var(--font-inter), "Inter", "Hiragino Sans", "Yu Gothic UI", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), "JetBrains Mono", ui-monospace, monospace;
+  --breakpoint-md: 744px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+}
+
+/* Motion speed (Demo config): CSS transitions follow the same switch as GSAP. */
+[data-motion="slow"] {
+  --motion-instant: 0.36s; --motion-fast: 0.6s; --motion-base: 0.9s; --motion-slow: 1.35s; --motion-slower: 1.8s;
+}
+[data-motion="off"] {
+  --motion-instant: 0s; --motion-fast: 0s; --motion-base: 0s; --motion-slow: 0s; --motion-slower: 0s;
+}
+
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body {
+  background: var(--color-bg-canvas);
+  color: var(--color-content-neutral-strongest);
+  font-family: var(--font-sans);
+  font-size: var(--text-body-base);
+  line-height: var(--text-body-base--line-height);
+  letter-spacing: var(--text-body-base--letter-spacing);
+  font-feature-settings: "cv11", "ss01", "tnum" 0;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+}
+::selection { background: var(--color-bg-accent-solid); color: #fff; }
+:focus-visible { outline: 2px solid var(--color-focus-accent-solid); outline-offset: 2px; border-radius: 8px; }
+.tnum { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--font-mono); letter-spacing: -0.02em; }
+[hidden] { display: none !important; }
+
+/* ---------- Typography (ZEN text styles) ---------- */
+@utility t-display { font-size: var(--text-display-2); line-height: var(--text-display-2--line-height); letter-spacing: var(--text-display-2--letter-spacing); font-weight: 600; }
+@utility t-h1 { font-size: var(--text-heading-1); line-height: var(--text-heading-1--line-height); letter-spacing: var(--text-heading-1--letter-spacing); font-weight: 600; }
+@utility t-h2 { font-size: var(--text-heading-2); line-height: var(--text-heading-2--line-height); letter-spacing: var(--text-heading-2--letter-spacing); font-weight: 600; }
+@utility t-h3 { font-size: var(--text-heading-3); line-height: var(--text-heading-3--line-height); letter-spacing: var(--text-heading-3--letter-spacing); font-weight: 600; }
+@utility t-h4 { font-size: var(--text-heading-4); line-height: var(--text-heading-4--line-height); letter-spacing: var(--text-heading-4--letter-spacing); font-weight: 600; }
+@utility t-sub { font-size: var(--text-subheading); line-height: var(--text-subheading--line-height); letter-spacing: var(--text-subheading--letter-spacing); font-weight: 600; }
+@utility t-lg { font-size: var(--text-body-extra); line-height: var(--text-body-extra--line-height); letter-spacing: var(--text-body-extra--letter-spacing); }
+@utility t-base { font-size: var(--text-body-base); line-height: var(--text-body-base--line-height); letter-spacing: var(--text-body-base--letter-spacing); }
+@utility t-sm { font-size: var(--text-body-small); line-height: var(--text-body-small--line-height); letter-spacing: var(--text-body-small--letter-spacing); }
+@utility t-cap { font-size: var(--text-caption); line-height: var(--text-caption--line-height); letter-spacing: 0.04em; text-transform: uppercase; font-weight: 500; }
+@utility t-eyebrow { font-family: var(--font-mono); font-size: var(--text-body-small); line-height: 1; letter-spacing: 0; text-transform: uppercase; color: var(--color-content-neutral-base); }
+
+/* Components live in a layer so Tailwind utilities can override them. */
+@layer components {
+/* ---------- Pressable (ZEN) ---------- */
+.pressable {
+  transition-property: transform, background-color, border-color, color, box-shadow, opacity;
+  transition-duration: var(--motion-slow), var(--motion-fast), var(--motion-fast), var(--motion-fast), var(--motion-fast), var(--motion-fast);
+  transition-timing-function: var(--ease-spring), var(--ease-standard), var(--ease-standard), var(--ease-standard), var(--ease-standard), var(--ease-standard);
+}
+.pressable:active:not(:disabled):not([aria-disabled="true"]) {
+  transition-duration: var(--motion-instant), var(--motion-fast), var(--motion-fast), var(--motion-fast), var(--motion-fast), var(--motion-fast);
+  transition-timing-function: var(--ease-standard);
+  transform: scale(0.97, 0.94);
+}
+
+/* ---------- Button ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: var(--button-md-h); padding: 0 20px; border-radius: var(--radius-action-md);
+  font-weight: 600; font-size: var(--text-button-m); line-height: var(--text-button-m--line-height); letter-spacing: var(--text-button-m--letter-spacing);
+  white-space: nowrap; user-select: none; cursor: pointer; border: 1px solid transparent;
+}
+.btn-lg { height: var(--button-lg-h); padding: 0 24px; font-size: var(--text-button-l); }
+.btn-sm { height: var(--button-sm-h); padding: 0 16px; font-size: var(--text-button-s); }
+.btn-xs { height: var(--button-xs-h); padding: 0 12px; font-size: var(--text-button-xs); gap: 4px; }
+.btn-block { width: 100%; }
+.btn-primary { background: var(--c-button-primary-bg); color: var(--c-button-primary-fg); }
+@media (hover: hover) { .btn-primary:hover { background: var(--c-button-primary-bg-hover); } }
+.btn-primary:active { background: var(--c-button-primary-bg-pressed); }
+.btn-secondary { background: var(--color-bg-neutral-subtle); color: var(--color-content-neutral-strongest); }
+@media (hover: hover) { .btn-secondary:hover { background: var(--color-bg-neutral-subtle-hover); } }
+.btn-tertiary { background: var(--c-button-tertiary-bg); color: var(--c-button-tertiary-fg); border-color: var(--c-button-tertiary-border); box-shadow: var(--shadow-action); }
+@media (hover: hover) { .btn-tertiary:hover { background: var(--c-button-tertiary-bg-hover); } }
+.btn-flat { background: transparent; color: var(--color-content-neutral-strongest); }
+@media (hover: hover) { .btn-flat:hover { background: var(--color-bg-neutral-flat-hover); } }
+.btn-danger { background: transparent; color: var(--color-content-negative-base); border-color: var(--color-border-negative-subtle); }
+.btn:disabled, .btn[aria-disabled="true"] { background: var(--color-bg-fill-disabled-neutral-solid); color: var(--color-content-disabled); border-color: transparent; box-shadow: none; cursor: not-allowed; }
+.btn .spin { animation: zen-spin 0.8s linear infinite; }
+.icon-btn { display: inline-grid; place-items: center; width: var(--button-md-h); height: var(--button-md-h); border-radius: var(--radius-full); color: var(--color-content-neutral-strongest); }
+.icon-btn.sm { width: var(--button-sm-h); height: var(--button-sm-h); }
+@media (hover: hover) { .icon-btn:hover { background: var(--color-bg-neutral-flat-hover); } }
+
+/* ---------- Surfaces ---------- */
+.card { background: var(--color-bg-surface); border-radius: var(--radius-2xl); box-shadow: var(--shadow-container); border: 1px solid var(--color-border-container-subtle); }
+.card-flat { background: var(--color-bg-surface); border-radius: var(--radius-2xl); border: 1px solid var(--color-border-neutral-pale); }
+.well { background: var(--color-bg-neutral-pale); border-radius: var(--radius-lg); }
+.hair-b { border-bottom: 1px solid var(--color-border-neutral-pale); }
+.hair-t { border-top: 1px solid var(--color-border-neutral-pale); }
+.ink { background: var(--color-bg-accent-solid); color: var(--color-content-on-accent); }
+.ink .muted-ink { color: color-mix(in oklab, var(--color-content-on-accent) 78%, transparent); }
+
+/* ---------- Badge / Tag ---------- */
+.badge { display: inline-flex; align-items: center; gap: 4px; height: var(--badge-xs-h, 20px); padding: 0 8px; border-radius: var(--radius-full); font-size: var(--text-badge-s); line-height: 1; font-weight: 500; white-space: nowrap; background: var(--color-bg-neutral-subtle); color: var(--color-content-neutral-strongest); }
+.badge-md { height: var(--badge-sm-h); padding: 0 10px; }
+.badge-solid { background: var(--color-bg-neutral-solid); color: var(--color-content-inverse-strongest); }
+.badge-outline { background: transparent; box-shadow: inset 0 0 0 1px var(--color-border-neutral-subtle); }
+.badge-dash { background: transparent; box-shadow: none; outline: 1px dashed var(--color-border-neutral-subtle-hover); outline-offset: -1px; }
+
+/* ---------- Chip (selectable) ---------- */
+.chip { display: inline-flex; align-items: center; gap: 8px; height: var(--chip-sm-h); padding: 0 var(--chip-sm-px); border-radius: var(--radius-full); background: var(--c-chip-primary-bg-unselected); border: 1px solid var(--c-chip-primary-border); font-weight: 500; cursor: pointer; }
+@media (hover: hover) { .chip:hover { background: var(--c-chip-primary-bg-unselected-hover); border-color: var(--c-chip-primary-border-hover); } }
+.chip[aria-pressed="true"], .chip[aria-checked="true"] { background: var(--c-chip-primary-bg-selected); color: var(--c-chip-primary-fg-selected); border-color: transparent; }
+
+/* ---------- Segmented ---------- */
+.seg { display: flex; gap: 4px; padding: 4px; border-radius: var(--radius-full); background: var(--color-bg-neutral-subtle); position: relative; isolation: isolate; }
+.seg > button { flex: 1; height: var(--segmented-md-h); border-radius: var(--radius-full); font-weight: 500; color: var(--color-content-neutral-base); position: relative; z-index: 1; transition: color var(--motion-fast) var(--ease-standard); white-space: nowrap; padding: 0 12px; }
+.seg > button[aria-pressed="true"], .seg > button[aria-selected="true"] { color: var(--color-content-neutral-strongest); }
+.seg .seg-thumb { position: absolute; z-index: 0; top: 4px; bottom: 4px; border-radius: var(--radius-full); background: var(--color-bg-surface); box-shadow: var(--shadow-bottom-1); transition: left var(--motion-slow) var(--ease-emphasized), width var(--motion-slow) var(--ease-emphasized); }
+
+/* ---------- Inputs ---------- */
+.field { display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); }
+.field > label, .label { font-weight: 500; font-size: var(--text-body-small); line-height: var(--text-body-small--line-height); color: var(--color-content-neutral-base); }
+.input { height: var(--input-lg-h); padding: 0 16px; border-radius: var(--radius-input-lg); background: var(--c-input-bg); border: 1px solid var(--c-input-border); width: 100%; font-size: var(--text-body-extra); transition: border-color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard); appearance: none; }
+.input:hover { border-color: var(--c-input-border-hover); }
+.input:focus { outline: none; border-color: var(--color-border-neutral-solid); box-shadow: 0 0 0 3px var(--color-bg-neutral-subtle); }
+select.input { background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%); background-position: calc(100% - 22px) 50%, calc(100% - 16px) 50%; background-size: 6px 6px; background-repeat: no-repeat; padding-right: 40px; }
+
+/* ---------- Toggle ---------- */
+.toggle { width: 44px; height: 26px; border-radius: 99px; background: var(--c-toggle-bar-bg-unselected); position: relative; flex: none; transition: background var(--motion-fast) var(--ease-standard); }
+.toggle::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 99px; background: var(--c-toggle-dot-bg-unselected-default); box-shadow: var(--shadow-bottom-1); transition: transform var(--motion-slow) var(--ease-spring); }
+.toggle[aria-checked="true"] { background: var(--c-toggle-bar-bg-selected); }
+.toggle[aria-checked="true"]::after { transform: translateX(18px); background: var(--c-toggle-dot-bg-selected-default); }
+
+/* ---------- Progress & meters ---------- */
+.meter { height: 6px; border-radius: 99px; background: var(--color-bg-neutral-subtle); overflow: hidden; }
+.meter > i { display: block; height: 100%; border-radius: inherit; background: var(--color-bg-accent-solid); transform-origin: left; }
+.skeleton { background: linear-gradient(90deg, var(--color-bg-neutral-subtle) 0%, var(--color-bg-neutral-pale) 50%, var(--color-bg-neutral-subtle) 100%); background-size: 200% 100%; animation: zen-shimmer 1.4s linear infinite; border-radius: 12px; }
+
+/* ---------- Layout helpers ---------- */
+.app-gutter { padding-left: var(--grid-margin-comfortable); padding-right: var(--grid-margin-comfortable); }
+.safe-b { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+.modal-shell { position: fixed; inset: 0; margin: 0; padding: 0; width: 100%; height: 100%; max-width: none; max-height: none; border: 0; background: transparent; color: inherit; }
+.modal-shell::backdrop { background: transparent; }
+.scrim { background: var(--color-bg-overlay); }
+.no-scrollbar { scrollbar-width: none; } .no-scrollbar::-webkit-scrollbar { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="slow"]) { --motion-instant: 0s; --motion-fast: 0s; --motion-base: 0s; --motion-slow: 0s; --motion-slower: 0s; }
+}

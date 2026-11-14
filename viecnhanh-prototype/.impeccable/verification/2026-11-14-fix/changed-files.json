@@ -1,0 +1,19 @@
+[
+  "scripts\\check-scoring.ts",
+  "src\\app\\globals.css",
+  "src\\app\\page.tsx",
+  "src\\app\\hr\\page.tsx",
+  "src\\app\\hr\\candidates\\[id]\\page.tsx",
+  "src\\app\\worker\\analyzing\\page.tsx",
+  "src\\app\\worker\\applications\\page.tsx",
+  "src\\app\\worker\\jobs\\layout.tsx",
+  "src\\app\\worker\\jobs\\[id]\\page.tsx",
+  "src\\app\\worker\\wallet\\page.tsx",
+  "src\\components\\DemoPanel.tsx",
+  "src\\components\\ui.tsx",
+  "src\\components\\worker\\Blocks.tsx",
+  "src\\lib\\hr-i18n.ts",
+  "src\\lib\\motion.ts",
+  "src\\lib\\pay.ts",
+  "src\\lib\\scoring.ts"
+]
