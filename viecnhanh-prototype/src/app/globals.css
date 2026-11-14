@@ -69,7 +69,7 @@
   --color-pos: var(--color-content-positive-base);
   --color-neg: var(--color-content-negative-base);
   --color-warn: var(--color-content-warning-base);
-  --font-sans: var(--font-inter), "Inter", "Hiragino Sans", "Yu Gothic UI", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-bevn), "Be Vietnam Pro", "Hiragino Sans", "Yu Gothic UI", "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), "JetBrains Mono", ui-monospace, monospace;
   --breakpoint-md: 744px;
   --breakpoint-lg: 1024px;
@@ -101,6 +101,14 @@ body {
 :focus-visible { outline: 2px solid var(--color-focus-accent-solid); outline-offset: 2px; border-radius: 8px; }
 .tnum { font-variant-numeric: tabular-nums; }
 .mono { font-family: var(--font-mono); letter-spacing: -0.02em; }
+/* LED fine-dot money numerals. Only for amounts >= 32px; smaller numbers use .mono. */
+@utility led {
+  font-family: var(--font-mono); font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+  -webkit-mask-image: radial-gradient(circle at center, #000 62%, transparent 66%);
+  mask-image: radial-gradient(circle at center, #000 62%, transparent 66%);
+  -webkit-mask-size: 3px 3px; mask-size: 3px 3px;
+}
+@media (forced-colors: active) { .led { -webkit-mask-image: none; mask-image: none; } }
 [hidden] { display: none !important; }
 
 /* ---------- Typography (ZEN text styles) ---------- */

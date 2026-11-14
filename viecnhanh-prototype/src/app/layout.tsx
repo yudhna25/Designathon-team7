@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Be_Vietnam_Pro, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 
-const inter = Inter({ variable: "--font-inter", subsets: ["latin", "vietnamese"], display: "swap" });
+const bevn = Be_Vietnam_Pro({ variable: "--font-bevn", subsets: ["latin", "vietnamese"], weight: ["400", "500", "600", "700", "800"], display: "swap" });
 const mono = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["latin", "vietnamese"], display: "swap" });
 
 export const metadata: Metadata = {
@@ -26,11 +26,11 @@ const boot = `try{var s=JSON.parse(localStorage.getItem("viecnhanh-demo-v2")||"{
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="vi" data-emphasis="brand" suppressHydrationWarning>
+    <html lang="vi" data-emphasis="brand" className={`${bevn.variable} ${mono.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: boot }} />
       </head>
-      <body className={`${inter.variable} ${mono.variable}`}>
+      <body>
         <Providers>{children}</Providers>
       </body>
     </html>

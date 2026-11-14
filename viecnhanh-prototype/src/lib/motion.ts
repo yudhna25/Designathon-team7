@@ -17,7 +17,12 @@ export function useReveal(scope: RefObject<HTMLElement | null>, deps: unknown[] 
     () => {
       const els = gsap.utils.toArray<HTMLElement>("[data-reveal]", scope.current);
       if (!els.length) return;
+      // Content must never wait on animation: skip when hidden (rAF paused) or motion is off.
+      const quiet = document.visibilityState !== "visible" || matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.dataset.motion === "off";
+      if (quiet) return;
       enter(els, { y: 18 }, { duration: 0.8, stagger: 0.045 });
+      const t = setTimeout(() => gsap.set(els, { clearProps: "opacity,visibility,transform" }), 1500);
+      return () => clearTimeout(t);
     },
     { scope, dependencies: deps },
   );
