@@ -47,3 +47,26 @@ assert.match(hrT("ja").toastApprove("Tuấn Anh"), /面接案内/, "Japanese app
 assert.doesNotMatch(hrT("ja").toastApprove("Tuấn Anh"), /採用/, "an interview invitation must not announce hiring");
 console.log("take-home mikawa:", pay);
 console.log("OK");
+
+// --- M4: earliest start, legal path, 3-month trial, peers, 300-hire plan ---
+import { earliestStart, fmtDate, legalPath } from "../src/lib/start";
+import { PEERS, HIRE_PLAN } from "../src/lib/data";
+const hrDay = Date.parse("2026-11-16T09:00:00+09:00");
+assert.equal(fmtDate(earliestStart(p, hrDay).date), "07/01/2027", "SSW job change = HR day + 7 + 45");
+assert.equal(earliestStart(p, hrDay).statusChange, true);
+const res = { ...p, visa: "resident" as const, availableInDays: 14 };
+assert.equal(fmtDate(earliestStart(res, hrDay).date), "30/11/2026", "residents need no status change");
+assert.equal(fmtDate(earliestStart({ ...p, availableInDays: 60 }, hrDay).date), "15/01/2027", "later of review and own availability");
+assert.match(earliestStart(p, hrDay).reason, /chuyển đổi tư cách lưu trú/);
+assert.equal(jobById("mikawa-cnc")!.headcount, 300);
+assert.equal(jobById("mikawa-cnc")!.contractMonths, 3);
+assert.ok(JOBS.every((j) => typeof j.verified === "boolean"));
+assert.ok(PEERS["mikawa-cnc"].peers.some((x) => x.askable), "key job has a volunteer to ask");
+const path = legalPath(p, hrDay);
+assert.deepEqual(path.map((x) => x.key), ["approve", "docs", "file", "review", "card", "day1"]);
+assert.equal(fmtDate(path.at(-1)!.at), fmtDate(earliestStart(p, hrDay).date), "flight-path ends on the start date");
+assert.deepEqual(legalPath(res, hrDay).map((x) => x.key), ["approve", "day1"]);
+assert.ok(!path.some((x) => /đảm bảo|guarantee/i.test(x.label + x.note)), "never promise a date");
+assert.ok(PEERS["mikawa-cnc"].peers.every((x) => x.attendanceVerified || !x.askable), "only attendance-verified peers are askable");
+assert.equal(HIRE_PLAN.jobId, "mikawa-cnc"); assert.equal(HIRE_PLAN.target, 300); assert.equal(HIRE_PLAN.filledByDay.length, HIRE_PLAN.days);
+console.log("M4 data checks OK");

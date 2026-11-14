@@ -163,6 +163,8 @@ export type Profile = {
   relocate: boolean; // ok to move if dorm provided
   otherSkills?: string; // free text ("Khác")
   otherCerts?: string;
+  province: string; // hometown province in Vietnam, used to match a hometown senpai
+  currentCompany?: string; // only used to avoid matching a senpai at the same company; never shown
 };
 
 export type Option = { vi: string; en: string; ja: string };
@@ -188,6 +190,9 @@ export type Job = {
   jlptMin: number;
   startWithinDays: number;
   headcount: number;
+  contractMonths?: number; // trial contract length, if any
+  renewable?: boolean;
+  verified: boolean; // company checked by ViệcNhanh
   isNewPlant?: boolean;
   perks: string[];
   questions?: Question[]; // extra questions set up by the employer
@@ -213,7 +218,10 @@ export const JOBS: Job[] = [
     certs: [],
     jlptMin: 1,
     startWithinDays: 45,
-    headcount: 120,
+    headcount: 300,
+    verified: true,
+    contractMonths: 3,
+    renewable: true,
     isNewPlant: true,
     perks: ["Nhà máy mới · mở 12/2026", "Ký túc xá 1 người/phòng", "Xe đưa đón từ ga"],
     questions: [
@@ -241,6 +249,7 @@ export const JOBS: Job[] = [
     jlptMin: 2,
     startWithinDays: 45,
     headcount: 30,
+    verified: true,
     perks: ["Chỉ ca ngày", "Nghỉ thứ 7 & CN"],
   },
   {
@@ -263,6 +272,7 @@ export const JOBS: Job[] = [
     jlptMin: 2,
     startWithinDays: 30,
     headcount: 12,
+    verified: true,
     perks: ["Gần ga JR Kariya", "Trợ cấp đi lại"],
   },
   {
@@ -285,6 +295,7 @@ export const JOBS: Job[] = [
     jlptMin: 2,
     startWithinDays: 30,
     headcount: 8,
+    verified: true,
     perks: ["Lương cao nhất khu vực"],
   },
   {
@@ -307,6 +318,7 @@ export const JOBS: Job[] = [
     jlptMin: 1,
     startWithinDays: 14,
     headcount: 15,
+    verified: false,
     perks: ["Không cần đứng máy"],
   },
   {
@@ -329,6 +341,7 @@ export const JOBS: Job[] = [
     jlptMin: 1,
     startWithinDays: 30,
     headcount: 25,
+    verified: true,
     perks: ["Ký túc xá rẻ"],
   },
   {
@@ -351,6 +364,7 @@ export const JOBS: Job[] = [
     jlptMin: 1,
     startWithinDays: 14,
     headcount: 40,
+    verified: true,
     perks: [],
   },
 ];
@@ -372,6 +386,8 @@ export const DEMO_PROFILE: Profile = {
   availableInDays: 30,
   city: "chiryu",
   relocate: true,
+  province: "Nghệ An",
+  currentCompany: "Kariya Parts",
 };
 
 // Other applicants for HR view. hoursAgo is relative to first app load.
@@ -394,6 +410,7 @@ const P = (p: Partial<Profile> & Pick<Profile, "name">): Profile => ({
   availableInDays: 14,
   city: "toyota",
   relocate: true,
+  province: "Hà Tĩnh",
   ...p,
 });
 
@@ -411,5 +428,28 @@ export const SEED_CANDIDATES: SeedCandidate[] = [
   { id: "x2", jobId: KEY_JOB_ID, hoursAgo: 8, status: "sent", profile: P({ name: "Bùi Thị Hạnh", visa: "intern", skills: { cnc_lathe: 2 } }) },
   { id: "x3", jobId: KEY_JOB_ID, hoursAgo: 9, status: "sent", profile: P({ name: "Kim Tuấn", visa: "engineer", skills: { cnc_lathe: 1 }, jlpt: 4 }) },
 ];
+
+// Demo data — mô phỏng, không phải số liệu thật.
+// Vietnamese workers already at each plant. Only askable + attendance-verified people can be asked (hometown senpai).
+export type Peer = { id: string; name: string; years: number; quote: string; rating: number; askable: boolean; province: string; attendanceVerified: boolean };
+export const PEERS: Record<string, { count: number; peers: Peer[] }> = {
+  "mikawa-cnc": {
+    count: 12,
+    peers: [
+      { id: "pe1", name: "Đặng Văn Hùng", years: 2, quote: "Tăng ca đúng mô tả, ký túc xá sạch.", rating: 4.6, askable: true, province: "Nghệ An", attendanceVerified: true },
+      { id: "pe2", name: "Lý Thị Thu", years: 1, quote: "Tổ trưởng người Nhật dễ tính, dạy kỹ.", rating: 4.4, askable: true, province: "Thanh Hoá", attendanceVerified: true },
+      { id: "pe3", name: "Cao Minh Đức", years: 3, quote: "Ca đêm hơi mệt nhưng phụ cấp tốt.", rating: 4.2, askable: false, province: "Nam Định", attendanceVerified: true },
+    ],
+  },
+  "okazaki-nc": {
+    count: 5,
+    peers: [
+      { id: "pe4", name: "Vương Quốc Huy", years: 2, quote: "Việc đều, ít tăng ca hơn quảng cáo.", rating: 4.0, askable: true, province: "Hà Tĩnh", attendanceVerified: true },
+    ],
+  },
+};
+
+// Demo data — mô phỏng. Key client: 3-month trial, 300 workers in week 1 (M3 market event). Day index is 0-based.
+export const HIRE_PLAN = { jobId: KEY_JOB_ID, target: 300, days: 7, filledByDay: [38, 41, 35, 44, 0, 0, 0], today: 3 };
 
 export const JPY_TO_VND = 172; // reference rate for display only

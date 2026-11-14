@@ -8,7 +8,7 @@ import { visaGate } from "@/lib/scoring";
 import { useApp } from "@/lib/store";
 import { enter, gsap, useGSAP } from "@/lib/motion";
 
-const EMPTY: Profile = { name: "", nationality: "VN", visa: "ssw1_mfg", cardExpiry: "", skills: {}, certs: [], jlpt: 2, availableInDays: 30, city: "chiryu", relocate: true };
+const EMPTY: Profile = { name: "", nationality: "VN", visa: "ssw1_mfg", cardExpiry: "", skills: {}, certs: [], jlpt: 2, availableInDays: 30, city: "chiryu", relocate: true, province: "" };
 
 export default function Page() {
   return <Suspense><Onboarding /></Suspense>;
