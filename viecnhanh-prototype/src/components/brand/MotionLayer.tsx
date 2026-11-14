@@ -35,6 +35,8 @@ export function MotionLayer() {
         curtain(() => router.push(to));
         return;
       }
+      // Tab bars switch instantly; the morph is for moving deeper (pass → job detail, list → item).
+      if (a.closest("nav, header, aside[aria-label]")) return;
       if (/^\/(worker|hr)/.test(url.pathname)) {
         e.preventDefault();
         withViewTransition(() => router.push(to), { asyncRoute: true });

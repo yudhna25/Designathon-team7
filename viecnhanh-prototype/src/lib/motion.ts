@@ -54,7 +54,9 @@ export function resolveViewTransition() {
   if (resolvePendingVT) {
     const r = resolvePendingVT;
     resolvePendingVT = null;
-    requestAnimationFrame(() => r());
+    // Not rAF: rendering is paused while a View Transition waits for its update callback, so rAF never fires
+    // and the browser holds the old frame until its ~4s timeout. A macrotask lets React commit, then resolves.
+    setTimeout(r, 0);
   }
 }
 
