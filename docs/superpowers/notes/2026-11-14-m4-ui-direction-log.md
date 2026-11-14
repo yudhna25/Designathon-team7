@@ -39,3 +39,4 @@ Running notes from the visual-direction brainstorm. Mockups: `.superpowers/brain
 - UX reframed: problem = few connections → can't quickly find legal work; HMW adds "know exactly when they can start"; key feature "Build Trust by People" via Zalo OA. Spec §1 updated with proposals: 2 trust sources, opt-in "người hỏi được" (no contact scraping), "Bắt đầu sớm nhất" date on card.
 - Repo: github.com/yudhna25/Designathon-team7 (private). Teammate owns Zalo OA flow on `feat/zalo-oa-flow`.
 - Team confirmed the 4 §1 proposals; start-date rule = HR approval + 7d docs + 45d ISA review (ISA stats ~41–64d for SSW1).
+- Teammate micro-interactions adopted (14/11): Legal Flight-Path (dates stay 'dự kiến', no 'guaranteed') and anonymous Hometown Senpai (verified by EWA attendance, reveal only on offer accept). Spec §6b, plan Tasks 5A/5B.

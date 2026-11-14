@@ -19,8 +19,8 @@ BTC chấm UX Design 40% và UI Design 40%. Phần UI phải *kể lại đượ
 1. Niềm tin có **2 nguồn**, cả hai đều phải hiện trên thẻ việc:
    - *ViệcNhanh xác minh*: visa đúng ngành, công ty có thật, lương thực nhận.
    - *Người Việt đang làm ở đó*: xác nhận thực tế ("tăng ca đúng mô tả") và hỏi được.
-2. "Người có thể quen" làm theo kiểu **tự nguyện**: người đang làm *chọn* làm "người hỏi được", có thưởng giới thiệu. **Không** quét danh bạ hay danh sách bạn Zalo. Lý do: chưa xác minh được API Zalo cho phép điều này, và thợ đang làm ở công ty cũ thường không muốn lộ việc mình đang tìm việc.
-3. Vế "biết chính xác ngày bắt đầu" phải thành **một ngày cụ thể** trên thẻ: `Bắt đầu sớm nhất: dd/mm`, tính từ tình trạng lưu trú, kèm 1 dòng lý do.
+2. "Người có thể quen" làm theo kiểu **tự nguyện**: người đang làm *chọn* làm "người hỏi được", có thưởng giới thiệu. **Không** quét danh bạ hay danh sách bạn Zalo. Lý do: chưa xác minh được API Zalo cho phép điều này, và thợ đang làm ở công ty cũ thường không muốn lộ việc mình đang tìm việc. → Cụ thể hoá bằng **Hỏi Senpai cùng quê (ẩn danh)**, xem §6b.
+3. Vế "biết chính xác ngày bắt đầu" phải thành **một ngày cụ thể** trên thẻ: `Bắt đầu sớm nhất: dd/mm`, tính từ tình trạng lưu trú, kèm 1 dòng lý do. → Hiển thị bằng **Lộ trình pháp lý** (Legal Flight-Path), xem §6b.
    - **Quy tắc tính (dùng cho demo):** thợ SSW (i) đổi công ty phải xin *chuyển đổi tư cách lưu trú* (在留資格変更許可申請). Thống kê của Cục XNC Nhật (ISA) cho 特定技能1号 vào khoảng **41–64 ngày** xét duyệt. Spec chọn:
      `Bắt đầu sớm nhất = ngày HR duyệt + 7 ngày chuẩn bị hồ sơ + 45 ngày xét duyệt` (≈ 7–8 tuần).
    - Ví dụ demo: HR duyệt 16/11/2026 → **Bắt đầu sớm nhất: 07/01/2027**.
@@ -108,7 +108,7 @@ Tham chiếu: `#m-top1-home` và `#m-top1-path` trong `.superpowers/brainstorm/5
 
 | Ô | Kích thước | Nội dung | Ưu tiên |
 |---|---|---|---|
-| **Người Việt ở đây** | lớn (2 cột) | avatar 3 người, 1 câu xác nhận ("Tăng ca đúng mô tả" · Hùng · 4,6★), nút **Hỏi anh Hùng qua Zalo** (người đã chọn làm người hỏi được) | **P0**, ô chính của khung "Build Trust by People" |
+| **Người Việt ở đây** | lớn (2 cột) | avatar 3 người, 1 câu xác nhận ("Tăng ca đúng mô tả" · Hùng · 4,6★), nút **Hỏi Senpai cùng quê · ẩn danh** (chỉ người đã tự nguyện, ưu tiên cùng tỉnh; xem §6b) | **P0**, ô chính của khung "Build Trust by People" |
 | Mức phù hợp | vừa | tiêu chí đạt ✓/✗, visa đúng ngành là cổng | P0 |
 | Vòng 24h | vừa | chỉ hiện khi đã ứng tuyển: thời gian HR còn lại | P0 |
 | Lộ trình tay nghề | vừa | chỉ hiện khi còn thiếu điều kiện: "Còn 1 bước để rất phù hợp" | P1 |
@@ -129,6 +129,24 @@ Tham chiếu: `#m-top1-home` và `#m-top1-path` trong `.superpowers/brainstorm/5
 
 **Tính năng ghép thêm:** Trợ lý AI hỏi–đáp (hỏi bằng giọng/chữ tiếng Việt, câu trả lời trích dẫn việc cụ thể kèm gợi ý hỏi tiếp).
 
+## 6b. Micro-interaction (ý của teammate, đã điều chỉnh)
+
+### A. Lộ trình pháp lý · Legal Flight-Path (P0, ở chi tiết việc)
+- **Tương tác:** chạm dòng `Bắt đầu sớm nhất` trên thẻ hoặc ở chi tiết việc → mở thanh mốc từng bước, thay cho câu ước lượng chung chung.
+- **Phản hồi:** các mốc khoá theo **đúng loại visa** của thợ. Bước nào là thủ tục bắt buộc của Cục XNC thì có biểu tượng khoá. Cuối thanh là **ngày bắt đầu** đặt cạnh **lương thực nhận** (số LED).
+- **Mốc cho SSW (i) đổi công ty:** HR duyệt → Công ty gửi giấy tờ (≈7 ngày) → Nộp đơn chuyển đổi tư cách lưu trú tại Cục XNC Nagoya → Chờ xét (thường 41–64 ngày) → Nhận thẻ cư trú mới → Ngày đầu đi làm + học an toàn tiếng Việt.
+- **Mốc cho định cư/vĩnh trú:** HR duyệt → Ngày đầu đi làm (không cần chuyển đổi).
+- Chạm một mốc → mở 1–2 câu giải thích và việc thợ cần làm ở mốc đó. Mốc hiện tại nhấp nháy nhẹ (tắt khi giảm chuyển động).
+- **Điều chỉnh so với ý gốc:** ý gốc ghi "guaranteed legal start date". Spec **không dùng chữ "đảm bảo"**. *Các bước* là chắc chắn (luật quy định), còn *ngày* là dự kiến vì thời gian xét của Cục XNC dao động. UI ghi: "Các bước là bắt buộc · ngày là dự kiến".
+
+### B. Hỏi Senpai cùng quê · chế độ ẩn danh (P0, ở thẻ việc và chi tiết việc)
+- **Tương tác:** nút `Hỏi Senpai cùng quê` → sheet chọn tối đa **3 câu hỏi** (chip có sẵn: tăng ca thật, ký túc xá, sếp/người Nhật, chuyện tiền lương + 1 ô tự viết) → gửi.
+- **Ẩn danh:** người hỏi hiện là `Thợ ẩn danh · cùng quê {tỉnh}`. Không lộ tên, ảnh, nơi làm hiện tại. Không ghép với Senpai đang làm ở **chính công ty hiện tại** của người hỏi.
+- **Senpai là ai:** người Việt đang làm ở nhà máy đó, **đã tự nguyện**, được ViệcNhanh xác minh **bằng dữ liệu chấm công của ví ứng lương** (đang thật sự đi làm ở đó). Ưu tiên cùng tỉnh, không có thì cùng vùng.
+- **Mở hồ sơ hai bên:** chỉ khi thợ **chính thức nhận việc** (nút `Nhận việc` sau khi được duyệt). Khi đó Zalo OA gửi tin mở hồ sơ hai bên để Senpai hỗ trợ ngày đầu. Trước mốc đó không có cách nào lộ danh tính.
+- **Điều chỉnh so với ý gốc:** ý gốc là "verified Vietnamese worker". Spec định nghĩa "verified" = có chấm công thật qua ví ứng lương, để trả lời câu hỏi "làm sao biết không phải người được trả tiền để nói tốt". Thêm 1 dòng trên sheet: "Senpai được thưởng giới thiệu khi bạn nhận việc. Câu trả lời là ý kiến cá nhân."
+- Tin "mở hồ sơ hai bên" đi qua Zalo OA → khớp với branch `feat/zalo-oa-flow` (xem §9).
+
 ## 7. Phạm vi màn hình (thứ tự ưu tiên)
 
 | Ưu tiên | Màn | Lý do |
@@ -136,6 +154,8 @@ Tham chiếu: `#m-top1-home` và `#m-top1-path` trong `.superpowers/brainstorm/5
 | P0 | Tin nhắn Zalo OA → mở Mini App (**teammate làm ở branch `feat/zalo-oa-flow`**) | Brief + feedback 3 + key feature |
 | P0 | Trang chủ thợ (thẻ + bento, ô người Việt ở đây) | Hành trình chính + Build Trust by People |
 | P0 | Chi tiết việc: lương thực nhận / ca / địa điểm / ngày bắt đầu sớm nhất / hợp đồng 3 tháng / người Việt đang làm | Feedback 1 + HMW + M3 |
+| P0 | Lộ trình pháp lý (Legal Flight-Path) | HMW "biết chính xác ngày bắt đầu" |
+| P0 | Hỏi Senpai cùng quê · ẩn danh + Nhận việc → mở hồ sơ hai bên | Key feature Build Trust by People |
 | P0 | Sheet xác minh theo tầng khi ứng tuyển lần đầu | Feedback 4 vs 6 |
 | P0 | Đơn đã gửi + vòng 24h + ngoại lệ quá hạn → 3 việc khác | Feedback 5 + ngoại lệ M3/M4 |
 | P0 | HR: tiến độ 0/300, duyệt theo đợt | Sự kiện M3 |
@@ -155,6 +175,7 @@ Tham chiếu: `#m-top1-home` và `#m-top1-path` trong `.superpowers/brainstorm/5
 
 - Codex đang sửa cùng codebase → chia file rõ trước khi code UI, hoặc làm UI sau khi Codex xong.
 - Repo: `github.com/yudhna25/Designathon-team7` (private). UI mới làm trên branch riêng (ví dụ `feat/ui-bento-card`), luồng Zalo OA ở `feat/zalo-oa-flow`. Hai bên cùng đụng `src/app/worker/page.tsx` (màn đăng nhập) và `src/components/worker/Shell.tsx` → chốt trước: **branch Zalo OA giữ màn vào/đăng nhập và tin nhắn OA; branch UI giữ trang chủ, chi tiết việc, bento**. Ai cần sửa file của bên kia thì báo trước.
+- Tin Zalo OA "mở hồ sơ hai bên" (Senpai) và "có việc hợp với bạn" do branch `feat/zalo-oa-flow` dựng giao diện tin nhắn. Branch UI chỉ gọi `toast("… qua Zalo OA")` và lưu trạng thái; hai bên thống nhất câu chữ tin nhắn.
 - Dữ liệu "người Việt ở đây" là **dữ liệu demo**. Trên slide phải ghi rõ là mô phỏng, không trình bày như số liệu thật.
 - Figma: đẩy từ code sang Figma (code → Figma), mỗi màn một frame 390px, HR 1280px.
 - Không deploy khi chưa hỏi trưởng nhóm.

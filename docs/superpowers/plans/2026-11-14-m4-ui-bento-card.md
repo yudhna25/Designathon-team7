@@ -27,9 +27,9 @@
 ## Review Focus
 
 1. **Hồ sơ chưa xong (`profile` null) hoặc thợ không phải SSW** (visa `resident`): `earliestStart` không được cộng 52 ngày cho người không cần đổi tư cách. Test ở Task 2.
-2. **Thợ có `availableInDays` lớn hơn thời gian xét duyệt** (ví dụ 60 ngày): ngày bắt đầu phải lấy mốc muộn hơn. Test ở Task 2.
+2. **Lộ danh tính người hỏi Senpai trước khi nhận việc** (tên, ảnh, công ty hiện tại lọt vào luồng hỏi): không được xảy ra; chỉ `acceptOffer` mới mở. Test ở Task 5B.
 3. **Duyệt theo đợt với ứng viên trượt cổng visa hoặc đã quyết rồi**: không được duyệt họ. Test ở Task 7.
-4. **Việc không có dữ liệu người Việt** (`PEERS` thiếu id): ô bento phải hiện trạng thái rỗng có ích, không vỡ layout. Test ở Task 2 + kiểm trực quan Task 4.
+4. **Senpai làm ở chính công ty hiện tại của người hỏi**: không được ghép (họ có thể nhận ra người hỏi). Test ở Task 5B. (Việc không có `PEERS` và `availableInDays` lớn vẫn được kiểm ở Task 2 và Task 4.)
 5. **Tab ẩn / rAF dừng khi demo** (GSAP không chạy): nội dung vẫn hiện. Kiểm ở Task 1.
 
 ---
@@ -67,22 +67,25 @@
 
 **Files:**
 - Create: `src/lib/start.ts`
-- Modify: `src/lib/data.ts` (type `Job`, job `mikawa-cnc`, thêm `PEERS`, `HIRE_PLAN`)
+- Modify: `src/lib/data.ts` (type `Job`, type `Profile`, job `mikawa-cnc`, `DEMO_PROFILE`, thêm `PEERS`, `HIRE_PLAN`)
 - Test: `scripts/check-scoring.ts` (thêm assert cuối file)
 
 **Interfaces:**
 - Produces:
   - `Job` thêm `contractMonths?: number; renewable?: boolean; verified: boolean`.
-  - `type Peer = { name: string; years: number; quote: string; rating: number; askable: boolean }`
+  - `Profile` thêm `province: string; currentCompany?: string` (`DEMO_PROFILE`: `province: "Nghệ An", currentCompany: "Kariya Parts"`; helper `P()` mặc định `province: "Hà Tĩnh"`; onboarding `EMPTY` có `province: ""`).
+  - `type Peer = { id: string; name: string; years: number; quote: string; rating: number; askable: boolean; province: string; attendanceVerified: boolean }`
   - `PEERS: Record<string, { count: number; peers: Peer[] }>` (key = `job.id`)
   - `HIRE_PLAN: { jobId: string; target: number; days: number; filledByDay: number[]; today: number }`
   - `STATUS_CHANGE_DAYS = 45`, `DOC_PREP_DAYS = 7`
   - `earliestStart(p: Profile, from: number): { date: Date; statusChange: boolean; reason: string }`
   - `fmtDate(d: Date): string` → `"dd/mm/yyyy"`
+  - `type PathStep = { key: "approve" | "docs" | "file" | "review" | "card" | "day1"; label: string; at: Date; legal: boolean; note: string }`
+  - `legalPath(p: Profile, from: number): PathStep[]` — cần chuyển đổi (SSW): 6 bước `approve`, `docs` (+7), `file` (+7), `review` (+52, note ghi "thường 41–64 ngày"), `card` (+52), `day1` (= `earliestStart`); không cần chuyển đổi: 2 bước `approve`, `day1`. `legal: true` cho `file`, `review`, `card`. Bước cuối luôn bằng `earliestStart(p, from).date`.
 
 - [ ] **Step 1: Viết assert (sẽ fail)** ở cuối `scripts/check-scoring.ts`:
   ```ts
-  import { earliestStart, fmtDate } from "../src/lib/start";
+  import { earliestStart, fmtDate, legalPath } from "../src/lib/start";
   import { PEERS, HIRE_PLAN } from "../src/lib/data";
   const hrDay = Date.parse("2026-11-16T09:00:00+09:00");
   assert.equal(fmtDate(earliestStart(p, hrDay).date), "07/01/2027", "SSW job change = HR day + 7 + 45");
@@ -95,13 +98,19 @@
   assert.equal(jobById("mikawa-cnc")!.contractMonths, 3);
   assert.ok(JOBS.every((j) => typeof j.verified === "boolean"));
   assert.ok(PEERS["mikawa-cnc"].peers.some((x) => x.askable), "key job has a volunteer to ask");
+  const path = legalPath(p, hrDay);
+  assert.deepEqual(path.map((x) => x.key), ["approve", "docs", "file", "review", "card", "day1"]);
+  assert.equal(fmtDate(path.at(-1)!.at), fmtDate(earliestStart(p, hrDay).date), "flight-path ends on the start date");
+  assert.deepEqual(legalPath(res, hrDay).map((x) => x.key), ["approve", "day1"]);
+  assert.ok(!path.some((x) => /đảm bảo|guarantee/i.test(x.label + x.note)), "never promise a date");
+  assert.ok(PEERS["mikawa-cnc"].peers.every((x) => x.attendanceVerified || !x.askable), "only attendance-verified peers are askable");
   assert.equal(HIRE_PLAN.jobId, "mikawa-cnc"); assert.equal(HIRE_PLAN.target, 300); assert.equal(HIRE_PLAN.filledByDay.length, HIRE_PLAN.days);
   ```
 - [ ] **Step 2:** Chạy `npx tsx scripts/check-scoring.ts` → FAIL (module `start` chưa có).
 - [ ] **Step 3: Viết `src/lib/start.ts`.** Đổi công ty cần xin chuyển đổi khi `p.visa` là `ssw1_mfg | ssw2_mfg | ssw1_food`. Khi đó mốc = `from + (DOC_PREP_DAYS + STATUS_CHANGE_DAYS) ngày`; ngược lại mốc = `from`. Kết quả = muộn hơn giữa mốc và `from + p.availableInDays ngày`. Tính theo ngày lịch giờ Nhật (`Asia/Tokyo`). `reason` khi `statusChange`: `"Đổi công ty cần xin chuyển đổi tư cách lưu trú, thường mất khoảng 6–9 tuần. Mùa cao điểm tháng 3–4 có thể lâu hơn."`; ngược lại: `"Tư cách lưu trú của bạn không cần xin chuyển đổi."`
-- [ ] **Step 4: Sửa `data.ts`:** thêm 3 trường vào `Job`; `mikawa-cnc`: `headcount: 300, contractMonths: 3, renewable: true`; mọi job `verified: true` trừ một job không phải khách chính (`verified: false`, để có trạng thái "Đang xác minh"). Thêm `PEERS` cho ít nhất `mikawa-cnc` (count 12, 3 người, trong đó `{ name: "Trần Văn Hùng", years: 2, quote: "Tăng ca đúng mô tả, ký túc xá sạch.", rating: 4.6, askable: true }`) và `okazaki-nc`; các job khác để trống. Thêm `HIRE_PLAN = { jobId: KEY_JOB_ID, target: 300, days: 7, filledByDay: [38, 41, 35, 44, 0, 0, 0], today: 3 }` (ngày 0-based; demo đang ở ngày 4/7). Comment đầu `PEERS` và `HIRE_PLAN`: `// Demo data — mô phỏng, không phải số liệu thật.`
+- [ ] **Step 4: Sửa `data.ts`:** thêm 3 trường vào `Job`; `mikawa-cnc`: `headcount: 300, contractMonths: 3, renewable: true`; mọi job `verified: true` trừ một job không phải khách chính (`verified: false`, để có trạng thái "Đang xác minh"). Thêm `PEERS` cho ít nhất `mikawa-cnc` (count 12, 3 người, trong đó `{ id: "pe1", name: "Đặng Văn Hùng", years: 2, quote: "Tăng ca đúng mô tả, ký túc xá sạch.", rating: 4.6, askable: true, province: "Nghệ An", attendanceVerified: true }`; một người `askable: false`; tên không trùng `SEED_CANDIDATES`) và `okazaki-nc`; các job khác để trống. Thêm `HIRE_PLAN = { jobId: KEY_JOB_ID, target: 300, days: 7, filledByDay: [38, 41, 35, 44, 0, 0, 0], today: 3 }` (ngày 0-based; demo đang ở ngày 4/7). Comment đầu `PEERS` và `HIRE_PLAN`: `// Demo data — mô phỏng, không phải số liệu thật.`
 - [ ] **Step 5:** `npx tsx scripts/check-scoring.ts` → in bảng điểm, không assert nào fail. `npx tsc --noEmit` → sạch (sửa chỗ nào `Job` literal thiếu `verified`).
-- [ ] **Step 6:** Commit `feat(data): earliest start date, 3-month trial, peers, 300-hire plan`.
+- [ ] **Step 6:** Commit `feat(data): earliest start, legal path, 3-month trial, peers, 300-hire plan`.
 
 ---
 
@@ -133,7 +142,7 @@
 
 - [ ] **Step 1: Băng thẻ.** Thay lưới `JobCard` trong `JobList` bằng hàng ngang `overflow-x-auto snap-x snap-mandatory` chứa `JobPass` (mỗi thẻ `snap-center`, rộng ~86% khung), chấm phân trang bên dưới cập nhật theo `IntersectionObserver`. Giữ bộ lọc "Tất cả / Rất phù hợp", khối "việc đã ẩn vì visa" và trạng thái rỗng như cũ. Khi có `?rescored=<id>`, cuộn thẻ đó vào giữa và giữ highlight (bỏ Flip reorder).
 - [ ] **Step 2: Bento** cho thẻ đang ở giữa, lưới 2 cột:
-  - `PeersTile` (2 cột, luôn đầu): 3 avatar, câu xác nhận của người đầu, `★ rating`, nút `Hỏi {tên} qua Zalo` chỉ với người `askable` (bấm → `toast("Đã gửi lời hỏi qua Zalo OA · {tên} trả lời khi rảnh")`). Không có dữ liệu → "Chưa có người Việt nào làm ở đây. Bạn có thể là người đầu tiên." + link "Xem việc có người Việt".
+  - `PeersTile` (2 cột, luôn đầu): 3 avatar, câu xác nhận của người đầu, `★ rating`, nút `Hỏi Senpai cùng quê · ẩn danh` khi có người `askable` (bấm → mở `SenpaiSheet` của Task 5B; nếu 5B chưa xong thì ẩn nút). Không có dữ liệu → "Chưa có người Việt nào làm ở đây. Bạn có thể là người đầu tiên." + link "Xem việc có người Việt".
   - `FitTile`: `MatchChips` từ `matchChips`.
   - `DeadlineTile`: chỉ khi `app` tồn tại và chưa đóng — vòng `ScoreRing` theo thời gian còn lại, nhãn `fmtLeft`.
   - `PathTile`: chỉ khi `fitOf(m, config.threshold) !== "great"` — "Còn {n} bước để rất phù hợp", link `/worker/improve?job=`.
@@ -161,6 +170,69 @@
 
 ---
 
+### Task 5A: Lộ trình pháp lý · Legal Flight-Path
+
+**Files:**
+- Create: `src/components/worker/FlightPath.tsx`
+- Modify: `src/app/worker/jobs/[id]/page.tsx` (Fact "Bắt đầu sớm nhất" của Task 5)
+- Modify: `src/components/worker/Pass.tsx` (dòng ngày bắt đầu)
+
+**Interfaces:**
+- Consumes: `legalPath`, `fmtDate`, `PathStep` (Task 2); `takeHome`, `yen` (pay.ts); `Sheet` (ui.tsx).
+- Produces: `FlightPath({ p, job, from, open, onClose }: { p: Profile; job: Job; from: number; open: boolean; onClose: () => void })`, hiển thị trong `Sheet`.
+
+- [ ] **Step 1:** Thanh dọc các `PathStep`: chấm + đường nối, bước `legal` có icon khoá và nhãn nhỏ "Thủ tục bắt buộc", ngày từng bước theo `fmtDate`. Bước hiện tại (bước đầu khi chưa ứng tuyển) có vòng sáng, nhịp nhẹ bằng CSS animation, tắt khi `prefers-reduced-motion` hoặc `data-motion="off"`.
+- [ ] **Step 2:** Chạm một bước → mở `note` ngay dưới bước đó (accordion, `aria-expanded`). Mỗi lúc chỉ mở một bước.
+- [ ] **Step 3:** Chân sheet: trái `Ngày đầu đi làm · {fmtDate} · dự kiến`, phải lương thực nhận `.led` ≥ 32px + "thực nhận/tháng". Dòng nhỏ cố định: `"Các bước là bắt buộc · ngày là dự kiến"`.
+- [ ] **Step 4:** Dòng ngày bắt đầu ở `JobPass` và Fact ở chi tiết việc thành nút mở `FlightPath` (trên `JobPass` gọi `e.preventDefault()` để không điều hướng Link).
+- [ ] **Step 5:** `npx tsc --noEmit` sạch. Kiểm 390px: hồ sơ demo (SSW) thấy 6 bước; đổi visa sang định cư trong onboarding thấy 2 bước.
+- [ ] **Step 6:** Commit `feat(worker): legal flight-path start-date tracker`.
+
+---
+
+### Task 5B: Hỏi Senpai cùng quê · ẩn danh
+
+**Files:**
+- Create: `src/lib/senpai.ts`
+- Create: `src/components/worker/SenpaiSheet.tsx`
+- Modify: `src/lib/store.ts` (state `threads`, action `askSenpai`, `acceptOffer`; `Application.accepted?: boolean`)
+- Modify: `src/components/worker/Bento.tsx` (`PeersTile` mở sheet), `src/app/worker/applications/page.tsx` (nút Nhận việc + thẻ mở hồ sơ)
+- Test: `scripts/check-scoring.ts`
+
+**Interfaces:**
+- Consumes: `PEERS`, `Peer`, `Profile`, `jobById` (Task 2); `Application` (store.ts).
+- Produces:
+  - `SENPAI_QUESTIONS: string[]` = `["Tăng ca thật mỗi tháng bao nhiêu giờ?", "Ký túc xá thế nào?", "Sếp và người Nhật ở đó đối xử ra sao?", "Lương có trả đúng như mô tả không?"]`
+  - `senpaiFor(p: Profile, jobId: string): Peer | null` — chỉ người `askable && attendanceVerified`; trả `null` nếu `jobById(jobId).company === p.currentCompany`; ưu tiên cùng `province`, rồi `years` lớn hơn.
+  - `askerLabel(p: Profile, revealed: boolean): string` — chưa mở: `"Thợ ẩn danh · cùng quê {province}"` khi Senpai cùng tỉnh, ngược lại `"Thợ ẩn danh"`; đã mở: `p.name`. (Hàm nhận thêm tham số `sameProvince = true`.)
+  - `isRevealed(apps: Application[], jobId: string): boolean` — có đơn `candidateId === "me"`, cùng `jobId`, `accepted === true`.
+  - `type Thread = { id: string; jobId: string; peerId: string; questions: string[]; answers: string[]; at: number }`
+  - store: `askSenpai(jobId: string, questions: string[]): string` (giữ tối đa 3 câu); `acceptOffer(appId: string): void` (chỉ có tác dụng khi `status === "approved"`).
+
+- [ ] **Step 1: Assert (sẽ fail):**
+  ```ts
+  import { askerLabel, senpaiFor, isRevealed } from "../src/lib/senpai";
+  assert.equal(senpaiFor(p, "mikawa-cnc")!.province, p.province, "same province first");
+  assert.equal(senpaiFor({ ...p, currentCompany: jobById("mikawa-cnc")!.company }, "mikawa-cnc"), null, "never match a senpai at the asker's current company");
+  assert.equal(askerLabel(p, false), "Thợ ẩn danh · cùng quê Nghệ An");
+  assert.ok(!askerLabel(p, false).includes(p.name) && !askerLabel(p, false).includes(p.currentCompany!), "no identity leaks before accept");
+  const offer = { id: "x", jobId: "mikawa-cnc", candidateId: "me", appliedAt: 0, status: "approved" as const };
+  assert.equal(isRevealed([offer], "mikawa-cnc"), false, "approval alone does not reveal");
+  assert.equal(isRevealed([{ ...offer, accepted: true }], "mikawa-cnc"), true);
+  ```
+- [ ] **Step 2:** Chạy `npx tsx scripts/check-scoring.ts` → FAIL. Viết `src/lib/senpai.ts` (kèm câu trả lời mẫu cho từng câu trong `SENPAI_QUESTIONS`: ngắn, thật, có cả điểm chưa tốt) → chạy lại → PASS.
+- [ ] **Step 3: `SenpaiSheet`:**
+  - Đầu sheet là thẻ Senpai: avatar, tên, `{years} năm ở đây`, `Cùng quê {province}`, huy hiệu `Đã xác minh chấm công`.
+  - Chip `SENPAI_QUESTIONS` + 1 ô tự viết, đếm `x/3`, khoá lựa chọn thứ 4.
+  - Dòng "Bạn hiện là: {askerLabel(p, false)}" kèm icon ẩn danh.
+  - Dòng minh bạch `"Senpai được thưởng giới thiệu khi bạn nhận việc. Câu trả lời là ý kiến cá nhân."`
+  - Nút `Gửi ẩn danh` → `askSenpai` → sau 2 giây hiện câu trả lời mẫu.
+- [ ] **Step 4: Nhận việc.** Ở `applications/page.tsx`, đơn `approved` có nút chính `Nhận việc` → `acceptOffer` → toast `"Đã nhận việc · Zalo OA đã mở hồ sơ hai bên với {senpai}"`, và trong đơn hiện thẻ "Senpai {tên} sẽ đón bạn ngày đầu". Trước bước này, luồng hỏi luôn hiện `askerLabel(p, false)`.
+- [ ] **Step 5:** `npx tsc --noEmit` sạch. Kiểm luồng: thẻ `mikawa-cnc` → Hỏi Senpai → chọn 3 câu → gửi → thấy trả lời; HR duyệt (DemoPanel) → Nhận việc → thấy thẻ mở hồ sơ.
+- [ ] **Step 6:** Commit `feat(worker): anonymous hometown senpai Q&A, reveal on offer accept`.
+
+---
+
 ### Task 6: Onboarding và hồ sơ — đóng mentor #1–#4, #6
 
 **Files:**
@@ -171,6 +243,7 @@
 **Interfaces:**
 - Produces: route `/worker/onboarding?edit=1&step={0|1|2}` mở thẳng bước đó, Lưu quay về `/worker/profile`.
 
+- [ ] **Step 0:** Bước visa thêm ô `Quê ở tỉnh nào?` (Picker 63 tỉnh, bắt buộc, dùng để ghép Senpai) và ô không bắt buộc `Đang làm ở công ty nào?` kèm dòng `"Chỉ để không ghép bạn với người cùng công ty. Không ai thấy thông tin này."`
 - [ ] **Step 1 (#2):** Bản nháp onboarding dùng `type Draft = Omit<Profile, "jlpt" | "city"> & { jlpt: number | null; city: CityId | "" }`; `EMPTY` có `jlpt: null, city: ""`. Nút Tiếp bị khoá đến khi chọn cả hai; chuyển `Draft → Profile` khi lưu.
 - [ ] **Step 2 (#3):** `titles[2] = "Bạn đi làm được từ ngày nào, ở thành phố nào?"`.
 - [ ] **Step 3 (#1, feedback 4):** Nhãn chứng chỉ `"Không bắt buộc · tăng mức phù hợp đến +{gain}%"`, `gain` = `suggestImprovements` lớn nhất cho chứng chỉ trên việc khách chính (làm tròn). Ô tải có 3 trạng thái hiển thị: đang tải (spinner + tên file), thành công (✓ + "Đã thêm · AI chấm lại"), lỗi (đỏ + "Thử lại"). Ảnh thẻ cư trú ở bước visa đổi thành **không bắt buộc** với dòng "Bạn có thể chụp sau, khi ứng tuyển".
@@ -265,7 +338,7 @@
 **Files:** không sửa code trừ khi QC tìm ra lỗi.
 
 - [ ] **Step 1:** Dừng dev server, chạy `npm run build` → build thành công, không cảnh báo hydration.
-- [ ] **Step 2:** Kiểm 390px + 1280px, sáng + tối, các màn: trang chủ thẻ+bento, chi tiết `mikawa-cnc`, sheet xác minh, đơn đã gửi (đang chờ / quá hạn), ví (thường / `ewaDown`), onboarding, hồ sơ, `/hr` EN + JA, `/worker/ask`. Không cuộn ngang, không chữ bị cắt dấu, lương LED to nhất ở thẻ.
+- [ ] **Step 2:** Kiểm 390px + 1280px, sáng + tối, các màn: trang chủ thẻ+bento, chi tiết `mikawa-cnc`, Lộ trình pháp lý (SSW 6 bước), sheet Hỏi Senpai (trước và sau Nhận việc), sheet xác minh, đơn đã gửi (đang chờ / quá hạn), ví (thường / `ewaDown`), onboarding, hồ sơ, `/hr` EN + JA, `/worker/ask`. Không cuộn ngang, không chữ bị cắt dấu, lương LED to nhất ở thẻ.
 - [ ] **Step 3:** Merge `main` mới nhất (có thể đã có Zalo OA) vào `feat/ui-bento-card`, giải xung đột theo phân chia ở Global Constraints, chạy lại Step 1.
 - [ ] **Step 4:** Đẩy từng màn ở Step 2 sang Figma (code → Figma), mỗi màn một frame 390 hoặc 1280, đặt tên `W01 Home · Bento + Thẻ`, `W02 Job detail`, …, `H01 HR · 0/300`. Gom trong page `M4 Final`.
 - [ ] **Step 5:** Hỏi trưởng nhóm trước khi deploy Vercel. Mở PR `feat/ui-bento-card → main`.
@@ -274,6 +347,6 @@
 
 ## Thứ tự & chạy song song
 
-Task 1 → 2 → 3 → 4 → 5 nối tiếp (phụ thuộc interface). Task 6 chỉ cần Task 1, chạy song song với 3–5 được (khác file). Task 7 cần Task 2. Task 8 cần Task 3 + 5. Task 9 cần Task 2. Nếu hết giờ: bỏ Task 9 trước, rồi phần ví ở Task 8; **không bỏ** Task 4, 5, 7.
+Task 1 → 2 → 3 → 4 → 5 → 5A → 5B nối tiếp (phụ thuộc interface). Task 6 chỉ cần Task 1, chạy song song với 3–5 được (khác file). Task 7 cần Task 2. Task 8 cần Task 3 + 5, và làm sau 5B (cùng sửa `applications/page.tsx`). Task 9 cần Task 2. Nếu hết giờ: bỏ Task 9 trước, rồi phần ví ở Task 8; **không bỏ** Task 4, 5, 5A, 5B, 7.
 
 **Cố ý không làm trong plan này** (P2 của spec, làm sau nếu còn giờ): chip kanji kèm nghĩa ở màn an toàn, công tắc `VI · やさしい日本語`, chế độ tối "ca đêm" riêng. Màn vào Zalo OA / Mini App thuộc branch `feat/zalo-oa-flow`.
