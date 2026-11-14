@@ -56,9 +56,9 @@ export function JobPass({ job, p, m, fit, now, applied, active, guest }: { job: 
         <span className="t-sm text-[#DCE3FC] block mt-1.5">{t("thực nhận mỗi tháng · ước tính", "月の手取り · 目安")}</span>
       </p>
       <button className="pointer-events-auto mt-3 t-sm font-semibold flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 -ml-1" onClick={() => setPath(true)} aria-label={t(`Bắt đầu sớm nhất ${start}, dự kiến. Xem lộ trình pháp lý`, `最短開始 ${start}（予定）。手続きの流れを見る`)}>
-        <Icon name="calendar" size={16} />{t(`Bắt đầu sớm nhất: ${start} · dự kiến`, `最短開始：${start}（予定）`)}<Icon name="chevron-right-01" size={14} />
+        <Icon name="calendar" size={16} />{t(`Bắt đầu ${start} · dự kiến`, `最短開始 ${start}（予定）`)}<Icon name="chevron-right-01" size={14} />
       </button>
-      <p className="mt-1 t-sm text-[#DCE3FC]">{ja ? SHIFT_JA[job.shift] : SHIFT_VI[job.shift]} · {ja ? CITIES[job.city].ja : CITIES[job.city].vi} · {km < 1 ? t("cùng thành phố với bạn", "同じ市内") : t(`~${km} km từ chỗ bạn`, `自宅から約${km}km`)}</p>
+      <p className="mt-1 t-sm text-[#DCE3FC]">{ja ? SHIFT_JA[job.shift] : SHIFT_VI[job.shift]} · {ja ? CITIES[job.city].ja : CITIES[job.city].vi}{guest ? "" : km < 1 ? t(" · cùng thành phố với bạn", " · 同じ市内") : t(` · cách ~${km} km`, ` · 約${km}km`)}</p>
       <div className="mt-3 flex flex-wrap gap-1.5">
         {job.contractMonths && <span className="rounded-full bg-white/15 px-2.5 py-1 t-sm">{t(`Thử việc ${job.contractMonths} tháng${job.renewable ? " · có thể gia hạn" : ""}`, `試用${job.contractMonths}か月${job.renewable ? " · 更新可" : ""}`)}</span>}
         {peers && <span className="rounded-full bg-white/15 px-2.5 py-1 t-sm">{t(`${peers.count} người Việt đang làm ở đây`, `ベトナム人${peers.count}名が在籍`)}</span>}

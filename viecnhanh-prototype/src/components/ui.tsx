@@ -248,7 +248,7 @@ export function Logo({ className = "", compact, inverse }: { className?: string;
       {!compact && (
         <span className="leading-none">
           <span className="block font-extrabold tracking-[0.14em] text-[17px]">KINTRA</span>
-          <span className={`block text-[11px] font-medium tracking-[0.02em] mt-0.5 ${inverse ? "opacity-70" : "text-faint"}`}>by ViệcNhanh</span>
+          <span className={`block text-[12px] font-medium tracking-[0.02em] mt-0.5 ${inverse ? "opacity-70" : "text-faint"}`}>by ViệcNhanh</span>
         </span>
       )}
     </span>
@@ -282,7 +282,7 @@ const FIT_TEXT: Record<FitLevel, string> = { great: "Rất phù hợp", possible
 export function FitBadge({ level, size = "md", label }: { level: FitLevel; size?: "xs" | "sm" | "md" | "lg"; label?: string }) {
   const n = level === "great" ? 3 : level === "possible" ? 2 : 1;
   const tone = level === "great" ? "ink" : level === "possible" ? "bg-brand-soft text-brand" : "bg-surface text-muted border border-dashed border-line";
-  const box = size === "lg" ? "h-11 pl-3 pr-4 gap-2 t-base" : size === "sm" ? "h-6 pl-2 pr-2.5 gap-1.5 text-[11px] leading-none" : size === "xs" ? "h-4 pl-1 pr-1.5 gap-1 text-[11px] leading-none" : "h-8 pl-2.5 pr-3 gap-2 t-sm";
+  const box = size === "lg" ? "h-11 pl-3 pr-4 gap-2 t-base" : size === "sm" ? "h-6 pl-2 pr-2.5 gap-1.5 text-[12px] leading-none" : size === "xs" ? "h-4 pl-1 pr-1.5 gap-1 text-[11px] leading-none" : "h-8 pl-2.5 pr-3 gap-2 t-sm";
   return (
     <span className={`inline-flex items-center rounded-full font-semibold whitespace-nowrap ${tone} ${box}`}>
       <Icon name={level === "great" ? "check-verified" : level === "possible" ? "trend-up-01" : "info-circle"} size={size === "lg" ? 20 : size === "sm" ? 14 : size === "xs" ? 11 : 16} solid={level === "great"} />

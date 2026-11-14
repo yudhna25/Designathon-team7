@@ -55,13 +55,14 @@ export function DemoPanel() {
   return (
     <>
       {show && !open && (
-        // Compact bottom-right pill (above BottomNav on phones) so it never covers cards or citation links.
+        // Icon-only, translucent until hovered, so it does not cover card text during a pitch. Shift + D still toggles it.
         <button
           onClick={() => setOpen(true)}
-          className="pressable fixed z-40 right-3 bottom-20 lg:right-5 lg:bottom-5 flex items-center gap-1.5 lg:gap-2 rounded-full bg-surface px-3 h-9 lg:pl-3 lg:pr-4 lg:h-10 shadow-[var(--shadow-bottom-2)] border border-hair t-sm font-semibold"
+          className="pressable fixed z-40 right-2 bottom-[84px] lg:right-4 lg:bottom-4 grid size-10 place-items-center rounded-full bg-surface/80 backdrop-blur border border-hair shadow-[var(--shadow-bottom-1)] opacity-60 hover:opacity-100 focus-visible:opacity-100 transition-opacity"
           aria-label="Mở bảng điều khiển demo (Shift + D)"
+          title="Demo · Shift + D"
         >
-          <Icon name="sliders-02" size={16} /><span className="text-[12px] lg:text-[length:var(--text-body-small)] tracking-wide">Demo</span>
+          <Icon name="sliders-02" size={18} />
         </button>
       )}
       {open && <Drawer onClose={() => setOpen(false)} />}

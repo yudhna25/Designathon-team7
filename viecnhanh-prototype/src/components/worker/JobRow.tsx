@@ -42,11 +42,11 @@ export function JobRow({ job, p, fit, now, applied, guest }: { job: Job; p: Prof
           {!guest && fit === "great" && <span className="text-brand font-semibold"> · {ja ? FIT_JA.great : FIT_VI.great}</span>}
           {applied && <span className="font-semibold text-fg"> · {t("Đã ứng tuyển", "応募済み")}</span>}
         </p>
-        <p className="mt-1.5 flex items-baseline gap-1">
+        <p className="mt-1.5 flex items-baseline gap-1 whitespace-nowrap">
           <span className="mono text-[20px] font-bold text-brand tnum">{yen(pay.net)}</span>
-          <span className="t-sm text-muted">{t("/tháng · ước tính", "/月 · 目安")}</span>
+          <span className="t-sm text-muted">{t("/tháng", "/月")}</span>
         </p>
-        <ul className="mt-1.5 flex flex-wrap gap-1.5 t-sm lg:-mr-9 lg:flex-nowrap lg:whitespace-nowrap lg:[&>li]:min-w-0 lg:[&>li]:truncate">
+        <ul className="mt-1.5 flex flex-wrap gap-1.5 t-sm [&>li]:whitespace-nowrap">
           <li className="rounded-full bg-subtle px-2 py-0.5">{ja ? CITIES[job.city].ja : CITIES[job.city].vi}</li>
           <li className="rounded-full bg-subtle px-2 py-0.5">{ja ? SHIFT_JA[job.shift] : SHIFT_VI[job.shift]}</li>
           {job.dorm !== null && <li className="rounded-full bg-brand-soft text-brand px-2 py-0.5">{t("Có ký túc xá", "寮あり")}</li>}
