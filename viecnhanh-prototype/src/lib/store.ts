@@ -68,6 +68,7 @@ type State = {
   safetyDone: boolean;
   withdrawals: Withdrawal[];
   threads: Thread[];
+  saved: string[]; // saved job ids
 };
 
 type Actions = {
@@ -86,6 +87,7 @@ type Actions = {
   decideMany: (appIds: string[], interview: Application["interview"]) => void;
   askSenpai: (jobId: string, peerId: string, questions: string[]) => string;
   acceptOffer: (appId: string) => void;
+  toggleSave: (jobId: string) => void;
   reset: () => void;
 };
 
@@ -114,6 +116,7 @@ const initial = (): State => {
     safetyDone: false,
     withdrawals: [],
     threads: [],
+    saved: [],
   };
 };
 
@@ -164,6 +167,7 @@ export const useApp = create<State & Actions>()(
         set((s) => ({ threads: [...s.threads, { id, jobId, peerId, questions: qs, answers: qs.map(answerFor), at: simNow(s.clock, s.config.speed) }] }));
         return id;
       },
+      toggleSave: (jobId) => set((s) => ({ saved: s.saved.includes(jobId) ? s.saved.filter((x) => x !== jobId) : [...s.saved, jobId] })),
       acceptOffer: (appId) =>
         set((s) => ({ apps: s.apps.map((a) => (a.id === appId && a.status === "approved" ? { ...a, accepted: true } : a)) })),
       reset: () => set({ ...initial(), config: get().config }),

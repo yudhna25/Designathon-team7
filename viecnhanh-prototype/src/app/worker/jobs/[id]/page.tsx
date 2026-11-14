@@ -9,7 +9,9 @@ import { PeersTile } from "@/components/worker/Bento";
 import { Scanner } from "@/components/worker/Scanner";
 import { earliestStart, fmtDate } from "@/lib/start";
 import { FlightPath } from "@/components/worker/FlightPath";
-import { CITIES, JLPT_SHORT, SKILLS, VISAS, jobById } from "@/lib/data";
+import { CITIES, JLPT_SHORT, JOBS, SKILLS, VISAS, distanceKm, jobById } from "@/lib/data";
+import { CompanyLogo, JobRow } from "@/components/worker/JobRow";
+import { SHOWCASE } from "@/lib/showcase";
 import { SHIFT_VI } from "@/lib/labels";
 import { FIT_VI, fitOf, matchChips, matchGuidance, scoreMatch, suggestImprovements } from "@/lib/scoring";
 import { takeHome, yen } from "@/lib/pay";
@@ -51,11 +53,14 @@ function JobDetail() {
   return (
     <Screen deps={[id]} className="pb-6 lg:pt-6 lg:pb-0">
       <div className="lg:hidden"><TopBar back="/worker/jobs" title={job.company} sub={CITIES[job.city].vi} /></div>
-      <div className="px-5 lg:px-0 pb-28 lg:pb-6 grid grid-cols-1 gap-4 max-w-[760px]">
+      <div className="px-5 lg:px-8 pb-28 lg:pb-6 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6 max-w-[1180px]">
+      <div className="grid grid-cols-1 gap-4 min-w-0">
         <section className="card p-6 md:p-8" style={{ viewTransitionName: `pass-card-${job.id}` } as CSSProperties} data-reveal>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {SHOWCASE.covers[job.id] && <img src={SHOWCASE.covers[job.id]} alt={`Nhà xưởng ${job.company} (minh hoạ)`} className="-mx-6 md:-mx-8 -mt-6 md:-mt-8 mb-5 w-[calc(100%+3rem)] md:w-[calc(100%+4rem)] max-w-none aspect-[16/7] object-cover rounded-t-[24px]" />}
           <div className="flex flex-col-reverse md:flex-row md:items-start gap-6 justify-between">
             <div className="min-w-0">
-              <p className="t-sm text-muted">{job.company} · {job.companyJa} · {CITIES[job.city].vi}</p>
+              <div className="flex items-center gap-3 mb-2"><CompanyLogo job={job} size={52} /><p className="t-sm text-muted">{job.company} · {job.companyJa}<br />{CITIES[job.city].vi}, Aichi</p></div>
               <h1 className="t-h2 mt-1" style={{ viewTransitionName: `pass-title-${job.id}` } as CSSProperties}>{job.title}</h1>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {job.isNewPlant && <span className="badge badge-solid badge-md">Nhà máy mới</span>}
@@ -68,16 +73,33 @@ function JobDetail() {
               <p className="t-sm text-muted mt-2">{fromFit ? `AI chấm lại: ${FIT_VI[fromFit]} → ${FIT_VI[fit]}` : "AI chấm từ hồ sơ của bạn"}</p>
             </div>
           </div>
-          <div className="mt-4 pt-4 hair-t">
-            <p className="t-sm text-muted">Thực nhận mỗi tháng · ước tính ban đầu</p>
-            <p className="led text-[40px] leading-none mt-2" style={{ viewTransitionName: `pass-net-${job.id}` } as CSSProperties} aria-hidden><Num value={pay.net} format={yen} spring /></p><p className="sr-only">{yen(pay.net)}</p>
-            <p className="t-sm text-muted mt-1">{pay.housingNote} · xem chi tiết khấu trừ bên dưới</p>
+          <div className="mt-5 grid grid-cols-2 md:grid-cols-3 gap-2" role="list" aria-label="Thông tin chính">
+            <div role="listitem" className="col-span-2 md:col-span-1 rounded-2xl bg-brand-soft p-3 min-w-0">
+              <p className="t-sm text-muted">Thực nhận/tháng</p>
+              <p className="led text-[32px] leading-none text-brand mt-1.5" style={{ viewTransitionName: `pass-net-${job.id}` } as CSSProperties}>{yen(pay.net)}</p>
+              <p className="t-sm text-muted">ước tính</p>
+            </div>
+            <div role="listitem" className="rounded-2xl bg-subtle p-3 min-w-0">
+              <p className="t-sm text-muted">Địa điểm</p>
+              <p className="font-semibold mt-1">{CITIES[job.city].vi}</p>
+              <p className="t-sm text-muted truncate">~{Math.round(distanceKm(p.city, job.city))} km</p>
+            </div>
+            <button role="listitem" className="rounded-2xl bg-subtle p-3 min-w-0 text-left pressable" onClick={() => setSheet("path")} aria-label={`Bắt đầu sớm nhất ${fmtDate(start.date)}, dự kiến. Xem lộ trình`}>
+              <p className="t-sm text-muted">Bắt đầu sớm nhất</p>
+              <p className="font-semibold mt-1 tnum">{fmtDate(start.date).slice(0, 5)}</p>
+              <p className="t-sm text-brand font-semibold">dự kiến ›</p>
+            </button>
           </div>
+          <p className="t-sm text-muted mt-2">{pay.housingNote} · xem chi tiết khấu trừ ở mục Lương</p>
           <div className="mt-5 pt-5 hair-t"><MatchChips chips={matchChips(p, job, m)} /></div>
         </section>
 
+        <nav className="sticky top-0 z-10 -mx-5 lg:mx-0 px-5 lg:px-0 py-2 bg-[color-mix(in_oklab,var(--color-bg-canvas)_92%,transparent)] backdrop-blur-xl flex gap-2 overflow-x-auto no-scrollbar" aria-label="Mục trong tin tuyển dụng">
+          {[["#ly-do", "Vì sao hợp"], ["#luong", "Lương & khấu trừ"], ["#cong-viec", "Công việc"], ["#nguoi-viet", "Người Việt ở đây"]].map(([h, l]) => <a key={h} href={h} className="chip pressable !h-10 t-sm shrink-0">{l}</a>)}
+        </nav>
+
         {/* ZEN AI Kit · AIInsightCard */}
-        <section className="card p-6" data-reveal aria-labelledby="why-h">
+        <section id="ly-do" className="card p-6 scroll-mt-16" data-reveal aria-labelledby="why-h">
           <div className="flex items-center gap-2 mb-3">
             <span className="badge badge-solid"><Icon name="stars-01" size={14} solid />AI gợi ý</span>
           </div>
@@ -103,9 +125,9 @@ function JobDetail() {
           </details>
         </section>
 
-        <div data-reveal><PayCard key={job.id} job={job} relocate={p.relocate} dorm={dorm} onDormChange={setDorm} /></div>
+        <div id="luong" className="scroll-mt-16" data-reveal><PayCard key={job.id} job={job} relocate={p.relocate} dorm={dorm} onDormChange={setDorm} /></div>
 
-        <section className="card p-6" data-reveal aria-labelledby="facts-h">
+        <section id="cong-viec" className="card p-6 scroll-mt-16" data-reveal aria-labelledby="facts-h">
           <h2 id="facts-h" className="t-h4 mb-4">Công việc</h2>
           <div className="grid gap-3 mb-5 pb-5 hair-b">
             <button className="text-left rounded-2xl -m-2 p-2 hover:bg-subtle pressable" onClick={() => setSheet("path")} aria-label="Xem lộ trình pháp lý đến ngày đi làm">
@@ -123,7 +145,7 @@ function JobDetail() {
           {job.perks.length > 0 && <ul className="mt-5 flex flex-wrap gap-1.5">{job.perks.map((x) => <li key={x} className="badge badge-md badge-outline">{x}</li>)}</ul>}
         </section>
 
-        <div data-reveal><PeersTile jobId={job.id} /></div>
+        <div id="nguoi-viet" className="scroll-mt-16" data-reveal><PeersTile jobId={job.id} /></div>
 
         <div data-reveal>
           <InlineNote icon="shield-tick">
@@ -132,10 +154,29 @@ function JobDetail() {
         </div>
         <p className="t-sm text-muted pb-4" data-reveal>Tư cách lưu trú yêu cầu: {VISAS.ssw1_mfg.short}, {VISAS.ssw2_mfg.short} hoặc {VISAS.resident.short}.</p>
       </div>
+      <aside className="grid gap-4 content-start mt-4 lg:mt-0" aria-label="Công ty và việc tương tự">
+        <section className="card p-5">
+          <div className="flex items-center gap-3"><CompanyLogo job={job} size={56} /><div className="min-w-0"><p className="font-semibold">{job.company}</p><p className="t-sm text-muted">{job.companyJa}</p></div></div>
+          <dl className="mt-4 grid gap-2 t-sm">
+            <div className="flex justify-between gap-3"><dt className="text-muted">Địa điểm</dt><dd className="font-medium">{CITIES[job.city].vi}, Aichi</dd></div>
+            <div className="flex justify-between gap-3"><dt className="text-muted">Đang tuyển</dt><dd className="font-medium tnum">{job.headcount} người</dd></div>
+            <div className="flex justify-between gap-3"><dt className="text-muted">Xác minh</dt><dd className="font-medium">{job.verified ? "ViệcNhanh đã xác minh" : "Đang xác minh"}</dd></div>
+          </dl>
+          {job.perks.length > 0 && <ul className="mt-3 flex flex-wrap gap-1.5">{job.perks.map((x) => <li key={x} className="badge badge-outline">{x}</li>)}</ul>}
+        </section>
+        <section aria-label="Việc tương tự">
+          <h2 className="t-sub mb-3">Việc tương tự</h2>
+          <div className="grid grid-cols-1 gap-3">
+            {JOBS.filter((j) => j.id !== job.id).map((j) => ({ j, m: scoreMatch(p, j, s.config.weights) })).filter((r) => r.m.gate.pass).sort((a, b) => b.m.total - a.m.total).slice(0, 3)
+              .map((r) => <JobRow key={r.j.id} job={r.j} p={p} fit={fitOf(r.m, s.config.threshold)} now={simNow(s.clock, s.config.speed)} />)}
+          </div>
+        </section>
+      </aside>
+      </div>
 
       {/* Sticky decision bar */}
       <div className="fixed lg:sticky bottom-0 inset-x-0 z-20 lg:mt-4 bg-[color-mix(in_oklab,var(--color-bg-canvas)_92%,transparent)] backdrop-blur-xl border-t border-hair">
-        <div className="px-5 lg:px-0 py-3 safe-b max-w-[760px] lg:pb-4">
+        <div className="px-5 lg:px-8 py-3 safe-b max-w-[1180px] lg:pb-4 lg:pr-[352px]">
           {invited ? (
             <Button size="lg" block icon="calendar" onClick={() => router.push("/worker/applications")}>Xem lời mời phỏng vấn</Button>
           ) : mine ? (

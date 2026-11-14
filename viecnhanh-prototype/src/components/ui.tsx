@@ -236,9 +236,11 @@ export function Logo({ className = "", compact, inverse }: { className?: string;
   );
 }
 
-export function Avatar({ name, size = 40 }: { name: string; size?: number }) {
+export function Avatar({ name, size = 40, src }: { name: string; size?: number; src?: string }) {
   const parts = name.trim().split(/\s+/);
   const initials = (parts.length > 1 ? parts[parts.length - 2][0] + parts[parts.length - 1][0] : parts[0].slice(0, 2)).toUpperCase();
+  // eslint-disable-next-line @next/next/no-img-element
+  if (src) return <img src={src} alt="" width={size} height={size} className="shrink-0 rounded-full bg-subtle object-cover border-2 border-surface" style={{ width: size, height: size }} />;
   return (
     <span className="inline-grid shrink-0 place-items-center rounded-full bg-subtle font-semibold text-fg" style={{ width: size, height: size, fontSize: size * 0.36 }} aria-hidden>
       {initials}

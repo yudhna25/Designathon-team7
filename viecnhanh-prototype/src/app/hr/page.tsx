@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Avatar, Icon, Meter, Num, toast } from "@/components/ui";
 import { HirePlan } from "@/components/hr/HirePlan";
+import { SHOWCASE } from "@/lib/showcase";
 import { HIRE_PLAN, JLPT_SHORT, KEY_JOB_ID, SKILLS, VISAS, jobById, type SkillId } from "@/lib/data";
 import { batchEligible, hireProgress, needsBatch } from "@/lib/hire";
 import { fmtLeftShort, hrT } from "@/lib/hr-i18n";
@@ -149,7 +150,7 @@ export default function HRCandidates() {
                     </td>
                     <td className="py-3 px-3">
                       <Link href={`/hr/candidates/${a.id}`} className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
-                        <Avatar name={p.name} size={36} />
+                        <Avatar name={p.name} size={36} src={SHOWCASE.avatars[a.candidateId]} />
                         <span><b className="block text-fg">{p.name}{a.candidateId === "me" && <span className="badge ml-2 align-middle">Demo</span>}{a.flagged && <span className="badge badge-dash ml-2 align-middle">{lang === "ja" ? "条件未達で応募" : "Applied below fit"}</span>}</b><span className="t-sm text-muted">{t.nationality[p.nationality]}</span></span>
                       </Link>
                     </td>
@@ -184,7 +185,7 @@ export default function HRCandidates() {
                 />
               )}
               <Link href={`/hr/candidates/${a.id}`} className="flex items-center gap-3 flex-1 min-w-0 pressable">
-                <Avatar name={p.name} size={40} />
+                <Avatar name={p.name} size={40} src={SHOWCASE.avatars[a.candidateId]} />
                 <span className="flex-1 min-w-0">
                   <b className="block truncate">{p.name}</b>
                   <span className="t-sm text-muted">{VISAS[p.visa].short} · {JLPT_SHORT[p.jlpt]} · {st === "sent" || st === "viewed" ? fmtLeftShort(left, lang) : t.status[st]}</span>
