@@ -15,9 +15,9 @@ export function CompanyLogo({ job, size = 48 }: { job: Job; size?: number }) {
   const initials = job.company.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
   return src ? (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt="" width={size} height={size} className="shrink-0 rounded-[14px] border border-hair bg-surface object-cover" />
+    <img src={src} alt="" width={size} height={size} className="shrink-0 self-start rounded-[14px] border border-hair bg-surface object-contain" style={{ width: size, height: size }} />
   ) : (
-    <span className="shrink-0 grid place-items-center rounded-[14px] bg-brand-soft text-brand font-bold" style={{ width: size, height: size, fontSize: size * 0.32 }} aria-hidden>{initials}</span>
+    <span className="shrink-0 self-start grid place-items-center rounded-[14px] bg-brand-soft text-brand font-bold" style={{ width: size, height: size, fontSize: size * 0.32 }} aria-hidden>{initials}</span>
   );
 }
 

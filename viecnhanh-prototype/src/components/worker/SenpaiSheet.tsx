@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { jobById } from "@/lib/data";
 import { SENPAI_QUESTIONS, askerLabel, hometownLabel, isRevealed, senpaiFor } from "@/lib/senpai";
 import { useApp } from "@/lib/store";
+import { SHOWCASE } from "@/lib/showcase";
 import { Avatar, Button, Icon, Sheet } from "../ui";
 
 /** Blind 3-question Q&A with an attendance-verified Vietnamese worker at that plant. */
@@ -48,7 +49,7 @@ export function SenpaiSheet({ jobId, open, onClose }: { jobId: string; open: boo
       ) : (
         <div className="grid gap-4">
           <div className="card-flat p-4 flex items-center gap-3">
-            <Avatar name={peer.name} size={44} />
+            <Avatar name={peer.name} size={44} src={SHOWCASE.avatars[peer.id]} />
             <div className="min-w-0">
               <p className="font-semibold">{peer.name}</p>
               <p className="t-sm text-muted">{peer.years} năm ở {job.company} · {hometownLabel(p, peer)}</p>

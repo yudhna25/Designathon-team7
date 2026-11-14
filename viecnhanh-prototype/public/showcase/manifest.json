@@ -8,7 +8,13 @@
     "toyohashi-mold": "/showcase/logos/toyohashi-mold.svg",
     "nagoya-food": "/showcase/logos/nagoya-food.svg"
   },
-  "covers": {},
+  "covers": {
+    "mikawa-cnc": "/showcase/covers/mikawa-cnc.svg",
+    "okazaki-nc": "/showcase/covers/okazaki-nc.svg",
+    "kariya-mill": "/showcase/covers/kariya-mill.svg",
+    "okazaki-weld": "/showcase/covers/okazaki-weld.svg",
+    "anjo-forklift": "/showcase/covers/anjo-forklift.svg"
+  },
   "avatars": {},
   "gallery": {},
   "brand": {}

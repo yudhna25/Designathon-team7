@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { SenpaiSheet } from "./SenpaiSheet";
 import { PEERS, type Job, type Profile } from "@/lib/data";
+import { SHOWCASE } from "@/lib/showcase";
 import { suggestImprovements, type Chip, type Fit } from "@/lib/scoring";
 import { deadlineOf, fmtLeft, isClosed, useApp, useNow, type Application } from "@/lib/store";
 import { Avatar, Icon, MatchChips, ScoreRing } from "../ui";
@@ -29,7 +30,7 @@ export function PeersTile({ jobId, className = "", onSeePeers }: { jobId: string
   return (
     <section className={`card-flat p-4 ${className}`} aria-label="Người Việt ở đây">
       <div className="flex items-start gap-3">
-        <span className="flex mt-0.5">{data.peers.slice(0, 3).map((x, i) => <span key={x.id} className={i ? "-ml-2" : ""}><Avatar name={x.name} size={32} /></span>)}</span>
+        <span className="flex mt-0.5">{data.peers.slice(0, 3).map((x, i) => <span key={x.id} className={i ? "-ml-2" : ""}><Avatar name={x.name} size={32} src={SHOWCASE.avatars[x.id]} /></span>)}</span>
         <div className="min-w-0 flex-1">
           <p className="font-semibold">{data.count} người Việt đang làm ở đây</p>
           <p className="t-sm text-muted line-clamp-2">“{lead.quote}” · {lead.name.split(" ").pop()}</p>
