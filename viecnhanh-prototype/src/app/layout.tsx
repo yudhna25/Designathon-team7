@@ -7,7 +7,7 @@ const bevn = Be_Vietnam_Pro({ variable: "--font-bevn", subsets: ["latin", "vietn
 const mono = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["latin", "vietnamese"], display: "swap" });
 
 export const metadata: Metadata = {
-  title: "ViệcNhanh Aichi · Prototype",
+  title: "KINTRA — Your skills. Your next move.",
   description: "AI chấm điểm phù hợp JD ↔ hồ sơ: việc đúng visa, đúng tay nghề, HR trả lời trong 24 giờ. Team 7 · Designathon 2026.",
 };
 

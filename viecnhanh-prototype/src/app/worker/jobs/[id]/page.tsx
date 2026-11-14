@@ -64,7 +64,7 @@ function JobDetail() {
               <h1 className="t-h2 mt-1" style={{ viewTransitionName: `pass-title-${job.id}` } as CSSProperties}>{job.title}</h1>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {job.isNewPlant && <span className="badge badge-solid badge-md">Nhà máy mới</span>}
-                <span className="badge badge-md"><Icon name={job.verified ? "check-verified" : "hourglass"} size={14} />{job.verified ? "ViệcNhanh đã xác minh" : "Đang xác minh"}</span>
+                <span className="badge badge-md"><Icon name={job.verified ? "check-verified" : "hourglass"} size={14} />{job.verified ? "KINTRA đã xác minh" : "Đang xác minh"}</span>
                 <span className="badge badge-md">Cần {job.headcount} người</span>
               </div>
             </div>
@@ -133,7 +133,7 @@ function JobDetail() {
             <button className="text-left rounded-2xl -m-2 p-2 hover:bg-subtle pressable" onClick={() => setSheet("path")} aria-label="Xem lộ trình pháp lý đến ngày đi làm">
               <Fact icon="calendar" k="Bắt đầu sớm nhất · xem lộ trình" v={`${fmtDate(start.date)} · dự kiến`} sub={`${start.reason} Trong lúc chờ: vẫn làm ở chỗ cũ nếu còn hợp đồng · ứng lương theo ngày công vẫn dùng được.`} />
             </button>
-            {job.contractMonths && <Fact icon="file-check" k="Hợp đồng" v={`Thử việc ${job.contractMonths} tháng${job.renewable ? " · có thể gia hạn" : ""}`} sub="Nếu không gia hạn, ViệcNhanh xếp việc tiếp trong 24h." />}
+            {job.contractMonths && <Fact icon="file-check" k="Hợp đồng" v={`Thử việc ${job.contractMonths} tháng${job.renewable ? " · có thể gia hạn" : ""}`} sub="Nếu không gia hạn, KINTRA xếp việc tiếp trong 24h." />}
           </div>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-5">
             <Fact icon="clock" k="Ca làm" v={SHIFT_VI[job.shift]} />
@@ -169,7 +169,7 @@ function JobDetail() {
           <dl className="mt-4 grid gap-2 t-sm">
             <div className="flex justify-between gap-3"><dt className="text-muted">Địa điểm</dt><dd className="font-medium">{CITIES[job.city].vi}, Aichi</dd></div>
             <div className="flex justify-between gap-3"><dt className="text-muted">Đang tuyển</dt><dd className="font-medium tnum">{job.headcount} người</dd></div>
-            <div className="flex justify-between gap-3"><dt className="text-muted">Xác minh</dt><dd className="font-medium">{job.verified ? "ViệcNhanh đã xác minh" : "Đang xác minh"}</dd></div>
+            <div className="flex justify-between gap-3"><dt className="text-muted">Xác minh</dt><dd className="font-medium">{job.verified ? "KINTRA đã xác minh" : "Đang xác minh"}</dd></div>
           </dl>
           {job.perks.length > 0 && <ul className="mt-3 flex flex-wrap gap-1.5">{job.perks.map((x) => <li key={x} className="badge badge-outline">{x}</li>)}</ul>}
         </section>

@@ -130,7 +130,7 @@ function Onboarding() {
                         <>
                           <b>Visa này chưa làm được các việc toàn thời gian đang tuyển.</b>
                           <span className="block mt-1">{gateWhy}</span>
-                          <span className="block mt-1">{p.visa === "student" ? "ViệcNhanh sẽ báo bạn qua Zalo khi có việc làm thêm dưới 28 giờ/tuần." : "Nhân viên tiếng Việt có thể hướng dẫn bạn đổi sang Kỹ năng đặc định (thi kỹ năng + tiếng Nhật)."}</span>
+                          <span className="block mt-1">{p.visa === "student" ? "KINTRA sẽ báo bạn qua Zalo khi có việc làm thêm dưới 28 giờ/tuần." : "Nhân viên tiếng Việt có thể hướng dẫn bạn đổi sang Kỹ năng đặc định (thi kỹ năng + tiếng Nhật)."}</span>
                           <span className="mt-3 flex flex-wrap gap-2">
                             <button type="button" className="btn btn-sm btn-primary pressable" onClick={() => toast("Đã gửi yêu cầu · nhân viên tiếng Việt nhắn bạn qua Zalo trong ngày", "message-chat-circle")}>
                               <Icon name="message-chat-circle" size={18} />Nhận tư vấn qua Zalo

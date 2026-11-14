@@ -192,7 +192,7 @@ export type Job = {
   headcount: number;
   contractMonths?: number; // trial contract length, if any
   renewable?: boolean;
-  verified: boolean; // company checked by ViệcNhanh
+  verified: boolean; // company checked by KINTRA
   isNewPlant?: boolean;
   perks: string[];
   questions?: Question[]; // extra questions set up by the employer

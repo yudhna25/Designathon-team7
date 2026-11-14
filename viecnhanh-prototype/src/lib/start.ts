@@ -38,7 +38,7 @@ export function legalPath(p: Profile, from: number): PathStep[] {
   const review = DOC_PREP_DAYS + STATUS_CHANGE_DAYS;
   return [
     approve,
-    { key: "docs", label: "Công ty gửi giấy tờ", at: at(DOC_PREP_DAYS), legal: false, note: "Công ty mới gửi hợp đồng và giấy tờ cần cho đơn. ViệcNhanh nhắc công ty nếu chậm." },
+    { key: "docs", label: "Công ty gửi giấy tờ", at: at(DOC_PREP_DAYS), legal: false, note: "Công ty mới gửi hợp đồng và giấy tờ cần cho đơn. KINTRA nhắc công ty nếu chậm." },
     { key: "file", label: "Nộp đơn chuyển đổi tư cách lưu trú", at: at(DOC_PREP_DAYS), legal: true, note: "Nộp tại Cục Xuất nhập cảnh Nagoya. Bắt buộc theo luật khi người có Kỹ năng đặc định đổi công ty." },
     { key: "review", label: "Cục Xuất nhập cảnh xét đơn", at: at(review), legal: true, note: "Thường 41–64 ngày theo thống kê của Cục. Trong lúc chờ, bạn vẫn làm ở chỗ cũ nếu còn hợp đồng." },
     { key: "card", label: "Nhận thẻ cư trú mới", at: at(review), legal: true, note: "Thẻ mới ghi công ty mới. Từ đây bạn được phép đi làm chỗ mới." },

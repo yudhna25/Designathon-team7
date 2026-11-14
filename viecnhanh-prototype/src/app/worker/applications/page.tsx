@@ -123,7 +123,7 @@ function Approved({ a }: { a: Application }) {
     { done: safety, t: "Nếu đạt: học an toàn trước ngày 1", d: safety ? "Đã hoàn thành" : "8 phút · có thể học trước", href: "/worker/safety" },
     ...(start ? [{ done: false, t: `Bắt đầu đi làm · ${start} (dự kiến)`, d: "Tính từ ngày HR duyệt và thủ tục lưu trú" }] : []),
     { done: false, t: "Ví lương mở sau ca đầu tiên", d: "Ứng lương đã làm, không phải vay", href: "/worker/wallet" },
-    ...(job.contractMonths ? [{ done: false, t: `Tháng ${job.contractMonths}: đánh giá gia hạn`, d: "Nếu không gia hạn, ViệcNhanh xếp việc tiếp trong 24h" }] : []),
+    ...(job.contractMonths ? [{ done: false, t: `Tháng ${job.contractMonths}: đánh giá gia hạn`, d: "Nếu không gia hạn, KINTRA xếp việc tiếp trong 24h" }] : []),
   ];
   return (
     <div className="mt-5">

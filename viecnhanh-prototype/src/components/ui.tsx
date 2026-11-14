@@ -225,13 +225,32 @@ export function Toaster() {
   );
 }
 
+/** KINTRA "Step K": stem + rising squares (skills climb step by step). Steps carry data-step for the preloader. */
+export function KintraMark({ size = 28, mono, className = "" }: { size?: number; mono?: string; className?: string }) {
+  const c1 = mono ?? "#1B22A7", c2 = mono ?? "#4260E6", c3 = mono ?? "#2F43D2";
+  return (
+    <svg width={size} height={size} viewBox="0 0 256 256" className={className} aria-hidden>
+      <g transform="translate(-6 0)">
+        <path data-k="stem" fill={c1} d="M48 32h44v192H48z" />
+        <path data-k="leg" fill={c1} d="M112 152h44l64 72h-44z" />
+        <path data-step="1" fill={c2} d="M92 152v-40h40v40z" />
+        <path data-step="2" fill={c3} d="M132 112V72h40v40z" />
+        <path data-step="3" fill={c2} d="M172 72V32h40v40z" />
+      </g>
+    </svg>
+  );
+}
+
 export function Logo({ className = "", compact, inverse }: { className?: string; compact?: boolean; inverse?: boolean }) {
   return (
-    <span className={`inline-flex items-center gap-2 font-semibold tracking-[-0.04em] ${className}`}>
-      <span className={`grid size-7 place-items-center rounded-[9px] ${inverse ? "bg-[var(--color-bg-inverse-solid)] text-[var(--color-content-neutral-strongest)]" : "ink"}`} aria-hidden>
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2.5 3.5 6 12.5 8 7.5 10 12.5 13.5 3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-      </span>
-      {!compact && <span>ViệcNhanh<span className={`font-medium ${inverse ? "opacity-60" : "text-faint"}`}> Aichi</span></span>}
+    <span className={`inline-flex items-center gap-2 ${className}`}>
+      <KintraMark size={30} mono={inverse ? "#fff" : undefined} />
+      {!compact && (
+        <span className="leading-none">
+          <span className="block font-extrabold tracking-[0.14em] text-[17px]">KINTRA</span>
+          <span className={`block text-[11px] font-medium tracking-[0.02em] mt-0.5 ${inverse ? "opacity-70" : "text-faint"}`}>by ViệcNhanh</span>
+        </span>
+      )}
     </span>
   );
 }

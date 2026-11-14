@@ -51,7 +51,7 @@ export default function Home() {
               <span className="inline-block whitespace-nowrap">24&nbsp;giờ.</span>
             </h1>
             <p className="t-lg text-muted mt-6 max-w-[560px]" data-hero>
-              ViệcNhanh nối lao động Việt đang ở Aichi với nhà máy cần người. AI đọc thẻ cư trú, đánh giá mức phù hợp với từng việc
+              KINTRA nối lao động Việt đang ở Aichi với nhà máy cần người. AI đọc thẻ cư trú, đánh giá mức phù hợp với từng việc
               và cho thấy lương thực nhận trước khi apply. Nhà máy nhận hồ sơ đã kiểm tra visa, xếp theo điểm.
             </p>
           </div>

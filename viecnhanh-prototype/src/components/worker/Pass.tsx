@@ -42,7 +42,7 @@ export function JobPass({ job, p, m, fit, now, applied, active }: { job: Job; p:
           <p className="t-sm font-semibold truncate">{job.company}</p>
           <p className="t-sm text-[#DCE3FC] flex items-center gap-1">
             <Icon name={job.verified ? "check-verified" : "hourglass"} size={14} solid={job.verified} />
-            {job.verified ? "ViệcNhanh đã xác minh" : "Đang xác minh"}
+            {job.verified ? "KINTRA đã xác minh" : "Đang xác minh"}
           </p>
         </div>
         <span className="shrink-0 rounded-full bg-white/15 px-2.5 py-1.5 t-sm font-bold">{m.gate.pass ? FIT_VI[fit] : "Không hợp visa"}</span>
