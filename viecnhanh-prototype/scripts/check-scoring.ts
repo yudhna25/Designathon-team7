@@ -70,3 +70,14 @@ assert.ok(!path.some((x) => /đảm bảo|guarantee/i.test(x.label + x.note)), "
 assert.ok(PEERS["mikawa-cnc"].peers.every((x) => x.attendanceVerified || !x.askable), "only attendance-verified peers are askable");
 assert.equal(HIRE_PLAN.jobId, "mikawa-cnc"); assert.equal(HIRE_PLAN.target, 300); assert.equal(HIRE_PLAN.filledByDay.length, HIRE_PLAN.days);
 console.log("M4 data checks OK");
+
+// --- M4: anonymous hometown senpai ---
+import { askerLabel, senpaiFor, isRevealed } from "../src/lib/senpai";
+assert.equal(senpaiFor(p, "mikawa-cnc")!.province, p.province, "same province first");
+assert.equal(senpaiFor({ ...p, currentCompany: jobById("mikawa-cnc")!.company }, "mikawa-cnc"), null, "never match a senpai at the asker's current company");
+assert.equal(askerLabel(p, false), "Thợ ẩn danh · cùng quê Nghệ An");
+assert.ok(!askerLabel(p, false).includes(p.name) && !askerLabel(p, false).includes(p.currentCompany!), "no identity leaks before accept");
+const offer = { id: "x", jobId: "mikawa-cnc", candidateId: "me", appliedAt: 0, status: "approved" as const };
+assert.equal(isRevealed([offer], "mikawa-cnc"), false, "approval alone does not reveal");
+assert.equal(isRevealed([{ ...offer, accepted: true }], "mikawa-cnc"), true);
+console.log("M4 senpai checks OK");

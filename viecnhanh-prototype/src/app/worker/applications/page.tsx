@@ -8,6 +8,7 @@ import { REJECT_REASONS, STATUS_VI } from "@/lib/labels";
 import { takeHome, yen } from "@/lib/pay";
 import { fitOf, scoreMatch, suggestImprovements } from "@/lib/scoring";
 import { deadlineOf, displayStatus, fmtLeft, fmtSlot, useApp, useNow, type Application } from "@/lib/store";
+import { senpaiFor } from "@/lib/senpai";
 
 export default function Applications() {
   const s = useApp();
@@ -106,6 +107,9 @@ function AppCard({ a, now }: { a: Application; now: number }) {
 
 function Approved({ a }: { a: Application }) {
   const safety = useApp((s) => s.safetyDone);
+  const profile = useApp((s) => s.profile);
+  const acceptOffer = useApp((s) => s.acceptOffer);
+  const senpai = profile ? senpaiFor(profile, a.jobId) : null;
   const iv = a.interview;
   // Order matches reality: invite → interview → (if hired) safety before day 1 → wallet after first shift.
   const steps = [
@@ -142,6 +146,17 @@ function Approved({ a }: { a: Application }) {
           );
         })}
       </ol>
+      {a.accepted ? (
+        <div className="mt-4 rounded-2xl bg-[var(--color-bg-inverse-solid)] text-[var(--color-content-neutral-strongest)] p-4 flex gap-3" role="status">
+          <Icon name="users-check" />
+          <span><b className="block">Đã nhận việc</b><span className="t-sm text-muted">{senpai ? `Zalo OA đã mở hồ sơ hai bên. Senpai ${senpai.name} sẽ đón bạn ngày đầu.` : "Zalo OA sẽ gửi hướng dẫn ngày đầu đi làm."}</span></span>
+        </div>
+      ) : (
+        <div className="mt-4 grid gap-2">
+          <Button size="lg" block icon="check-circle" onClick={() => { acceptOffer(a.id); toast(senpai ? `Đã nhận việc · Zalo OA đã mở hồ sơ hai bên với ${senpai.name}` : "Đã nhận việc", "users-check"); }}>Nhận việc</Button>
+          <p className="t-sm muted-ink">Khi bạn nhận việc, tên bạn mới được mở cho Senpai cùng quê để hỗ trợ ngày đầu.</p>
+        </div>
+      )}
     </div>
   );
 }

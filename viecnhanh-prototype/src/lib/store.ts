@@ -4,6 +4,7 @@ import { persist } from "zustand/middleware";
 import { useEffect, useState } from "react";
 import { SEED_CANDIDATES, jobById, type Profile } from "./data";
 import { DEFAULT_WEIGHTS, scoreMatch, type Weights } from "./scoring";
+import { answerFor, type Thread } from "./senpai";
 
 export const INTERVIEW_SLOTS = ["2026-11-18T10:00", "2026-11-18T14:00", "2026-11-19T10:00"];
 export const fmtSlot = (iso: string, lang: "vi" | "en" | "ja" = "vi") =>
@@ -23,6 +24,7 @@ export type Application = {
   flagged?: boolean; // applied below "Rất phù hợp"
   answers?: Record<string, string>; // employer extra questions
   interview?: { slot: string; mode: "onsite" | "online" };
+  accepted?: boolean; // worker formally accepted the offer → senpai profiles unlock
 };
 
 export type Config = {
@@ -63,6 +65,7 @@ type State = {
   seedSafety: Record<string, boolean>;
   safetyDone: boolean;
   withdrawals: Withdrawal[];
+  threads: Thread[];
 };
 
 type Actions = {
@@ -78,6 +81,8 @@ type Actions = {
   decide: (appId: string, status: "approved" | "rejected", extra?: { reason?: string; startDate?: string; interview?: Application["interview"] }) => void;
   completeSafety: () => void;
   withdraw: (amount: number, fee: number) => void;
+  askSenpai: (jobId: string, peerId: string, questions: string[]) => string;
+  acceptOffer: (appId: string) => void;
   reset: () => void;
 };
 
@@ -105,6 +110,7 @@ const initial = (): State => {
     seedSafety: Object.fromEntries(SEED_CANDIDATES.map((c) => [c.id, !!c.safetyDone])),
     safetyDone: false,
     withdrawals: [],
+    threads: [],
   };
 };
 
@@ -148,6 +154,14 @@ export const useApp = create<State & Actions>()(
       completeSafety: () => set({ safetyDone: true }),
       withdraw: (amount, fee) =>
         set((s) => ({ withdrawals: [{ id: `w${Date.now()}`, amount, fee, at: simNow(s.clock, s.config.speed) }, ...s.withdrawals] })),
+      askSenpai: (jobId, peerId, questions) => {
+        const id = `t${Date.now()}`;
+        const qs = questions.slice(0, 3);
+        set((s) => ({ threads: [...s.threads, { id, jobId, peerId, questions: qs, answers: qs.map(answerFor), at: simNow(s.clock, s.config.speed) }] }));
+        return id;
+      },
+      acceptOffer: (appId) =>
+        set((s) => ({ apps: s.apps.map((a) => (a.id === appId && a.status === "approved" ? { ...a, accepted: true } : a)) })),
       reset: () => set({ ...initial(), config: get().config }),
     }),
     {

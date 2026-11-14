@@ -1,13 +1,16 @@
 "use client";
 import Link from "next/link";
+import { useState } from "react";
+import { SenpaiSheet } from "./SenpaiSheet";
 import { PEERS, type Job, type Profile } from "@/lib/data";
 import { suggestImprovements, type Chip, type Fit } from "@/lib/scoring";
 import { deadlineOf, fmtLeft, isClosed, useApp, useNow, type Application } from "@/lib/store";
 import { Avatar, Icon, MatchChips, ScoreRing } from "../ui";
 
 /** "Người Việt ở đây": social proof + the door to an anonymous hometown senpai. */
-export function PeersTile({ jobId, onAsk, className = "" }: { jobId: string; onAsk?: () => void; className?: string }) {
+export function PeersTile({ jobId, className = "" }: { jobId: string; className?: string }) {
   const data = PEERS[jobId];
+  const [ask, setAsk] = useState(false);
   if (!data) {
     return (
       <section className={`card-flat p-4 ${className}`} aria-label="Người Việt ở đây">
@@ -29,24 +32,25 @@ export function PeersTile({ jobId, onAsk, className = "" }: { jobId: string; onA
         </div>
         <span className="ml-auto text-[18px] font-bold text-brand tnum">{lead.rating.toFixed(1).replace(".", ",")}★</span>
       </div>
-      {canAsk && onAsk && (
-        <button className="btn btn-secondary btn-sm pressable mt-3 w-full" onClick={onAsk}>
+      {canAsk && (
+        <button className="btn btn-secondary btn-sm pressable mt-3 w-full" onClick={() => setAsk(true)}>
           <Icon name="message-chat-circle" size={16} />Hỏi Senpai cùng quê · ẩn danh
         </button>
       )}
+      <SenpaiSheet jobId={jobId} open={ask} onClose={() => setAsk(false)} />
     </section>
   );
 }
 
 /** Bento under the pass. Tiles change with the pass in view. */
-export function Bento({ job, p, chips, fit, app, onAsk }: { job: Job; p: Profile; chips: Chip[]; fit: Fit; app?: Application; onAsk?: () => void }) {
+export function Bento({ job, p, chips, fit, app }: { job: Job; p: Profile; chips: Chip[]; fit: Fit; app?: Application }) {
   const s = useApp();
   const now = useNow();
   const open = app && !isClosed(app, s);
   const steps = fit === "great" ? 0 : Math.max(1, suggestImprovements(p, job, s.config.weights).length);
   return (
     <div className="grid grid-cols-2 gap-2 mt-3" aria-live="polite">
-      <PeersTile jobId={job.id} onAsk={onAsk} className="col-span-2" />
+      <PeersTile key={job.id} jobId={job.id} className="col-span-2" />
       <section className="card-flat p-4" aria-label="Tiêu chí">
         <p className="t-sm font-semibold text-muted mb-2">Tiêu chí</p>
         <MatchChips chips={chips} max={4} />
