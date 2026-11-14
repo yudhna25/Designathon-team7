@@ -74,19 +74,32 @@ export function ScoreBreakdown({ m, compact }: { m: Match; compact?: boolean }) 
 }
 
 /** Take-home pay as one number, with the full waterfall behind it. */
-export function PayCard({ job, relocate }: { job: Job; relocate: boolean }) {
-  const [dorm, setDorm] = useState(job.dorm !== null && relocate);
+export function PayCard({ job, relocate, dorm: controlledDorm, onDormChange }: { job: Job; relocate: boolean; dorm?: boolean; onDormChange?: (v: boolean) => void }) {
+  const [localDorm, setLocalDorm] = useState(job.dorm !== null && relocate);
+  const dorm = controlledDorm ?? localDorm;
+  const setDorm = onDormChange ?? setLocalDorm;
   const pay = takeHome(job, dorm);
+  const ratioPct = `${Math.max(0, Math.min(100, Math.round((pay.net / pay.gross) * 100)))}%`;
   return (
     <section className="card p-5 md:p-6" aria-labelledby="pay-h">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 id="pay-h" className="t-eyebrow mb-2">Thực nhận mỗi tháng · ước tính</h2>
-          <p className="text-[40px] leading-none font-semibold tracking-[-0.04em]"><Num value={pay.net} format={(n) => yen(n)} /></p>
-          <p className="text-muted mt-2">{vnd(pay.net)} · tỷ giá tham khảo</p>
+          <p className="text-[40px] leading-none font-semibold tracking-[-0.04em]"><Num value={pay.net} format={(n) => yen(n)} spring /></p>
+          <p className="text-muted mt-2"><Num value={pay.net} format={(n) => vnd(n)} spring /> · tỷ giá tham khảo</p>
           <p className="t-sm text-muted mt-1">{pay.housingNote}</p>
         </div>
         <Icon name="coins-hand" size={28} className="text-faint" />
+      </div>
+
+      <div className="mt-4" aria-hidden="true">
+        <div className="flex justify-between t-sm text-muted mb-1.5">
+          <span>Tỷ lệ thực nhận trên lương gộp</span>
+          <span className="tnum font-semibold text-fg">{ratioPct}</span>
+        </div>
+        <div className="h-2 rounded-full bg-subtle overflow-hidden">
+          <div className="pay-ratio-bar h-full rounded-full bg-solid" style={{ "--pay-ratio": ratioPct } as React.CSSProperties} />
+        </div>
       </div>
 
       {job.dorm !== null && (
@@ -110,9 +123,9 @@ export function PayCard({ job, relocate }: { job: Job; relocate: boolean }) {
             <dd className="tnum shrink-0">−{yen(l.amount)}</dd>
           </div>
         ))}
-        <div className="flex justify-between gap-4 pt-2.5 hair-t t-sub"><dt>Thực nhận</dt><dd className="tnum">{yen(pay.net)}</dd></div>
+        <div className="flex justify-between gap-4 pt-2.5 hair-t t-sub"><dt>Thực nhận</dt><dd className="tnum"><Num value={pay.net} format={(n) => yen(n)} spring /></dd></div>
       </dl>
-      <p className="mt-4 t-sm flex gap-2"><Icon name="award-01" size={18} />Cộng thêm <b className="tnum">{yen(pay.bonus)}</b> thưởng chuyên cần nếu đi làm đủ ngày.</p>
+      <p className="mt-4 t-sm flex items-start gap-2"><Icon name="award-01" size={18} className="mt-0.5" /><span>Cộng thêm <b className="tnum">{yen(pay.bonus)}</b> thưởng chuyên cần nếu đi làm đủ ngày.</span></p>
       <p className="mt-1 t-sm text-muted">Ước tính theo giờ làm thường gặp, có thể chênh ±5%. Đã tính thuế cư trú giả định, chưa xét thời gian cư trú. Lương trả tháng, ngày 25.</p>
     </section>
   );

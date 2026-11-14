@@ -56,6 +56,31 @@ function JobList({ activeId }: { activeId?: string }) {
     setIdx(best);
   };
   useEffect(() => setIdx(0), [order]);
+  const scrollToIndex = (i: number) => {
+    if (i < 0 || i >= visible.length) return;
+    strip.current?.querySelector<HTMLElement>(`[data-i="${i}"]`)?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    setIdx(i);
+  };
+  const pendingJob = useRef<string | null>(null);
+  const scrollToJob = (id: string) => {
+    const i = visible.findIndex((r) => r.j.id === id);
+    if (i >= 0) {
+      pendingJob.current = null;
+      scrollToIndex(i);
+    } else {
+      pendingJob.current = id;
+    }
+  };
+  useEffect(() => {
+    if (!pendingJob.current) return;
+    const i = visible.findIndex((r) => r.j.id === pendingJob.current);
+    if (i >= 0) {
+      pendingJob.current = null;
+      scrollToIndex(i);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
+
   useEffect(() => {
     const i = visible.findIndex((r) => r.j.id === (rescored ?? activeId));
     if (i > 0) strip.current?.querySelector<HTMLElement>(`[data-i="${i}"]`)?.scrollIntoView({ inline: "center", block: "nearest" });
@@ -67,7 +92,7 @@ function JobList({ activeId }: { activeId?: string }) {
   const okCount = all.filter((r) => r.m.gate.pass && r.m.total >= s.config.threshold).length;
   return (
     <Screen>
-      <TopBar title="Việc phù hợp với bạn" sub={`${okCount} việc rất phù hợp · xếp theo mức phù hợp`} right={<BellLink />} />
+      <TopBar title="Việc phù hợp với bạn" sub={`${okCount} rất phù hợp · xếp theo điểm`} right={<BellLink />} />
       <div className="px-5 lg:px-0 lg:pl-1">
         <div className="flex gap-2 mb-4" data-reveal role="group" aria-label="Lọc việc">
           <button className="chip pressable !h-9 t-sm" aria-pressed={filter === "all"} onClick={() => setFilter("all")}>Tất cả · {all.length - hidden.length}</button>
@@ -82,10 +107,42 @@ function JobList({ activeId }: { activeId?: string }) {
                 </div>
               ))}
             </div>
-            <div className="flex justify-center gap-1.5 mt-3" aria-hidden>
-              {visible.map((r, i) => <i key={r.j.id} className={`h-1.5 rounded-full transition-all ${i === idx ? "w-[18px] bg-[var(--color-bg-accent-solid,#1B22A7)]" : "w-1.5 bg-subtle"}`} />)}
+            <div className="flex items-center justify-center gap-2 mt-3">
+              <button
+                type="button"
+                aria-label="Việc trước"
+                disabled={idx <= 0}
+                onClick={() => scrollToIndex(idx - 1)}
+                className="inline-flex items-center justify-center w-8 h-8 rounded-full text-muted hover:text-[var(--color-content-neutral-strongest)] hover:bg-subtle/60 disabled:opacity-30 disabled:pointer-events-none pressable focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-accent-solid)]"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden><path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </button>
+              <div className="flex items-center gap-1" role="tablist" aria-label="Chọn thẻ việc">
+                {visible.map((r, i) => (
+                  <button
+                    key={r.j.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={i === idx}
+                    aria-label={`${r.j.title} (${i + 1}/${visible.length})`}
+                    onClick={() => scrollToIndex(i)}
+                    className="p-1.5 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-accent-solid)]"
+                  >
+                    <span className={`block h-1.5 rounded-full transition-all ${i === idx ? "w-[18px] bg-[var(--color-bg-accent-solid)]" : "w-1.5 bg-subtle"}`} />
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                aria-label="Việc tiếp theo"
+                disabled={idx >= visible.length - 1}
+                onClick={() => scrollToIndex(idx + 1)}
+                className="inline-flex items-center justify-center w-8 h-8 rounded-full text-muted hover:text-[var(--color-content-neutral-strongest)] hover:bg-subtle/60 disabled:opacity-30 disabled:pointer-events-none pressable focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-accent-solid)]"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden><path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </button>
             </div>
-            {cur && <Bento job={cur.j} p={p} chips={matchChips(p, cur.j, cur.m)} fit={fitOf(cur.m, s.config.threshold)} app={mine.filter((a) => a.jobId === cur.j.id).at(-1)} />}
+            {cur && <Bento job={cur.j} p={p} chips={matchChips(p, cur.j, cur.m)} fit={fitOf(cur.m, s.config.threshold)} app={mine.filter((a) => a.jobId === cur.j.id).at(-1)} onSeePeers={() => { setFilter("all"); scrollToJob("mikawa-cnc"); }} />}
           </>
         )}
         {visible.length === 0 && (

@@ -6,7 +6,7 @@ import { Button, FitBadge, Icon, Logo, Sheet } from "@/components/ui";
 import { useApp } from "@/lib/store";
 import { gsap, useGSAP, useReveal } from "@/lib/motion";
 
-type Method = "zalo" | "phone";
+type Method = "zalo" | "line" | "phone";
 
 export default function Login() {
   const router = useRouter();
@@ -45,6 +45,7 @@ export default function Login() {
             <p className="t-lg text-muted mt-3" data-reveal>Trả lời 3 câu. AI tìm việc đúng visa, có lương thực nhận rõ ràng. Nhà máy trả lời trong 24 giờ.</p>
             <div className="mt-8 grid gap-3" data-reveal>
               <Button size="lg" block onClick={() => setSheet("zalo")}><ZaloMark />Tiếp tục với Zalo</Button>
+              <Button size="lg" block variant="secondary" onClick={() => setSheet("line")}><LineMark />Tiếp tục với LINE</Button>
               <Button size="lg" block variant="tertiary" icon="phone" onClick={() => setSheet("phone")}>Dùng số điện thoại</Button>
             </div>
             <ul className="mt-8 grid gap-3 t-sm text-muted" data-reveal>
@@ -58,6 +59,7 @@ export default function Login() {
       </div>
 
       <ZaloSheet open={sheet === "zalo"} onClose={() => setSheet(null)} onAllow={() => done("zalo", "Nguyễn Tuấn Anh")} onPhone={() => setSheet("phone")} />
+      <LineSheet open={sheet === "line"} onClose={() => setSheet(null)} onAllow={() => done("line", "Nguyễn Tuấn Anh")} onPhone={() => setSheet("phone")} />
       <PhoneSheet open={sheet === "phone"} onClose={() => setSheet(null)} onDone={() => done("phone", "")} />
     </div>
   );
@@ -66,7 +68,7 @@ export default function Login() {
 function Hero() {
   return (
     <div className="hidden lg:flex relative ink overflow-hidden flex-col justify-between p-12 min-h-dvh">
-      <Link href="/" aria-label="Trang giới thiệu" className="text-[var(--color-content-inverse-strongest)]"><Logo inverse /></Link>
+      <Link href="/" aria-label="Trang giới thiệu" className="text-[var(--color-content-on-accent)]"><Logo inverse /></Link>
       <div className="grid place-items-center"><HeroArt /></div>
       <p className="text-[56px] leading-[1] font-semibold tracking-[-0.05em] max-w-[560px]" data-reveal>
         Đúng visa. Đúng tay nghề.<br /><span className="muted-ink">Có kết quả trong 24 giờ.</span>
@@ -127,10 +129,34 @@ function ZaloSheet({ open, onClose, onAllow, onPhone }: { open: boolean; onClose
           <Button size="lg" block variant="tertiary" icon="phone" onClick={onPhone}>Nhập số điện thoại</Button>
         </div>
       }>
-      <p className="text-muted mb-4">Mở Zalo trên điện thoại khác, chọn <b className="text-fg">Quét mã QR</b> rồi hướng camera vào mã này.</p>
+      <p className="text-muted mb-4">Chạm <b className="text-fg">Mở Zalo trên điện thoại này</b> để xác nhận một chạm. Nếu bạn đang mở trên máy tính, dùng điện thoại quét mã QR bên dưới.</p>
       <div className="mx-auto w-fit rounded-[28px] bg-[var(--color-bg-surface)] p-4 border border-hair shadow-[var(--shadow-bottom-1)]"><FakeQR /></div>
-      <p className="t-sm text-muted text-center mt-3 flex items-center justify-center gap-2"><Icon name="clock" size={16} />Mã đổi sau 2 phút · bản demo</p>
+      <p className="t-sm text-muted text-center mt-3 flex items-center justify-center gap-2"><Icon name="clock" size={16} />Hoặc quét mã QR nếu bạn đang mở trên máy tính · bản demo</p>
       <p className="t-sm text-muted mt-4 flex gap-2"><Icon name="lock-01" size={16} className="mt-0.5" />ViệcNhanh chỉ lấy tên, ảnh đại diện và số điện thoại. Không đọc tin nhắn hay danh bạ.</p>
+    </Sheet>
+  );
+}
+
+function LineSheet({ open, onClose, onAllow, onPhone }: { open: boolean; onClose: () => void; onAllow: () => void; onPhone: () => void }) {
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { if (open) setBusy(false); }, [open]);
+  return (
+    <Sheet open={open} onClose={onClose} title="Đăng nhập bằng LINE"
+      footer={
+        <div className="grid gap-2">
+          <Button size="lg" block loading={busy} onClick={() => { setBusy(true); setTimeout(onAllow, 700); }}><LineMark />Mở LINE trên điện thoại này</Button>
+          <Button size="lg" block variant="tertiary" icon="phone" onClick={onPhone}>Nhập số điện thoại</Button>
+        </div>
+      }>
+      <p className="text-muted mb-4">Dùng tài khoản LINE tại Nhật để đăng nhập nhanh và nhận lịch phỏng vấn từ nhà máy qua tin nhắn.</p>
+      <div className="well p-4 flex items-center gap-3">
+        <LineMark big />
+        <div className="min-w-0">
+          <p className="font-semibold">ViệcNhanh Aichi Official</p>
+          <p className="t-sm text-muted">Chỉ nhận tên hiển thị và ID để báo lịch phỏng vấn</p>
+        </div>
+      </div>
+      <p className="t-sm text-muted mt-4 flex gap-2"><Icon name="lock-01" size={16} className="mt-0.5" />Không tự gửi tin cho bạn bè hoặc đọc nhóm chat của bạn.</p>
     </Sheet>
   );
 }
@@ -192,13 +218,31 @@ function PhoneSheet({ open, onClose, onDone }: { open: boolean; onClose: () => v
         </div>
       ) : (
         <div>
-          <p className="text-muted mb-4">Đã gửi tới {cc} {phone}. <button className="underline underline-offset-4 text-fg" onClick={() => setStep("phone")}>Đổi số</button></p>
-          <div ref={boxes} className="grid grid-cols-6 gap-2" aria-label="Mã 6 số" role="group">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className={`h-14 rounded-2xl grid place-items-center t-h4 tnum border ${otp[i] ? "border-line-strong" : "border-line"}`}>{otp[i] ?? ""}</div>
-            ))}
+          <p className="text-muted mb-4">Đã gửi tới {cc} {phone}. <button type="button" className="underline underline-offset-4 text-fg" onClick={() => setStep("phone")}>Đổi số</button></p>
+          <div className="relative">
+            <input
+              autoFocus
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              aria-label="Mã xác nhận 6 số"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              className="peer absolute inset-0 z-10 size-full opacity-0 cursor-text"
+            />
+            <div ref={boxes} className="grid grid-cols-6 gap-2 peer-focus-visible:[&>div:first-child]:ring-2 peer-focus-visible:[&>div]:border-line-strong" aria-hidden="true">
+              {Array.from({ length: 6 }).map((_, i) => {
+                const active = i === Math.min(otp.length, 5);
+                return (
+                  <div key={i} className={`h-14 rounded-2xl grid place-items-center t-h4 tnum border transition-colors ${otp[i] ? "border-line-strong bg-surface" : active ? "border-[var(--color-border-accent-solid)] bg-surface" : "border-line"}`}>
+                    {otp[i] ?? ""}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <p className="t-sm text-muted mt-3">{otp.length < 6 ? "Đang chờ SMS… (bản demo tự điền mã)" : "Đã nhận mã."}</p>
+          <p className="t-sm text-muted mt-3">{otp.length < 6 ? "Gõ hoặc dán mã 6 số (bản demo cũng tự điền)…" : "Đã nhận mã."}</p>
         </div>
       )}
     </Sheet>
@@ -207,4 +251,8 @@ function PhoneSheet({ open, onClose, onDone }: { open: boolean; onClose: () => v
 
 function ZaloMark({ big }: { big?: boolean }) {
   return <span className={`grid place-items-center rounded-[8px] bg-[var(--color-bg-inverse-solid)] text-[var(--color-content-neutral-strongest)] font-bold ${big ? "size-11 rounded-2xl text-[13px]" : "size-6 text-[9px]"}`} aria-hidden>Zalo</span>;
+}
+
+function LineMark({ big }: { big?: boolean }) {
+  return <span className={`grid place-items-center rounded-[8px] bg-[#06C755] text-white font-bold ${big ? "size-11 rounded-2xl text-[13px]" : "size-6 text-[9px]"}`} aria-hidden>LINE</span>;
 }

@@ -52,9 +52,9 @@ export default function Profile() {
         </section>
 
         <section className="card p-6 grid gap-4" data-reveal>
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="font-medium">Giao diện</span>
-            <div className="w-[240px]"><Segmented size="sm" label="Giao diện" value={config.theme} onChange={(v) => setConfig({ theme: v })} options={[{ value: "system", label: "Tự động" }, { value: "light", label: "Sáng" }, { value: "dark", label: "Tối" }]} /></div>
+            <div className="w-full sm:w-[240px]"><Segmented size="sm" label="Giao diện" value={config.theme} onChange={(v) => setConfig({ theme: v })} options={[{ value: "system", label: "Tự động" }, { value: "light", label: "Sáng" }, { value: "dark", label: "Tối" }]} /></div>
           </div>
           <button onClick={() => toast("Bản demo: nút này mở Zalo OA hỗ trợ tiếng Việt", "message-chat-circle")} className="flex items-center gap-3 py-1 text-left"><Icon name="message-chat-circle" /><span className="flex-1"><b className="block">Hỗ trợ tiếng Việt</b><span className="t-sm text-muted">Nhắn Zalo OA · 7h–22h mỗi ngày</span></span><Icon name="chevron-right-01" className="text-faint" /></button>
         </section>

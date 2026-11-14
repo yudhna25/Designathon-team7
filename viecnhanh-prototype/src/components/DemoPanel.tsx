@@ -52,13 +52,13 @@ export function DemoPanel() {
   return (
     <>
       {show && !open && (
-        // Phones: slim tab on the right edge so it never covers a CTA. Desktop: pill bottom-right.
+        // Compact bottom-right pill (above BottomNav on phones) so it never covers cards or citation links.
         <button
           onClick={() => setOpen(true)}
-          className="pressable fixed z-40 right-0 top-[38%] lg:top-auto lg:right-5 lg:bottom-5 flex flex-col lg:flex-row items-center gap-1.5 lg:gap-2 rounded-l-xl lg:rounded-full bg-surface px-1.5 py-3 lg:pl-3 lg:pr-4 lg:py-0 lg:h-10 shadow-[var(--shadow-bottom-2)] border border-hair border-r-0 lg:border-r t-sm font-semibold"
+          className="pressable fixed z-40 right-3 bottom-20 lg:right-5 lg:bottom-5 flex items-center gap-1.5 lg:gap-2 rounded-full bg-surface px-3 h-9 lg:pl-3 lg:pr-4 lg:h-10 shadow-[var(--shadow-bottom-2)] border border-hair t-sm font-semibold"
           aria-label="Mở bảng điều khiển demo (Shift + D)"
         >
-          <Icon name="sliders-02" size={18} /><span className="[writing-mode:vertical-rl] lg:[writing-mode:horizontal-tb] text-[12px] lg:text-[length:var(--text-body-small)] tracking-wide">Demo</span>
+          <Icon name="sliders-02" size={16} /><span className="text-[12px] lg:text-[length:var(--text-body-small)] tracking-wide">Demo</span>
         </button>
       )}
       {open && <Drawer onClose={() => setOpen(false)} />}

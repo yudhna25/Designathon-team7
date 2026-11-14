@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useRef, useState } from "react";
-import { Button, FitBadge, Icon, InlineNote, MatchChips, Sheet, Segmented } from "@/components/ui";
+import { Suspense, type CSSProperties, useEffect, useRef, useState } from "react";
+import { Button, FitBadge, Icon, InlineNote, MatchChips, Num, Sheet, Segmented } from "@/components/ui";
 import { Screen, TopBar } from "@/components/worker/Shell";
 import { PayCard, ScoreBreakdown } from "@/components/worker/Blocks";
 import { PeersTile } from "@/components/worker/Bento";
@@ -14,7 +14,7 @@ import { SHIFT_VI } from "@/lib/labels";
 import { FIT_VI, fitOf, matchChips, matchGuidance, scoreMatch, suggestImprovements } from "@/lib/scoring";
 import { takeHome, yen } from "@/lib/pay";
 import { deadlineOf, fmtLeft, isClosed, simNow, useApp, useNow } from "@/lib/store";
-import { gsap, useGSAP } from "@/lib/motion";
+import { gsap, resolveViewTransition, useGSAP } from "@/lib/motion";
 
 export default function Page() {
   return <Suspense><JobDetail /></Suspense>;
@@ -27,6 +27,13 @@ function JobDetail() {
   const s = useApp();
   const job = jobById(id);
   const [sheet, setSheet] = useState<null | "apply" | "anyway" | "path">(null);
+  const [dorm, setDorm] = useState(() => (job ? job.dorm !== null && (s.profile?.relocate ?? false) : false));
+  useEffect(() => {
+    setDorm(job ? job.dorm !== null && (s.profile?.relocate ?? false) : false);
+  }, [job?.id, s.profile?.relocate]);
+  useEffect(() => {
+    resolveViewTransition();
+  }, [id]);
   if (!job) return <div className="p-8"><p>Không tìm thấy việc này.</p><Link className="underline" href="/worker/jobs">Về danh sách</Link></div>;
 
   const p = s.profile!;
@@ -38,18 +45,18 @@ function JobDetail() {
   const mine = s.apps.find((a) => a.candidateId === "me" && a.jobId === job.id && !isClosed(a, s));
   const invited = s.apps.some((a) => a.candidateId === "me" && a.jobId === job.id && a.status === "approved");
   const best = [...m.criteria].sort((a, b) => b.score - a.score);
-  const pay = takeHome(job, p.relocate);
+  const pay = takeHome(job, dorm);
   const start = earliestStart(p, simNow(s.clock, s.config.speed) + 864e5);
 
   return (
     <Screen deps={[id]} className="pb-6 lg:pt-6 lg:pb-0">
       <div className="lg:hidden"><TopBar back="/worker/jobs" title={job.company} sub={CITIES[job.city].vi} /></div>
-      <div className="px-5 lg:px-0 grid grid-cols-1 gap-4 max-w-[760px]">
-        <section className="card p-6 md:p-8" data-reveal>
+      <div className="px-5 lg:px-0 pb-28 lg:pb-6 grid grid-cols-1 gap-4 max-w-[760px]">
+        <section className="card p-6 md:p-8" style={{ viewTransitionName: `pass-card-${job.id}` } as CSSProperties} data-reveal>
           <div className="flex flex-col-reverse md:flex-row md:items-start gap-6 justify-between">
             <div className="min-w-0">
               <p className="t-sm text-muted">{job.company} · {job.companyJa} · {CITIES[job.city].vi}</p>
-              <h1 className="t-h2 mt-1">{job.title}</h1>
+              <h1 className="t-h2 mt-1" style={{ viewTransitionName: `pass-title-${job.id}` } as CSSProperties}>{job.title}</h1>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {job.isNewPlant && <span className="badge badge-solid badge-md">Nhà máy mới</span>}
                 <span className="badge badge-md"><Icon name={job.verified ? "check-verified" : "hourglass"} size={14} />{job.verified ? "ViệcNhanh đã xác minh" : "Đang xác minh"}</span>
@@ -63,7 +70,7 @@ function JobDetail() {
           </div>
           <div className="mt-4 pt-4 hair-t">
             <p className="t-sm text-muted">Thực nhận mỗi tháng · ước tính ban đầu</p>
-            <p className="led text-[40px] leading-none mt-2" aria-hidden>{yen(pay.net)}</p><p className="sr-only">{yen(pay.net)}</p>
+            <p className="led text-[40px] leading-none mt-2" style={{ viewTransitionName: `pass-net-${job.id}` } as CSSProperties} aria-hidden><Num value={pay.net} format={yen} spring /></p><p className="sr-only">{yen(pay.net)}</p>
             <p className="t-sm text-muted mt-1">{pay.housingNote} · xem chi tiết khấu trừ bên dưới</p>
           </div>
           <div className="mt-5 pt-5 hair-t"><MatchChips chips={matchChips(p, job, m)} /></div>
@@ -96,7 +103,7 @@ function JobDetail() {
           </details>
         </section>
 
-        <div data-reveal><PayCard key={`${job.id}-${p.relocate}`} job={job} relocate={p.relocate} /></div>
+        <div data-reveal><PayCard key={job.id} job={job} relocate={p.relocate} dorm={dorm} onDormChange={setDorm} /></div>
 
         <section className="card p-6" data-reveal aria-labelledby="facts-h">
           <h2 id="facts-h" className="t-h4 mb-4">Công việc</h2>
@@ -127,8 +134,8 @@ function JobDetail() {
       </div>
 
       {/* Sticky decision bar */}
-      <div className="fixed lg:sticky bottom-0 inset-x-0 z-20 lg:mt-4 bg-[color-mix(in_oklab,var(--color-bg-canvas)_90%,transparent)] backdrop-blur-xl border-t border-hair lg:border-0 lg:bg-transparent lg:backdrop-blur-none">
-        <div className="px-5 lg:px-0 pt-3 pb-3 safe-b max-w-[760px] lg:pb-8">
+      <div className="fixed lg:sticky bottom-0 inset-x-0 z-20 lg:mt-4 bg-[color-mix(in_oklab,var(--color-bg-canvas)_92%,transparent)] backdrop-blur-xl border-t border-hair">
+        <div className="px-5 lg:px-0 py-3 safe-b max-w-[760px] lg:pb-4">
           {invited ? (
             <Button size="lg" block icon="calendar" onClick={() => router.push("/worker/applications")}>Xem lời mời phỏng vấn</Button>
           ) : mine ? (
@@ -137,7 +144,7 @@ function JobDetail() {
             <Button size="lg" block onClick={() => setSheet("apply")} iconRight="arrow-right">Ứng tuyển · HR trả lời trong {s.config.deadlineH}h</Button>
           ) : m.gate.pass ? (
             <div className="flex flex-wrap gap-2">
-              <Button size="lg" className="flex-1" icon="trend-up-01" onClick={() => router.push(`/worker/improve?job=${job.id}`)}>Cập nhật kinh nghiệm</Button>
+              {ups.length > 0 && <Button size="lg" className="flex-1" icon="trend-up-01" onClick={() => router.push(`/worker/improve?job=${job.id}`)}>Cập nhật kinh nghiệm</Button>}
               <Button size="lg" className="flex-1" variant="tertiary" onClick={() => setSheet("anyway")}>Vẫn ứng tuyển ngay</Button>
             </div>
           ) : (

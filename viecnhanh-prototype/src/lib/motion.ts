@@ -46,3 +46,42 @@ export function applyMotion(mode: "normal" | "slow" | "off") {
   document.documentElement.dataset.motion = effective;
   gsap.globalTimeline.timeScale(effective === "slow" ? 1 / 3 : effective === "off" ? 1000 : 1);
 }
+
+let resolvePendingVT: (() => void) | null = null;
+
+/** Finish an active route View Transition once the destination view mounts. */
+export function resolveViewTransition() {
+  if (resolvePendingVT) {
+    const r = resolvePendingVT;
+    resolvePendingVT = null;
+    requestAnimationFrame(() => r());
+  }
+}
+
+/** Run a state or route transition inside the View Transitions API when supported and motion is active. */
+export function withViewTransition(fn: () => void, opts?: { asyncRoute?: boolean }) {
+  if (typeof document === "undefined") { fn(); return; }
+  const quiet = window.matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.dataset.motion === "off";
+  const doc = document as Document & { startViewTransition?: (cb: () => void | Promise<void>) => void };
+  if (quiet || typeof doc.startViewTransition !== "function") {
+    fn();
+    return;
+  }
+  if (!opts?.asyncRoute) {
+    doc.startViewTransition(fn);
+    return;
+  }
+  doc.startViewTransition(
+    () =>
+      new Promise<void>((resolve) => {
+        resolvePendingVT = resolve;
+        fn();
+        setTimeout(() => {
+          if (resolvePendingVT === resolve) {
+            resolvePendingVT = null;
+            resolve();
+          }
+        }, 320);
+      }),
+  );
+}

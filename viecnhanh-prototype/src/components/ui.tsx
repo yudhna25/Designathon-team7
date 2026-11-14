@@ -17,7 +17,7 @@ export function Icon({ name, size = 20, solid, className = "", label }: { name: 
 }
 
 type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "secondary" | "tertiary" | "flat" | "danger";
+  variant?: "primary" | "secondary" | "tertiary" | "flat" | "danger" | "inverse";
   size?: "lg" | "md" | "sm" | "xs";
   block?: boolean;
   loading?: boolean;
@@ -35,24 +35,38 @@ export function Button({ variant = "primary", size = "md", block, loading, icon,
   );
 }
 
-/** Animated number (count-up). */
-export function Num({ value, format = (n: number) => Math.round(n).toLocaleString("ja-JP"), className = "", duration = 1 }: { value: number; format?: (n: number) => string; className?: string; duration?: number }) {
+/** Animated number (count-up with optional mid-flight spring interpolation). */
+export function Num({ value, format = (n: number) => Math.round(n).toLocaleString("ja-JP"), className = "", duration = 1, spring }: { value: number; format?: (n: number) => string; className?: string; duration?: number; spring?: boolean }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const last = useRef(value);
+  const live = useRef(value);
+  const first = useRef(true);
   useGSAP(
     () => {
-      const o = { v: last.current };
+      if (first.current && spring) {
+        first.current = false;
+        live.current = value;
+        if (ref.current) ref.current.textContent = format(value);
+        return;
+      }
+      first.current = false;
+      const o = { v: live.current };
       gsap.to(o, {
         v: value,
-        duration,
-        ease: "expo.out",
-        onUpdate: () => { if (ref.current) ref.current.textContent = format(o.v); },
-        onComplete: () => { last.current = value; },
+        duration: spring ? Math.min(duration, 0.55) : duration,
+        ease: spring ? "power3.out" : "expo.out",
+        onUpdate: () => {
+          live.current = o.v;
+          if (ref.current) ref.current.textContent = format(o.v);
+        },
+        onComplete: () => { live.current = value; },
       });
+      if (spring && ref.current) {
+        gsap.fromTo(ref.current, { scale: 1.03 }, { scale: 1, duration: 0.42, ease: "back.out(2)", clearProps: "transform" });
+      }
     },
     { dependencies: [value] },
   );
-  return <span ref={ref} className={`tnum ${className}`}>{format(value)}</span>;
+  return <span ref={ref} className={`inline-block origin-left tnum ${className}`}>{format(value)}</span>;
 }
 
 /** Match score ring — the hero element of the AI scoring. */

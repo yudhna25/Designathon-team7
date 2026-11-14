@@ -53,7 +53,12 @@ export default function Analyzing() {
       <p className="t-eyebrow mb-3 flex items-center gap-2 !text-brand"><Icon name="stars-01" solid size={16} />AI đang dựng hồ sơ</p>
       <h1 className="t-h2 mb-6">{done ? (great.length ? `Có ${great.length} việc rất phù hợp với bạn` : "AI đã kiểm tra hồ sơ của bạn") : "Chờ một chút, AI đang đọc hồ sơ…"}</h1>
 
-      <div className={`card p-5 ${done ? "hidden" : ""}`}><AIThinking steps={steps} onDone={() => setDone(true)} /></div>
+      <div className={`card p-5 ${done ? "hidden" : ""}`}>
+        <AIThinking steps={steps} onDone={() => setDone(true)} />
+        <div className="mt-4 pt-3 hair-t flex justify-end">
+          <Button size="sm" variant="flat" iconRight="arrow-right" onClick={() => setDone(true)}>Xem kết quả ngay</Button>
+        </div>
+      </div>
 
       <div ref={result} className={done ? "grid gap-4" : "hidden"}>
         <section data-res className="card p-5" aria-labelledby="ai-h">

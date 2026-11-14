@@ -89,7 +89,7 @@ export function TopBar({ title, back, right, sub }: { title?: ReactNode; back?: 
     return () => window.removeEventListener("scroll", on);
   }, []);
   return (
-    <header className={`sticky top-0 z-20 transition-[background-color,box-shadow] duration-[var(--motion-base)] ${scrolled ? "bg-[color-mix(in_oklab,var(--color-bg-canvas)_86%,transparent)] backdrop-blur-xl shadow-[0_1px_0_var(--color-border-neutral-pale)]" : ""}`}>
+    <header className={`sticky top-0 z-20 bg-[color-mix(in_oklab,var(--color-bg-canvas)_92%,transparent)] backdrop-blur-xl transition-[background-color,box-shadow] duration-[var(--motion-base)] ${scrolled ? "shadow-[0_1px_0_var(--color-border-neutral-pale)]" : ""}`}>
       <div className="h-14 md:h-16 flex items-center gap-1 px-2 md:px-4">
         {back ? (
           <button className="icon-btn pressable" aria-label="Quay lại" onClick={() => (back === true ? router.back() : router.push(back))}>

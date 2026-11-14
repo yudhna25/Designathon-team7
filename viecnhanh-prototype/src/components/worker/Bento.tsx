@@ -8,7 +8,7 @@ import { deadlineOf, fmtLeft, isClosed, useApp, useNow, type Application } from 
 import { Avatar, Icon, MatchChips, ScoreRing } from "../ui";
 
 /** "Người Việt ở đây": social proof + the door to an anonymous hometown senpai. */
-export function PeersTile({ jobId, className = "" }: { jobId: string; className?: string }) {
+export function PeersTile({ jobId, className = "", onSeePeers }: { jobId: string; className?: string; onSeePeers?: () => void }) {
   const data = PEERS[jobId];
   const [ask, setAsk] = useState(false);
   if (!data) {
@@ -16,7 +16,11 @@ export function PeersTile({ jobId, className = "" }: { jobId: string; className?
       <section className={`card-flat p-4 ${className}`} aria-label="Người Việt ở đây">
         <p className="t-sm font-semibold text-muted">Người Việt ở đây</p>
         <p className="mt-1">Chưa có người Việt nào làm ở đây. Bạn có thể là người đầu tiên.</p>
-        <Link href="/worker/jobs" className="t-sm font-semibold text-brand mt-2 inline-block">Xem việc có người Việt</Link>
+        {onSeePeers ? (
+          <button type="button" onClick={onSeePeers} className="t-sm font-semibold text-brand mt-2 inline-flex items-center gap-1 underline underline-offset-4">Xem việc có người Việt</button>
+        ) : (
+          <Link href="/worker/jobs/mikawa-cnc" className="t-sm font-semibold text-brand mt-2 inline-flex items-center gap-1 underline underline-offset-4">Xem việc có người Việt</Link>
+        )}
       </section>
     );
   }
@@ -24,13 +28,13 @@ export function PeersTile({ jobId, className = "" }: { jobId: string; className?
   const canAsk = data.peers.some((x) => x.askable && x.attendanceVerified);
   return (
     <section className={`card-flat p-4 ${className}`} aria-label="Người Việt ở đây">
-      <div className="flex items-center gap-3">
-        <span className="flex">{data.peers.slice(0, 3).map((x, i) => <span key={x.id} className={i ? "-ml-2" : ""}><Avatar name={x.name} size={32} /></span>)}</span>
-        <div className="min-w-0">
+      <div className="flex items-start gap-3">
+        <span className="flex mt-0.5">{data.peers.slice(0, 3).map((x, i) => <span key={x.id} className={i ? "-ml-2" : ""}><Avatar name={x.name} size={32} /></span>)}</span>
+        <div className="min-w-0 flex-1">
           <p className="font-semibold">{data.count} người Việt đang làm ở đây</p>
-          <p className="t-sm text-muted truncate">“{lead.quote}” · {lead.name.split(" ").pop()}</p>
+          <p className="t-sm text-muted line-clamp-2">“{lead.quote}” · {lead.name.split(" ").pop()}</p>
         </div>
-        <span className="ml-auto text-[18px] font-bold text-brand tnum">{lead.rating.toFixed(1).replace(".", ",")}★</span>
+        <span className="ml-auto text-[18px] font-bold text-brand tnum shrink-0">{lead.rating.toFixed(1).replace(".", ",")}★</span>
       </div>
       {canAsk && (
         <button className="btn btn-secondary btn-sm pressable mt-3 w-full" onClick={() => setAsk(true)}>
@@ -43,14 +47,14 @@ export function PeersTile({ jobId, className = "" }: { jobId: string; className?
 }
 
 /** Bento under the pass. Tiles change with the pass in view. */
-export function Bento({ job, p, chips, fit, app }: { job: Job; p: Profile; chips: Chip[]; fit: Fit; app?: Application }) {
+export function Bento({ job, p, chips, fit, app, onSeePeers }: { job: Job; p: Profile; chips: Chip[]; fit: Fit; app?: Application; onSeePeers?: () => void }) {
   const s = useApp();
   const now = useNow();
   const open = app && !isClosed(app, s);
   const steps = fit === "great" ? 0 : Math.max(1, suggestImprovements(p, job, s.config.weights).length);
   return (
     <div className="grid grid-cols-2 gap-2 mt-3">
-      <PeersTile key={job.id} jobId={job.id} className="col-span-2" />
+      <PeersTile key={job.id} jobId={job.id} className="col-span-2" onSeePeers={onSeePeers} />
       <section className="card-flat p-4" aria-label="Tiêu chí">
         <p className="t-sm font-semibold text-muted mb-2">Tiêu chí</p>
         <MatchChips chips={chips} max={4} />

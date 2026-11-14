@@ -39,7 +39,7 @@ export function FlightPath({ p, job, from, open, onClose }: { p: Profile; job: J
           return (
             <li key={st.key} className="relative pl-9 pb-4">
               {i < steps.length - 1 && <span className="absolute left-[11px] top-6 bottom-0 w-0.5 bg-subtle" aria-hidden />}
-              <span className={`absolute left-0 top-0.5 grid size-6 place-items-center rounded-full ${i === 0 ? "fp-now bg-[#1B22A7] text-white" : st.legal ? "ink" : "bg-subtle"}`} aria-hidden>
+              <span className={`absolute left-0 top-0.5 grid size-6 place-items-center rounded-full ${i === 0 ? "fp-now bg-[var(--color-bg-accent-solid)] text-white" : st.legal ? "ink" : "bg-subtle"}`} aria-hidden>
                 {st.legal ? <Icon name="lock-01" size={12} /> : <span className="size-1.5 rounded-full bg-current" />}
               </span>
               <button className="w-full text-left flex items-start justify-between gap-3" aria-expanded={isOpen} onClick={() => setOpenKey(isOpen ? null : st.key)}>

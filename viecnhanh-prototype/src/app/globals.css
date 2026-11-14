@@ -1,6 +1,23 @@
 @import "tailwindcss";
 @import "../styles/zen-tokens.css";
 
+/* Overdrive CSS @property custom properties for 60fps physics interpolation */
+@property --ewa-taken {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+@property --ewa-avail {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 50%;
+}
+@property --pay-ratio {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 75%;
+}
+
 /* ViệcNhanh palette (ZEN template "Việc Nhanh"): Bold Blue primary, Light Blue secondary,
    Soft White canvas, Jet Black text. Wired into ZEN accent tokens; html has data-emphasis="brand". */
 :root:not([data-theme="dark"]) {
@@ -93,6 +110,7 @@ body {
   line-height: var(--text-body-base--line-height);
   letter-spacing: var(--text-body-base--letter-spacing);
   font-feature-settings: "cv11", "ss01", "tnum" 0;
+  text-wrap: pretty;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
   overflow-x: hidden;
@@ -112,14 +130,14 @@ body {
 [hidden] { display: none !important; }
 
 /* ---------- Typography (ZEN text styles) ---------- */
-@utility t-display { font-size: var(--text-display-2); line-height: var(--text-display-2--line-height); letter-spacing: var(--text-display-2--letter-spacing); font-weight: 600; }
-@utility t-h1 { font-size: var(--text-heading-1); line-height: var(--text-heading-1--line-height); letter-spacing: var(--text-heading-1--letter-spacing); font-weight: 600; }
-@utility t-h2 { font-size: var(--text-heading-2); line-height: var(--text-heading-2--line-height); letter-spacing: var(--text-heading-2--letter-spacing); font-weight: 600; }
-@utility t-h3 { font-size: var(--text-heading-3); line-height: var(--text-heading-3--line-height); letter-spacing: var(--text-heading-3--letter-spacing); font-weight: 600; }
-@utility t-h4 { font-size: var(--text-heading-4); line-height: var(--text-heading-4--line-height); letter-spacing: var(--text-heading-4--letter-spacing); font-weight: 600; }
+@utility t-display { font-size: var(--text-display-2); line-height: var(--text-display-2--line-height); letter-spacing: var(--text-display-2--letter-spacing); font-weight: 600; text-wrap: balance; }
+@utility t-h1 { font-size: var(--text-heading-1); line-height: var(--text-heading-1--line-height); letter-spacing: var(--text-heading-1--letter-spacing); font-weight: 600; text-wrap: balance; }
+@utility t-h2 { font-size: var(--text-heading-2); line-height: var(--text-heading-2--line-height); letter-spacing: var(--text-heading-2--letter-spacing); font-weight: 600; text-wrap: balance; }
+@utility t-h3 { font-size: var(--text-heading-3); line-height: var(--text-heading-3--line-height); letter-spacing: var(--text-heading-3--letter-spacing); font-weight: 600; text-wrap: balance; }
+@utility t-h4 { font-size: var(--text-heading-4); line-height: var(--text-heading-4--line-height); letter-spacing: var(--text-heading-4--letter-spacing); font-weight: 600; text-wrap: balance; }
 @utility t-sub { font-size: var(--text-subheading); line-height: var(--text-subheading--line-height); letter-spacing: var(--text-subheading--letter-spacing); font-weight: 600; }
-@utility t-lg { font-size: var(--text-body-extra); line-height: var(--text-body-extra--line-height); letter-spacing: var(--text-body-extra--letter-spacing); }
-@utility t-base { font-size: var(--text-body-base); line-height: var(--text-body-base--line-height); letter-spacing: var(--text-body-base--letter-spacing); }
+@utility t-lg { font-size: var(--text-body-extra); line-height: var(--text-body-extra--line-height); letter-spacing: var(--text-body-extra--letter-spacing); text-wrap: pretty; }
+@utility t-base { font-size: var(--text-body-base); line-height: var(--text-body-base--line-height); letter-spacing: var(--text-body-base--letter-spacing); text-wrap: pretty; }
 @utility t-sm { font-size: var(--text-body-small); line-height: var(--text-body-small--line-height); letter-spacing: var(--text-body-small--letter-spacing); }
 @utility t-cap { font-size: var(--text-caption); line-height: var(--text-caption--line-height); letter-spacing: 0.04em; text-transform: uppercase; font-weight: 500; }
 @utility t-eyebrow { font-family: var(--font-mono); font-size: var(--text-body-small); line-height: 1; letter-spacing: 0; text-transform: uppercase; color: var(--color-content-neutral-base); }
@@ -149,9 +167,12 @@ body {
 .btn-sm { height: var(--button-sm-h); padding: 0 16px; font-size: var(--text-button-s); }
 .btn-xs { height: var(--button-xs-h); padding: 0 12px; font-size: var(--text-button-xs); gap: 4px; }
 .btn-block { width: 100%; }
-.btn-primary { background: var(--c-button-primary-bg); color: var(--c-button-primary-fg); }
+.btn-primary { background: var(--c-button-primary-bg); color: var(--color-content-on-accent); }
 @media (hover: hover) { .btn-primary:hover { background: var(--c-button-primary-bg-hover); } }
 .btn-primary:active { background: var(--c-button-primary-bg-pressed); }
+.btn-inverse, .ink .btn-primary { background: var(--color-content-on-accent); color: var(--color-bg-accent-solid); box-shadow: var(--shadow-bottom-1); }
+@media (hover: hover) { .btn-inverse:hover, .ink .btn-primary:hover { background: color-mix(in oklab, var(--color-content-on-accent) 92%, var(--color-bg-accent-solid)); } }
+.btn-inverse:active, .ink .btn-primary:active { background: color-mix(in oklab, var(--color-content-on-accent) 85%, var(--color-bg-accent-solid)); }
 .btn-secondary { background: var(--color-bg-neutral-subtle); color: var(--color-content-neutral-strongest); }
 @media (hover: hover) { .btn-secondary:hover { background: var(--color-bg-neutral-subtle-hover); } }
 .btn-tertiary { background: var(--c-button-tertiary-bg); color: var(--c-button-tertiary-fg); border-color: var(--c-button-tertiary-border); box-shadow: var(--shadow-action); }
@@ -192,7 +213,7 @@ body {
 .seg > button[aria-pressed="true"], .seg > button[aria-selected="true"] { color: var(--color-content-neutral-strongest); }
 .seg > button:not([aria-pressed="true"]):hover { background: color-mix(in oklab, var(--color-bg-surface) 60%, transparent); }
 .seg > button[aria-pressed="true"] { color: #fff; }
-.seg .seg-thumb { position: absolute; z-index: 0; top: 4px; bottom: 4px; border-radius: var(--radius-full); background: #1B22A7; box-shadow: var(--shadow-bottom-1); transition: left var(--motion-slow) var(--ease-emphasized), width var(--motion-slow) var(--ease-emphasized); }
+.seg .seg-thumb { position: absolute; z-index: 0; top: 4px; bottom: 4px; border-radius: var(--radius-full); background: var(--color-bg-accent-solid); box-shadow: var(--shadow-bottom-1); transition: left var(--motion-slow) var(--ease-emphasized), width var(--motion-slow) var(--ease-emphasized); }
 
 /* ---------- Inputs ---------- */
 .field { display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); }
@@ -234,3 +255,36 @@ select.input { background-image: linear-gradient(45deg, transparent 50%, current
 .fp-now { animation: fp-pulse 1.8s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .fp-now { animation: none; } }
 [data-motion="off"] .fp-now { animation: none; }
+
+/* View Transitions shared-element morph + 60fps @property bar physics */
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: 0.38s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0.01ms !important;
+  }
+}
+[data-motion="off"] ::view-transition-group(*),
+[data-motion="off"] ::view-transition-old(*),
+[data-motion="off"] ::view-transition-new(*) {
+  animation-duration: 0.01ms !important;
+}
+
+.ewa-seg-taken {
+  width: var(--ewa-taken);
+  transition: --ewa-taken var(--motion-base) cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ewa-seg-avail {
+  width: var(--ewa-avail);
+  transition: --ewa-avail var(--motion-base) cubic-bezier(0.16, 1, 0.3, 1);
+}
+.pay-ratio-bar {
+  width: var(--pay-ratio);
+  transition: --pay-ratio var(--motion-slow) cubic-bezier(0.16, 1, 0.3, 1);
+}

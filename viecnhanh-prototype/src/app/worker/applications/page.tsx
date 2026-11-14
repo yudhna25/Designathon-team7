@@ -1,10 +1,12 @@
 "use client";
+import { flushSync } from "react-dom";
 import Link from "next/link";
 import { Button, FitBadge, Icon, Meter, toast } from "@/components/ui";
 import { BellLink, Screen, TopBar } from "@/components/worker/Shell";
 import { StatusSteps } from "@/components/worker/Blocks";
 import { CITIES, JOBS, jobById } from "@/lib/data";
 import { REJECT_REASONS, STATUS_VI } from "@/lib/labels";
+import { withViewTransition } from "@/lib/motion";
 import { takeHome, yen } from "@/lib/pay";
 import { fitOf, scoreMatch, suggestImprovements } from "@/lib/scoring";
 import { deadlineOf, displayStatus, fmtLeft, fmtSlot, useApp, useNow, type Application } from "@/lib/store";
@@ -129,7 +131,7 @@ function Approved({ a }: { a: Application }) {
       {iv && (
         <div className="mt-4 rounded-2xl bg-[var(--color-bg-inverse-solid)] text-[var(--color-content-neutral-strongest)] p-4 grid gap-3">
           <div className="flex gap-3"><Icon name="calendar-check" /><span><span className="t-sm text-muted block">Lịch phỏng vấn</span><b>{fmtSlot(iv.slot)}</b></span></div>
-          <div className="flex gap-3"><Icon name={iv.mode === "onsite" ? "marker-pin-02" : "phone-call"} /><span><span className="t-sm text-muted block">{iv.mode === "onsite" ? "Tại nhà máy" : "Online"}</span><b>{iv.mode === "onsite" ? "Cổng số 2, Mikawa Precision · Toyota-shi. Mang thẻ cư trú." : "Gọi video qua Zalo, HR sẽ gọi đúng giờ."}</b></span></div>
+          <div className="flex gap-3"><Icon name={iv.mode === "onsite" ? "marker-pin-02" : "phone-call"} /><span><span className="t-sm text-muted block">{iv.mode === "onsite" ? "Tại nhà máy" : "Online"}</span><b>{iv.mode === "onsite" ? `${job.company} · ${CITIES[job.city].vi} (xem cổng vào trong tin nhắn Zalo OA). Mang thẻ cư trú.` : "Gọi video qua Zalo, HR sẽ gọi đúng giờ."}</b></span></div>
           <Button size="sm" variant="secondary" icon="calendar" onClick={() => toast("Đã thêm vào lịch và nhắc trước 1 giờ qua Zalo OA", "calendar-check")}>Thêm vào lịch</Button>
         </div>
       )}
@@ -158,7 +160,22 @@ function Approved({ a }: { a: Application }) {
         </div>
       ) : (
         <div className="mt-4 grid gap-2">
-          <Button size="lg" block icon="check-circle" onClick={() => { acceptOffer(a.id); toast(senpai ? `Đã nhận việc · Zalo OA đã mở hồ sơ hai bên với ${senpai.name}` : "Đã nhận việc", "users-check"); }}>Nhận việc</Button>
+          <Button
+            size="lg"
+            block
+            variant="inverse"
+            icon="check-circle"
+            onClick={() => {
+              withViewTransition(() => {
+                flushSync(() => {
+                  acceptOffer(a.id);
+                });
+              });
+              toast(senpai ? `Đã nhận việc · Zalo OA đã mở hồ sơ hai bên với ${senpai.name}` : "Đã nhận việc", "users-check");
+            }}
+          >
+            Nhận việc
+          </Button>
           <p className="t-sm muted-ink">Khi bạn nhận việc, tên bạn mới được mở cho Senpai ở nhà máy để hỗ trợ ngày đầu.</p>
         </div>
       )}

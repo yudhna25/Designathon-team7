@@ -19,7 +19,7 @@ export default function Home() {
   const root = useRef<HTMLDivElement>(null);
   useGSAP(
     () => {
-      const split = SplitText.create(".hero-line", { type: "lines,words", mask: "lines", linesClass: "pb-[0.1em] -mb-[0.1em]" });
+      const split = SplitText.create(".hero-line", { type: "lines,words", mask: "lines", linesClass: "pb-[0.14em] -mb-[0.14em]" });
       gsap.from(split.words, { yPercent: 110, duration: 1.1, stagger: 0.04, ease: "expo.out" });
       enter("[data-hero]", { y: 20 }, { stagger: 0.08, duration: 0.9, delay: 0.35 });
       enter(".entry", { y: 40 }, { stagger: 0.1, duration: 1, delay: 0.5 });
@@ -47,7 +47,8 @@ export default function Home() {
             <p className="t-eyebrow mb-6" data-hero>Prototype · Milestone 2 · Aichi, Japan</p>
             <h1 className="hero-line text-[44px] leading-[1.02] md:text-[76px] md:leading-[0.98] font-semibold tracking-[-0.055em]">
               Việc đúng tay nghề.<br />
-              <span className="text-faint">HR trả lời trong</span> 24&nbsp;giờ.
+              <span className="text-faint">HR trả lời trong</span>{" "}
+              <span className="inline-block whitespace-nowrap">24&nbsp;giờ.</span>
             </h1>
             <p className="t-lg text-muted mt-6 max-w-[560px]" data-hero>
               ViệcNhanh nối lao động Việt đang ở Aichi với nhà máy cần người. AI đọc thẻ cư trú, đánh giá mức phù hợp với từng việc
@@ -115,7 +116,7 @@ export default function Home() {
 
       <footer className="hair-t">
         <div className="mx-auto max-w-[1280px] px-5 md:px-10 py-8 grid md:grid-cols-2 gap-4 t-sm text-muted">
-          <p>UI xây trên ZEN Kaiz Design System (Free) · Dizai Studio · zen.dizai.studio<br />Font: Inter, JetBrains Mono (SIL OFL 1.1) · Code: Next.js, React, Tailwind CSS, GSAP</p>
+          <p>UI xây trên ZEN Kaiz Design System (Free) · Dizai Studio · zen.dizai.studio<br />Font: Be Vietnam Pro, JetBrains Mono (SIL OFL 1.1) · Code: Next.js, React, Tailwind CSS, GSAP</p>
           <p className="md:text-right">Prototype vibecoded với Claude Code · Dữ liệu demo là giả lập, tên nhà máy là tên giả.<br />Nhấn <kbd className="mono text-fg">Shift + D</kbd> để mở bảng điều khiển demo.</p>
         </div>
       </footer>
@@ -134,7 +135,7 @@ function Stat({ k, v }: { k: string; v: string }) {
 
 function Entry({ href, eyebrow, title, desc, cta, icon, dark }: { href: string; eyebrow: string; title: string; desc: string; cta: string; icon: "phone" | "monitor-01"; dark?: boolean }) {
   return (
-    <Link href={href} className={`entry group relative overflow-hidden rounded-[32px] p-7 md:p-10 min-h-[320px] flex flex-col justify-between pressable ${dark ? "ink" : "card"}`}>
+    <Link href={href} className={`entry group relative overflow-hidden rounded-[32px] p-7 md:p-10 min-h-[320px] flex flex-col justify-between pressable focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus-accent-solid)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-canvas)] ${dark ? "ink" : "card"}`}>
       <div className="flex items-start justify-between">
         <span className={`t-eyebrow ${dark ? "!text-[color:var(--color-content-on-dark-overlay-base)]" : ""}`}>{eyebrow}</span>
         <span className={`grid size-12 place-items-center rounded-full transition-transform duration-[var(--motion-slow)] [transition-timing-function:var(--ease-spring)] group-hover:rotate-[-45deg] ${dark ? "bg-[var(--color-bg-inverse-solid)] text-[var(--color-content-neutral-strongest)]" : "ink"}`}>

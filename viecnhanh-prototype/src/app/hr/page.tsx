@@ -18,6 +18,7 @@ export default function HRCandidates() {
   const t = hrT(s.config.hrLang);
   const lang = s.config.hrLang;
   const [showEx, setShowEx] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "approved" | "closed">("all");
   const [picked, setPicked] = useState<string[]>([]);
   const [slot, setSlot] = useState(INTERVIEW_SLOTS[0]);
   const root = useRef<HTMLDivElement>(null);
@@ -36,6 +37,13 @@ export default function HRCandidates() {
   const due = open.filter((r) => r.left < s.config.reminderH * 36e5);
   const fresh = ranked.filter((r) => now - r.a.appliedAt < 864e5).length;
   const approved = ranked.filter((r) => r.st === "approved").length;
+  const closedCount = ranked.length - open.length - approved;
+  const visibleRanked = ranked.filter(({ st }) => {
+    if (statusFilter === "open") return st === "sent" || st === "viewed";
+    if (statusFilter === "approved") return st === "approved";
+    if (statusFilter === "closed") return st === "rejected" || st === "expired";
+    return true;
+  });
   const eligible = new Set(batchEligible(ranked.map((r) => ({ appId: r.a.id, gatePass: r.m.gate.pass, fit: fitOf(r.m, s.config.threshold), status: r.st }))));
   const sel = picked.filter((id) => eligible.has(id));
   const toggle = (id: string) => setPicked((x) => (x.includes(id) ? x.filter((y) => y !== id) : [...x, id]));
@@ -63,11 +71,10 @@ export default function HRCandidates() {
 
       <HirePlan approvedNow={approved} lang={lang} />
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5" data-reveal>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5" data-reveal>
         <Kpi label={t.kpi.pending} value={open.length} icon="hourglass" />
         <Kpi label={t.kpi.due(s.config.reminderH)} value={due.length} icon="alert-triangle" strong={due.length > 0} />
         <Kpi label={lang === "ja" ? "判断までの時間（中央値）" : "Time to decision (median)"} value={medianH} suffix={lang === "ja" ? "時間" : "h"} icon="clock" />
-        <Kpi label={lang === "ja" ? "充足率（300名）" : "Fill rate (of 300)"} value={fill.pct} suffix="%" icon="users-check" />
         <Kpi label={lang === "ja" ? "30日定着率 · 試算" : "30-day retention · simulated"} value={91} suffix="%" icon="check-verified" />
       </div>
       {fresh > 0 && <p className="sr-only">{t.kpi.fresh}: {fresh}</p>}
@@ -88,50 +95,107 @@ export default function HRCandidates() {
         </div>
       )}
 
+      <div className="flex flex-wrap items-center gap-2 mb-4" role="tablist" aria-label={lang === "ja" ? "ステータス絞り込み" : "Filter by status"} data-reveal>
+        {[
+          { k: "all" as const, label: lang === "ja" ? `すべて (${ranked.length})` : `All (${ranked.length})` },
+          { k: "open" as const, label: lang === "ja" ? `未対応 (${open.length})` : `Pending (${open.length})` },
+          { k: "approved" as const, label: lang === "ja" ? `面接案内済 (${approved})` : `Invited (${approved})` },
+          { k: "closed" as const, label: lang === "ja" ? `対応済 (${closedCount})` : `Closed (${closedCount})` },
+        ].map((f) => {
+          const active = statusFilter === f.k;
+          return (
+            <button
+              key={f.k}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => setStatusFilter(f.k)}
+              className={`rounded-full px-3.5 py-1.5 text-sm font-medium border transition-colors pressable focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-accent-solid)] ${
+                active
+                  ? "bg-[var(--color-bg-accent-solid)] text-[var(--color-content-on-accent)] border-transparent"
+                  : "bg-[var(--color-bg-canvas)] border-hair text-muted hover:text-fg"
+              }`}
+            >
+              {f.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Desktop table */}
       <div className="hidden md:block card overflow-hidden" data-reveal>
-        <table className="w-full t-base">
-          <thead>
-            <tr className="text-left t-sm text-muted hair-b">
-              <th className="font-medium py-3 pl-5 w-10"><span className="sr-only">{lang === "ja" ? "選択" : "Select"}</span></th>
-              <th className="font-medium py-3">{t.th.cand}</th>
-              <th className="font-medium py-3">{t.th.match}</th>
-              <th className="font-medium py-3">{t.th.visa}</th>
-              <th className="font-medium py-3 hidden xl:table-cell">{t.th.skills}</th>
-              <th className="font-medium py-3">{t.th.jlpt}</th>
-              <th className="font-medium py-3 hidden lg:table-cell">{t.th.start}</th>
-              <th className="font-medium py-3">{t.th.left}</th>
-              <th className="font-medium py-3 pr-5">{t.th.status}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ranked.map(({ a, p, m, st, left }) => {
-              const isDue = (st === "sent" || st === "viewed") && left < s.config.reminderH * 36e5;
-              return (
-                <tr key={a.id} onClick={() => router.push(`/hr/candidates/${a.id}`)} className={`cursor-pointer hair-b last:border-0 hover:bg-pale transition-colors ${st === "expired" || st === "rejected" ? "text-muted" : ""} ${a.candidateId === "me" ? "bg-pale" : ""}`}>
-                  <td className="py-3 pl-5" onClick={(e) => e.stopPropagation()}>
-                    {eligible.has(a.id) && <input type="checkbox" className="size-5 accent-[#1B22A7]" checked={sel.includes(a.id)} onChange={() => toggle(a.id)} aria-label={`${lang === "ja" ? "選択" : "Select"} ${p.name}`} />}
-                  </td>
-                  <td className="py-3">
-                    <Link href={`/hr/candidates/${a.id}`} className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
-                      <Avatar name={p.name} size={36} />
-                      <span><b className="block text-fg">{p.name}{a.candidateId === "me" && <span className="badge ml-2 align-middle">Demo</span>}{a.flagged && <span className="badge badge-dash ml-2 align-middle">{lang === "ja" ? "条件未達で応募" : "Applied below fit"}</span>}</b><span className="t-sm text-muted">{t.nationality[p.nationality]}</span></span>
-                    </Link>
-                  </td>
-                  <td className="py-3 w-[190px]"><div className="pr-4"><FitPill fit={fitOf(m, s.config.threshold)} label={fitWord(m)} /><div className="flex items-center gap-2 mt-1.5"><Meter value={m.total} label={`${p.name} · ${t.th.match}`} className="flex-1" /><span className="t-sm tnum text-muted w-9 text-right">{m.total}%</span></div></div></td>
-                  <td className="py-3"><span className="badge badge-outline" lang="ja"><Icon name="check" size={12} />{VISAS[p.visa].short}</span></td>
-                  <td className="py-3 hidden xl:table-cell t-sm">{(Object.keys(p.skills) as SkillId[]).slice(0, 2).map((k) => `${SKILLS[k][lang]} ${t.years(p.skills[k] ?? 0)}`).join(" · ")}</td>
-                  <td className="py-3 tnum">{JLPT_SHORT[p.jlpt]}</td>
-                  <td className="py-3 hidden lg:table-cell">{t.days(p.availableInDays)}</td>
-                  <td className="py-3 tnum">{st === "sent" || st === "viewed" ? <span className={isDue ? "font-semibold text-fg underline decoration-2 underline-offset-4" : ""}>{fmtLeftShort(left, lang)}</span> : "—"}</td>
-                  <td className="py-3 pr-5"><StatusBadge st={st} label={t.status[st]} /></td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        {ranked.length === 0 && <p className="p-8 text-center text-muted">{t.empty}</p>}
+        <div className="overflow-x-auto">
+          <table className="w-full t-base">
+            <thead>
+              <tr className="text-left t-sm text-muted hair-b">
+                <th className="font-medium py-3 pl-5 pr-3 w-10"><span className="sr-only">{lang === "ja" ? "選択" : "Select"}</span></th>
+                <th className="font-medium py-3 px-3 whitespace-nowrap">{t.th.cand}</th>
+                <th className="font-medium py-3 px-3 whitespace-nowrap">{t.th.match}</th>
+                <th className="font-medium py-3 px-3 whitespace-nowrap">{t.th.visa}</th>
+                <th className="font-medium py-3 px-3 whitespace-nowrap hidden xl:table-cell">{t.th.skills}</th>
+                <th className="font-medium py-3 px-3 whitespace-nowrap">{t.th.jlpt}</th>
+                <th className="font-medium py-3 px-3 whitespace-nowrap hidden lg:table-cell">{t.th.start}</th>
+                <th className="font-medium py-3 px-3 whitespace-nowrap">{t.th.left}</th>
+                <th className="font-medium py-3 pl-3 pr-5 whitespace-nowrap">{t.th.status}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleRanked.map(({ a, p, m, st, left }) => {
+                const isDue = (st === "sent" || st === "viewed") && left < s.config.reminderH * 36e5;
+                return (
+                  <tr key={a.id} onClick={() => router.push(`/hr/candidates/${a.id}`)} className={`cursor-pointer hair-b last:border-0 hover:bg-pale transition-colors ${st === "expired" || st === "rejected" ? "text-muted" : ""} ${a.candidateId === "me" ? "bg-pale" : ""}`}>
+                    <td className="py-3 pl-5 pr-3" onClick={(e) => e.stopPropagation()}>
+                      {eligible.has(a.id) && <input type="checkbox" className="size-5 accent-[var(--color-bg-accent-solid)]" checked={sel.includes(a.id)} onChange={() => toggle(a.id)} aria-label={`${lang === "ja" ? "選択" : "Select"} ${p.name}`} />}
+                    </td>
+                    <td className="py-3 px-3">
+                      <Link href={`/hr/candidates/${a.id}`} className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                        <Avatar name={p.name} size={36} />
+                        <span><b className="block text-fg">{p.name}{a.candidateId === "me" && <span className="badge ml-2 align-middle">Demo</span>}{a.flagged && <span className="badge badge-dash ml-2 align-middle">{lang === "ja" ? "条件未達で応募" : "Applied below fit"}</span>}</b><span className="t-sm text-muted">{t.nationality[p.nationality]}</span></span>
+                      </Link>
+                    </td>
+                    <td className="py-3 px-3 w-[190px]"><div className="pr-2"><FitPill fit={fitOf(m, s.config.threshold)} label={fitWord(m)} /><div className="flex items-center gap-2 mt-1.5"><Meter value={m.total} label={`${p.name} · ${t.th.match}`} className="flex-1" /><span className="t-sm tnum text-muted w-9 text-right">{m.total}%</span></div></div></td>
+                    <td className="py-3 px-3 whitespace-nowrap"><span className="badge badge-outline" lang="ja"><Icon name="check" size={12} />{VISAS[p.visa].short}</span></td>
+                    <td className="py-3 px-3 hidden xl:table-cell t-sm">{(Object.keys(p.skills) as SkillId[]).slice(0, 2).map((k) => `${SKILLS[k][lang]} ${t.years(p.skills[k] ?? 0)}`).join(" · ")}</td>
+                    <td className="py-3 px-3 tnum whitespace-nowrap">{JLPT_SHORT[p.jlpt]}</td>
+                    <td className="py-3 px-3 hidden lg:table-cell whitespace-nowrap">{t.days(p.availableInDays)}</td>
+                    <td className="py-3 px-3 tnum whitespace-nowrap">{st === "sent" || st === "viewed" ? <span className={isDue ? "font-semibold text-fg underline decoration-2 underline-offset-4" : ""}>{fmtLeftShort(left, lang)}</span> : "—"}</td>
+                    <td className="py-3 pl-3 pr-5 whitespace-nowrap"><StatusBadge st={st} label={t.status[st]} /></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        {visibleRanked.length === 0 && <p className="p-8 text-center text-muted">{t.empty}</p>}
       </div>
+
+      {/* Mobile cards */}
+      <ul className="md:hidden grid gap-3">
+        {visibleRanked.map(({ a, p, m, st, left }) => (
+          <li key={a.id} data-reveal>
+            <div className={`card p-4 flex items-center gap-3 ${a.candidateId === "me" ? "bg-pale" : ""}`}>
+              {eligible.has(a.id) && (
+                <input
+                  type="checkbox"
+                  className="size-5 shrink-0 accent-[var(--color-bg-accent-solid)]"
+                  checked={sel.includes(a.id)}
+                  onChange={() => toggle(a.id)}
+                  aria-label={`${lang === "ja" ? "選択" : "Select"} ${p.name}`}
+                />
+              )}
+              <Link href={`/hr/candidates/${a.id}`} className="flex items-center gap-3 flex-1 min-w-0 pressable">
+                <Avatar name={p.name} size={40} />
+                <span className="flex-1 min-w-0">
+                  <b className="block truncate">{p.name}</b>
+                  <span className="t-sm text-muted">{VISAS[p.visa].short} · {JLPT_SHORT[p.jlpt]} · {st === "sent" || st === "viewed" ? fmtLeftShort(left, lang) : t.status[st]}</span>
+                </span>
+                <FitPill fit={fitOf(m, s.config.threshold)} label={fitWord(m)} />
+              </Link>
+            </div>
+          </li>
+        ))}
+        {visibleRanked.length === 0 && <li className="card p-6 text-center text-muted">{t.empty}</li>}
+      </ul>
 
       {sel.length > 0 && (
         <div className="sticky bottom-4 z-20 mt-4 ink rounded-2xl p-3 md:p-4 flex flex-wrap items-center gap-3 shadow-[var(--shadow-bottom-2)]" role="region" aria-label={lang === "ja" ? "一括招待" : "Batch invite"}>
@@ -139,25 +203,9 @@ export default function HRCandidates() {
           <select className="input !h-10 !w-auto t-sm" value={slot} onChange={(e) => setSlot(e.target.value)} aria-label={lang === "ja" ? "面接日時" : "Interview slot"}>
             {INTERVIEW_SLOTS.map((x) => <option key={x} value={x}>{fmtSlot(x, lang)}</option>)}
           </select>
-          <button className="btn btn-sm pressable bg-[var(--color-bg-inverse-solid)] text-[var(--color-content-neutral-strongest)]" onClick={invite}>{lang === "ja" ? `${sel.length}名をグループ面接に招待` : `Invite ${sel.length} to group interview`}</button>
+          <button className="btn btn-sm btn-inverse pressable" onClick={invite}>{lang === "ja" ? `${sel.length}名をグループ面接に招待` : `Invite ${sel.length} to group interview`}</button>
         </div>
       )}
-
-      {/* Mobile cards */}
-      <ul className="md:hidden grid gap-3">
-        {ranked.map(({ a, p, m, st, left }) => (
-          <li key={a.id} data-reveal>
-            <Link href={`/hr/candidates/${a.id}`} className="card p-4 flex items-center gap-3 pressable">
-              <Avatar name={p.name} size={40} />
-              <span className="flex-1 min-w-0">
-                <b className="block truncate">{p.name}</b>
-                <span className="t-sm text-muted">{VISAS[p.visa].short} · {JLPT_SHORT[p.jlpt]} · {st === "sent" || st === "viewed" ? fmtLeftShort(left, lang) : t.status[st]}</span>
-              </span>
-              <FitPill fit={fitOf(m, s.config.threshold)} label={fitWord(m)} />
-            </Link>
-          </li>
-        ))}
-      </ul>
 
       {excluded.length > 0 && (
         <div className="mt-5 rounded-2xl border border-dashed border-line p-4" data-reveal>

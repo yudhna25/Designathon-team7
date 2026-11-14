@@ -80,9 +80,25 @@ export default function Candidate() {
           <section className="card p-6" data-reveal aria-labelledby="dc-h">
             <h2 id="dc-h" className="t-h4 mb-4">{t.docs}</h2>
             <dl className="grid sm:grid-cols-2 gap-4">
-              <Doc ok k={t.card} v={`${VISAS[p.visa].short} · ${t.cardOk}`} />
-              <Doc ok k={t.limit} v={VISAS[p.visa].weeklyHourCap ? `${VISAS[p.visa].weeklyHourCap}h/wk` : t.none} />
-              <Doc ok k={t.myNumber} v={t.declared} />
+              {(() => {
+                const isMe = a.candidateId === "me";
+                const cardOk = !isMe || s.scanned;
+                return (
+                  <>
+                    <Doc
+                      ok={cardOk}
+                      k={t.card}
+                      v={`${VISAS[p.visa].short} · ${cardOk ? t.cardOk : (lang === "ja" ? "未スキャン · 入社時確認" : "Not scanned yet · verify at intake")}`}
+                    />
+                    <Doc ok k={t.limit} v={VISAS[p.visa].weeklyHourCap ? `${VISAS[p.visa].weeklyHourCap}h/wk` : t.none} />
+                    <Doc
+                      ok={!isMe}
+                      k={t.myNumber}
+                      v={isMe ? (lang === "ja" ? "入社初日に提出" : "To be collected on Day 1") : t.declared}
+                    />
+                  </>
+                );
+              })()}
               <Doc ok={false} k={t.bank} v={t.afterApprove} />
               {(p.otherSkills?.trim() || p.otherCerts?.trim()) && <Doc ok={false} k={lang === "ja" ? "本人申告（未評価）" : "Self-reported (not scored)"} v={[p.otherSkills?.trim(), p.otherCerts?.trim()].filter(Boolean).join(" · ")} />}
               <Doc ok={safety} k={t.safety} v={safety ? t.safetyDone : t.safetyTodo} />
@@ -122,7 +138,7 @@ export default function Candidate() {
                   <select id="interview-slot" className="input" value={slot} onChange={(e) => setSlot(e.target.value)}>
                     {INTERVIEW_SLOTS.map((d) => <option key={d} value={d}>{fmtSlot(d, lang)}</option>)}
                   </select>
-                  <Segmented size="sm" label="Interview mode" value={ivMode} onChange={setIvMode} options={[{ value: "onsite", label: lang === "ja" ? "工場で" : "On-site" }, { value: "online", label: "Zalo video" }]} />
+                  <Segmented size="sm" label="Interview mode" value={ivMode} onChange={setIvMode} options={[{ value: "onsite", label: lang === "ja" ? "工場で" : "On-site" }, { value: "online", label: lang === "ja" ? "Zaloビデオ通話" : "Zalo video" }]} />
                   <Button size="lg" block className="!h-auto min-h-[var(--button-lg-h)] !whitespace-normal py-3" onClick={approve}>{t.confirmApprove}</Button>
                   <Button variant="flat" block onClick={() => setMode("idle")}>{lang === "ja" ? "戻る" : "Back"}</Button>
                 </div>

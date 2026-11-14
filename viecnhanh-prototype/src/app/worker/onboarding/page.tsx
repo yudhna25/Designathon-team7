@@ -62,7 +62,7 @@ function Onboarding() {
     <div className="min-h-dvh flex flex-col mx-auto w-full max-w-[640px]">
       <header className="sticky top-0 z-20 bg-[color-mix(in_oklab,var(--color-bg-canvas)_88%,transparent)] backdrop-blur-xl px-2 md:px-0">
         <div className="h-14 flex items-center gap-2">
-          <button className="icon-btn pressable" aria-label={step ? "Câu trước" : "Thoát"} onClick={() => (step && !(edit && step === startStep) ? go(step - 1) : router.push(edit ? "/worker/profile" : "/worker"))}>
+          <button className="icon-btn pressable" aria-label={step ? "Câu trước" : "Thoát"} onClick={() => (step > 0 ? go(step - 1) : router.push(edit ? "/worker/profile" : "/worker"))}>
             <Icon name={step ? "arrow-left" : "x-medium"} />
           </button>
           <div className="flex-1 grid grid-cols-3 gap-1.5 px-2" role="progressbar" aria-valuemin={1} aria-valuemax={3} aria-valuenow={step + 1} aria-label={`Câu ${step + 1} trên 3`}>
@@ -203,7 +203,7 @@ function Onboarding() {
                 {p.otherCerts !== undefined && (
                   <input autoFocus className="input mt-3" aria-label="Chứng chỉ khác" placeholder="Ví dụ: Chứng chỉ điện, an toàn hoá chất…" value={p.otherCerts} onChange={(e) => set({ otherCerts: e.target.value })} />
                 )}
-                <label className={`mt-3 flex items-center gap-3 rounded-2xl border-2 border-dashed p-4 cursor-pointer pressable ${upload.state === "error" ? "border-[#d92d20]" : upload.state === "ok" ? "border-[var(--color-border-accent-solid)]" : "border-line"}`}>
+                <label className={`mt-3 flex items-center gap-3 rounded-2xl border-2 border-dashed p-4 cursor-pointer pressable ${upload.state === "error" ? "border-[var(--color-border-negative-solid,var(--color-content-negative-base))]" : upload.state === "ok" ? "border-[var(--color-border-accent-solid)]" : "border-line"}`}>
                   <input type="file" accept="image/*,application/pdf" className="sr-only" onChange={(e) => {
                     const f = e.target.files?.[0];
                     if (!f) return;
@@ -261,7 +261,21 @@ function Onboarding() {
 
       <div className="fixed bottom-0 inset-x-0 z-20 bg-[color-mix(in_oklab,var(--color-bg-canvas)_90%,transparent)] backdrop-blur-xl border-t border-hair">
         <div className="mx-auto max-w-[640px] px-5 md:px-0 pt-3 safe-b">
-          {step === 0 && <Button size="lg" block variant={visaOk && !legalJobs ? "tertiary" : "primary"} disabled={!visaOk} onClick={() => go(1)} iconRight="arrow-right">{visaOk && !legalJobs ? "Vẫn tạo hồ sơ để nhận báo việc" : "Tiếp tục"}</Button>}
+          {step === 0 && (
+            <Button size="lg" block variant={visaOk && !legalJobs ? "tertiary" : "primary"} disabled={!visaOk} onClick={() => go(1)} iconRight="arrow-right">
+              {!manual
+                ? "Quét thẻ hoặc chọn nhập tay để tiếp tục"
+                : !p.name.trim()
+                  ? "Nhập họ tên để tiếp tục"
+                  : !p.cardExpiry
+                    ? "Chọn hạn thẻ cư trú để tiếp tục"
+                    : !p.province
+                      ? "Chọn tỉnh quê của bạn để tiếp tục"
+                      : legalJobs
+                        ? "Tiếp tục"
+                        : "Vẫn tạo hồ sơ để nhận báo việc"}
+            </Button>
+          )}
           {step === 1 && <Button size="lg" block disabled={!skillCount || p.jlpt === null} onClick={() => go(2)} iconRight="arrow-right">{!skillCount ? "Chọn ít nhất 1 kỹ năng" : p.jlpt === null ? "Chọn trình độ tiếng Nhật" : "Tiếp tục"}</Button>}
           {step === 2 && <Button size="lg" block icon="stars-01" disabled={!whereOk} onClick={finish}>{!whereOk ? "Chọn thành phố bạn đang sống" : edit ? "Lưu hồ sơ" : "Để AI tìm việc cho tôi"}</Button>}
         </div>

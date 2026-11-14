@@ -47,7 +47,7 @@ export function Scanner({ onResult, done }: { onResult: (r: ScanResult) => void;
           {photo && <span className="ocr-box invisible absolute left-[6%] top-[64%] w-[40%] h-[11%] rounded-md ring-2 ring-[var(--color-bg-neutral-solid)] bg-[color-mix(in_oklab,var(--color-bg-neutral-solid)_8%,transparent)]" />}
           <span className="scan-line invisible absolute inset-x-[-4%] h-[3px] rounded-full bg-solid shadow-[0_0_20px_4px_color-mix(in_oklab,var(--color-bg-neutral-solid)_35%,transparent)]" />
           {(["left-[-10px] top-[-10px] border-l-[3px] border-t-[3px] rounded-tl-2xl", "right-[-10px] top-[-10px] border-r-[3px] border-t-[3px] rounded-tr-2xl", "left-[-10px] bottom-[-10px] border-l-[3px] border-b-[3px] rounded-bl-2xl", "right-[-10px] bottom-[-10px] border-r-[3px] border-b-[3px] rounded-br-2xl"] as const).map((c) => (
-            <span key={c} className={`corner absolute size-8 border-[var(--color-content-inverse-strongest)] ${c}`} aria-hidden />
+            <span key={c} className={`corner absolute size-8 border-[var(--color-content-on-accent)] ${c}`} aria-hidden />
           ))}
           {phase === "done" && (
             <span className="absolute right-2 bottom-2 badge badge-md bg-[var(--color-bg-inverse-solid)] text-[var(--color-content-neutral-strongest)] animate-[zen-pop_var(--motion-slow)_var(--ease-bounce)]">
