@@ -13,7 +13,7 @@ import { Icon } from "../ui";
 import { FlightPath } from "./FlightPath";
 
 /** Wallet-style job pass: take-home pay is always the biggest thing on screen. */
-export function JobPass({ job, p, m, fit, now, applied, active }: { job: Job; p: Profile; m: Match; fit: Fit; now: number; applied?: boolean; active?: boolean }) {
+export function JobPass({ job, p, m, fit, now, applied, active, guest }: { job: Job; p: Profile; m: Match; fit: Fit; now: number; applied?: boolean; active?: boolean; guest?: boolean }) {
   const ja = useLang() === "ja";
   const t = (vi: string, jp: string) => (ja ? jp : vi);
   const router = useRouter();
@@ -45,10 +45,10 @@ export function JobPass({ job, p, m, fit, now, applied, active }: { job: Job; p:
           <p className="t-sm font-semibold truncate">{job.company}</p>
           <p className="t-sm text-[#DCE3FC] flex items-center gap-1">
             <Icon name={job.verified ? "check-verified" : "hourglass"} size={14} solid={job.verified} />
-            {job.verified ? t("ViệcNhanh đã xác minh", "ViệcNhanh確認済み") : t("Đang xác minh", "確認中")}
+            {job.verified ? t("KINTRA đã xác minh", "KINTRA確認済み") : t("Đang xác minh", "確認中")}
           </p>
         </div>
-        <span className="shrink-0 rounded-full bg-white/15 px-2.5 py-1.5 t-sm font-bold">{m.gate.pass ? (ja ? FIT_JA[fit] : FIT_VI[fit]) : t("Không hợp visa", "在留資格の対象外")}</span>
+        <span className="shrink-0 rounded-full bg-white/15 px-2.5 py-1.5 t-sm font-bold">{guest ? t("Đang tuyển", "募集中") : m.gate.pass ? (ja ? FIT_JA[fit] : FIT_VI[fit]) : t("Không hợp visa", "在留資格の対象外")}</span>
       </div>
       <h2 className="text-[20px] leading-tight font-semibold tracking-[-0.025em] mt-3" style={vtTitle}>{job.title}</h2>
       <p className="mt-3">

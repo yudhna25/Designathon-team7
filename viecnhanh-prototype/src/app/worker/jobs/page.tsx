@@ -5,20 +5,28 @@ import { PeersTile } from "@/components/worker/Bento";
 import { CompanyLogo } from "@/components/worker/JobRow";
 import { CITIES, JLPT, JOBS, PEERS, SKILLS, START_OPTIONS, VISAS, type SkillId } from "@/lib/data";
 import { scoreMatch } from "@/lib/scoring";
-import { useApp } from "@/lib/store";
+import { useApp, useViewer } from "@/lib/store";
 import { useLang, useT } from "@/lib/i18n";
 
 /** Desktop right rail on the jobs home: AI summary, the assistant, and workplaces with Vietnamese workers. */
 export default function JobsIndex() {
   const t = useT();
   const ja = useLang() === "ja";
-  const p = useApp((s) => s.profile)!;
+  const { p, guest } = useViewer();
   const weights = useApp((s) => s.config.weights);
   const start = START_OPTIONS.find((o) => o.days === p.availableInDays);
   // Việc hợp visa có người Việt đang làm, đông người trước.
   const peerJobs = JOBS.filter((j) => PEERS[j.id] && scoreMatch(p, j, weights).gate.pass).sort((a, b) => PEERS[b.id].count - PEERS[a.id].count);
   return (
     <div className="grid gap-4 lg:sticky lg:top-6">
+      {guest ? (
+        <section className="card p-5">
+          <p className="t-eyebrow mb-3 flex items-center gap-2"><Icon name="stars-01" solid size={16} />{t("AI tóm tắt về bạn", "AIによるあなたの要約")}</p>
+          <h2 className="t-sub">{t("Chưa đăng nhập", "未ログイン")}</h2>
+          <p className="t-sm text-muted mt-1">{t("Đăng nhập bằng Zalo, trả lời 3 câu để AI chấm mức phù hợp cho từng việc.", "Zaloでログインし3つの質問に答えると、AIが各求人の適合度を評価します。")}</p>
+          <Link href="/worker" className="btn btn-primary btn-sm pressable mt-4 w-full">{t("Đăng nhập", "ログイン")}</Link>
+        </section>
+      ) : (
       <section className="card p-5">
         <p className="t-eyebrow mb-3 flex items-center gap-2"><Icon name="stars-01" solid size={16} />{t("AI tóm tắt về bạn", "AIによるあなたの要約")}</p>
         <div className="flex items-center justify-between gap-2">
@@ -33,6 +41,7 @@ export default function JobsIndex() {
           <Row k={t("Sẵn sàng", "開始可能")} v={ja ? `${p.availableInDays === 0 ? "すぐに" : `${p.availableInDays}日後`}` : start ? `${start.vi} · ${start.sub}` : `${p.availableInDays} ngày`} />
         </dl>
       </section>
+      )}
 
       <Link href="/worker/ask" className="card-flat p-5 pressable block bg-brand-soft">
         <p className="font-semibold flex items-center gap-2"><Icon name="stars-01" solid size={18} />{t("Trợ lý AI của bạn", "あなたのAIアシスタント")}</p>

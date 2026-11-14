@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { gsap } from "@/lib/motion";
 import type { Job, Profile } from "@/lib/data";
 import { takeHome, yen } from "@/lib/pay";
 import { fmtDate, legalPath } from "@/lib/start";
@@ -9,6 +10,18 @@ import { Icon, Sheet } from "../ui";
 export function FlightPath({ p, job, from, open, onClose }: { p: Profile; job: Job; from: number; open: boolean; onClose: () => void }) {
   const steps = legalPath(p, from);
   const [openKey, setOpenKey] = useState<string | null>(steps[0].key);
+  const list = useRef<HTMLOListElement>(null);
+  // Draw the road between milestones each time the sheet opens.
+  useEffect(() => {
+    if (!open || document.documentElement.dataset.motion === "off" || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = setTimeout(() => {
+      const root = list.current;
+      if (!root) return;
+      gsap.fromTo(root.querySelectorAll("[data-fp-line]"), { scaleY: 0 }, { scaleY: 1, transformOrigin: "50% 0%", duration: 0.35, stagger: 0.12, ease: "power2.out" });
+      gsap.fromTo(root.querySelectorAll("[data-fp-dot]"), { scale: 0.4, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.4, stagger: 0.12, ease: "back.out(2.2)", clearProps: "transform,opacity,visibility" });
+    }, 80);
+    return () => clearTimeout(t);
+  }, [open]);
   const net = takeHome(job, p.relocate).net;
   const last = steps[steps.length - 1];
   return (
@@ -33,13 +46,13 @@ export function FlightPath({ p, job, from, open, onClose }: { p: Profile; job: J
       }
     >
       <p className="text-muted mb-4">{job.title} · {job.company}</p>
-      <ol className="relative grid gap-0">
+      <ol ref={list} className="relative grid gap-0">
         {steps.map((st, i) => {
           const isOpen = openKey === st.key;
           return (
             <li key={st.key} className="relative pl-9 pb-4">
-              {i < steps.length - 1 && <span className="absolute left-[11px] top-6 bottom-0 w-0.5 bg-subtle" aria-hidden />}
-              <span className={`absolute left-0 top-0.5 grid size-6 place-items-center rounded-full ${i === 0 ? "fp-now bg-[var(--color-bg-accent-solid)] text-white" : st.legal ? "ink" : "bg-subtle"}`} aria-hidden>
+              {i < steps.length - 1 && <span data-fp-line className="absolute left-[11px] top-6 bottom-0 w-0.5 bg-[#4260E6]/40" aria-hidden />}
+              <span data-fp-dot className={`absolute left-0 top-0.5 grid size-6 place-items-center rounded-full ${i === 0 ? "fp-now bg-[var(--color-bg-accent-solid)] text-white" : st.legal ? "ink" : "bg-subtle"}`} aria-hidden>
                 {st.legal ? <Icon name="lock-01" size={12} /> : <span className="size-1.5 rounded-full bg-current" />}
               </span>
               <button className="w-full text-left flex items-start justify-between gap-3" aria-expanded={isOpen} onClick={() => setOpenKey(isOpen ? null : st.key)}>

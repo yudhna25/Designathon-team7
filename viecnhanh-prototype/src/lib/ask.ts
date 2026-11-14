@@ -23,7 +23,7 @@ export function answer(q: string, p: Profile, now = Date.now()): Answer {
   if (has(q, "ứng lương", "trong lúc chờ")) {
     return {
       q,
-      a: "Được. Ứng lương tính theo ngày công đã làm và đã được nhà máy xác nhận, không phải khoản vay, không lãi. Trong lúc chờ thủ tục đổi công ty, bạn vẫn ứng được ở chỗ làm hiện tại nếu chỗ đó dùng ViệcNhanh.",
+      a: "Được. Ứng lương tính theo ngày công đã làm và đã được nhà máy xác nhận, không phải khoản vay, không lãi. Trong lúc chờ thủ tục đổi công ty, bạn vẫn ứng được ở chỗ làm hiện tại nếu chỗ đó dùng KINTRA.",
       cites: [],
       follow: ["Việc nào lương thực nhận trên ¥200k?"],
     };

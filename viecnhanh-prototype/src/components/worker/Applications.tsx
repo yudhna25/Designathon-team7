@@ -88,7 +88,7 @@ function Approved({ a }: { a: Application }) {
     { done: false, t: iv ? `Phỏng vấn ${fmtSlot(iv.slot)}` : "Phỏng vấn", d: "Kết quả báo trong app và qua Zalo OA" },
     { done: safety, t: "Nếu đạt: học an toàn trước ngày 1", d: safety ? "Đã hoàn thành" : "8 phút · có thể học trước", href: "/worker/safety" },
     ...(start ? [{ done: false, t: `Bắt đầu đi làm · ${start} (dự kiến)`, d: "Tính từ ngày HR duyệt và thủ tục lưu trú" }] : []),
-    ...(job.contractMonths ? [{ done: false, t: `Tháng ${job.contractMonths}: đánh giá gia hạn`, d: "Nếu không gia hạn, ViệcNhanh xếp việc tiếp trong 24h" }] : []),
+    ...(job.contractMonths ? [{ done: false, t: `Tháng ${job.contractMonths}: đánh giá gia hạn`, d: "Nếu không gia hạn, KINTRA xếp việc tiếp trong 24h" }] : []),
   ];
   return (
     <div className="mt-5">

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Button, FitBadge, Icon, Logo, Sheet } from "@/components/ui";
-import { useApp } from "@/lib/store";
+import { useApp, takeNext } from "@/lib/store";
 import { gsap, useGSAP, useReveal } from "@/lib/motion";
 
 type Method = "zalo" | "line" | "phone";
@@ -18,7 +18,7 @@ export default function Login() {
   const done = (method: Method, name: string) => {
     login(method, name);
     setSheet(null);
-    router.push(profile ? "/worker/applications" : "/worker/onboarding");
+    router.push(profile ? takeNext("/worker/jobs") : "/worker/onboarding");
   };
 
   return (
@@ -36,7 +36,7 @@ export default function Login() {
             <p className="t-eyebrow mb-3">Lần đăng nhập thứ {logins}</p>
             <h1 className="t-h2">Chào mừng trở lại, {profile.name.split(" ").slice(-2).join(" ")}</h1>
             <p className="t-lg text-muted mt-3 mb-8">Hồ sơ của bạn đã được lưu. Xem trạng thái hoặc tìm thêm việc.</p>
-            <Button size="lg" block iconRight="arrow-right" onClick={() => { login(auth.method, auth.name); router.push("/worker/applications"); }}>Vào trang của tôi</Button>
+            <Button size="lg" block iconRight="arrow-right" onClick={() => { login(auth.method, auth.name); router.push(takeNext("/worker/applications")); }}>Vào trang của tôi</Button>
             <Button size="lg" block variant="flat" className="mt-2" onClick={() => useApp.getState().logout()}>Đăng nhập tài khoản khác</Button>
           </div>
         ) : (
@@ -55,7 +55,7 @@ export default function Login() {
             </ul>
           </>
         )}
-        <p className="t-sm text-muted mt-auto pt-10 lg:mt-10">Tiếp tục nghĩa là bạn đồng ý với Điều khoản và Chính sách bảo mật của ViệcNhanh.</p>
+        <p className="t-sm text-muted mt-auto pt-10 lg:mt-10">Tiếp tục nghĩa là bạn đồng ý với Điều khoản và Chính sách bảo mật của KINTRA.</p>
       </div>
 
       <ZaloSheet open={sheet === "zalo"} onClose={() => setSheet(null)} onAllow={() => done("zalo", "Nguyễn Tuấn Anh")} onPhone={() => setSheet("phone")} />
@@ -132,7 +132,7 @@ function ZaloSheet({ open, onClose, onAllow, onPhone }: { open: boolean; onClose
       <p className="text-muted mb-4">Chạm <b className="text-fg">Mở Zalo trên điện thoại này</b> để xác nhận một chạm. Nếu bạn đang mở trên máy tính, dùng điện thoại quét mã QR bên dưới.</p>
       <div className="mx-auto w-fit rounded-[28px] bg-[var(--color-bg-surface)] p-4 border border-hair shadow-[var(--shadow-bottom-1)]"><FakeQR /></div>
       <p className="t-sm text-muted text-center mt-3 flex items-center justify-center gap-2"><Icon name="clock" size={16} />Hoặc quét mã QR nếu bạn đang mở trên máy tính · bản demo</p>
-      <p className="t-sm text-muted mt-4 flex gap-2"><Icon name="lock-01" size={16} className="mt-0.5" />ViệcNhanh chỉ lấy tên, ảnh đại diện và số điện thoại. Không đọc tin nhắn hay danh bạ.</p>
+      <p className="t-sm text-muted mt-4 flex gap-2"><Icon name="lock-01" size={16} className="mt-0.5" />KINTRA chỉ lấy tên, ảnh đại diện và số điện thoại. Không đọc tin nhắn hay danh bạ.</p>
     </Sheet>
   );
 }
@@ -152,7 +152,7 @@ function LineSheet({ open, onClose, onAllow, onPhone }: { open: boolean; onClose
       <div className="well p-4 flex items-center gap-3">
         <LineMark big />
         <div className="min-w-0">
-          <p className="font-semibold">ViệcNhanh Aichi Official</p>
+          <p className="font-semibold">KINTRA · Official</p>
           <p className="t-sm text-muted">Chỉ nhận tên hiển thị và ID để báo lịch phỏng vấn</p>
         </div>
       </div>

@@ -16,7 +16,7 @@ import { SHIFT_JA, SHIFT_VI } from "@/lib/labels";
 import { useLang, useT } from "@/lib/i18n";
 import { FIT_JA, FIT_VI, fitOf, matchChips, matchGuidance, scoreMatch, suggestImprovements } from "@/lib/scoring";
 import { takeHome, yen } from "@/lib/pay";
-import { deadlineOf, fmtLeft, isClosed, simNow, useApp, useNow } from "@/lib/store";
+import { deadlineOf, fmtLeft, isClosed, loginThenReturn, simNow, useApp, useNow, useViewer } from "@/lib/store";
 import { gsap, resolveViewTransition, useGSAP } from "@/lib/motion";
 
 export default function Page() {
@@ -34,16 +34,16 @@ function JobDetail() {
   const s = useApp();
   const job = jobById(id);
   const [sheet, setSheet] = useState<null | "apply" | "anyway" | "path">(null);
-  const [dorm, setDorm] = useState(() => (job ? job.dorm !== null && (s.profile?.relocate ?? false) : false));
+  const [dorm, setDorm] = useState(() => (job ? job.dorm !== null && (s.profile?.relocate ?? true) : false));
   useEffect(() => {
-    setDorm(job ? job.dorm !== null && (s.profile?.relocate ?? false) : false);
+    setDorm(job ? job.dorm !== null && (s.profile?.relocate ?? true) : false);
   }, [job?.id, s.profile?.relocate]);
   useEffect(() => {
     resolveViewTransition();
   }, [id]);
   if (!job) return <div className="p-8"><p>{t("Không tìm thấy việc này.", "この求人は見つかりません。")}</p><Link className="underline" href="/worker/jobs">{t("Về danh sách", "一覧へ戻る")}</Link></div>;
 
-  const p = s.profile!;
+  const { p, guest } = useViewer();
   const m = scoreMatch(p, job, s.config.weights);
   const fit = fitOf(m, s.config.threshold);
   const can = fit === "great";
@@ -70,12 +70,12 @@ function JobDetail() {
               <h1 className="t-h2 mt-1" style={{ viewTransitionName: `pass-title-${job.id}` } as CSSProperties}>{job.title}</h1>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {job.isNewPlant && <span className="badge badge-solid badge-md">{t("Nhà máy mới", "新工場")}</span>}
-                <span className="badge badge-md"><Icon name={job.verified ? "check-verified" : "hourglass"} size={14} />{job.verified ? t("ViệcNhanh đã xác minh", "ViệcNhanh確認済み") : t("Đang xác minh", "確認中")}</span>
+                <span className="badge badge-md"><Icon name={job.verified ? "check-verified" : "hourglass"} size={14} />{job.verified ? t("KINTRA đã xác minh", "KINTRA確認済み") : t("Đang xác minh", "確認中")}</span>
                 <span className="badge badge-md">{t(`Cần ${job.headcount} người`, `募集${job.headcount}名`)}</span>
               </div>
             </div>
             <div className="shrink-0 md:text-right">
-              <FitBadge level={fit} size="lg" label={ja ? FIT_JA[fit] : undefined} />
+              {guest ? <span className="badge badge-md bg-brand-soft text-brand">{t("Đang tuyển", "募集中")}</span> : <FitBadge level={fit} size="lg" label={ja ? FIT_JA[fit] : undefined} />}
               <p className="t-sm text-muted mt-2">{fromFit ? t(`AI chấm lại: ${FIT_VI[fromFit]} → ${FIT_VI[fit]}`, `AI再評価：${FIT_JA[fromFit]} → ${FIT_JA[fit]}`) : t("AI chấm từ hồ sơ của bạn", "あなたのプロフィールからAIが評価")}</p>
             </div>
           </div>
@@ -105,6 +105,14 @@ function JobDetail() {
         </nav>
 
         {/* ZEN AI Kit · AIInsightCard */}
+        {guest ? (
+          <section id="ly-do" className="card p-6 scroll-mt-16 bg-brand-soft" aria-labelledby="why-h">
+            <span className="badge badge-solid"><Icon name="stars-01" size={14} solid />{t("AI gợi ý", "AIの提案")}</span>
+            <h2 id="why-h" className="t-h4 mt-3">{t("Việc này có hợp với bạn không?", "この仕事はあなたに合っていますか？")}</h2>
+            <p className="text-muted mt-1">{t("Đăng nhập bằng Zalo, trả lời 3 câu. AI kiểm visa, chấm mức phù hợp và cho biết bạn còn thiếu gì.", "Zaloでログインし3つの質問に答えると、AIが在留資格と適合度を確認します。")}</p>
+            <Button className="mt-4" icon="stars-01" onClick={() => router.push(loginThenReturn(`/worker/jobs/${job.id}`))}>{t("Đăng nhập để xem mức phù hợp", "ログインして適合度を見る")}</Button>
+          </section>
+        ) : (
         <section id="ly-do" className="card p-6 scroll-mt-16" data-reveal aria-labelledby="why-h">
           <div className="flex items-center gap-2 mb-3">
             <span className="badge badge-solid"><Icon name="stars-01" size={14} solid />{t("AI gợi ý", "AIの提案")}</span>
@@ -130,6 +138,7 @@ function JobDetail() {
             <div className="pt-4"><ScoreBreakdown m={m} /></div>
           </details>
         </section>
+        )}
 
         <div id="luong" className="scroll-mt-16" data-reveal><PayCard key={job.id} job={job} relocate={p.relocate} dorm={dorm} onDormChange={setDorm} /></div>
 
@@ -139,7 +148,7 @@ function JobDetail() {
             <button className="text-left rounded-2xl -m-2 p-2 hover:bg-subtle pressable" onClick={() => setSheet("path")} aria-label={t("Xem lộ trình pháp lý đến ngày đi làm", "初出勤までの手続きの流れを見る")}>
               <Fact icon="calendar" k={t("Bắt đầu sớm nhất · xem lộ trình", "最短開始 · 流れを見る")} v={t(`${fmtDate(start.date)} · dự kiến`, `${fmtDate(start.date)}（予定）`)} sub={t(`${start.reason} Trong lúc chờ: vẫn làm ở chỗ cũ nếu còn hợp đồng · ứng lương theo ngày công vẫn dùng được.`, `${start.reason} 待機中も契約が続く限り現在の職場で働けます。`)} />
             </button>
-            {job.contractMonths && <Fact icon="file-check" k={t("Hợp đồng", "契約")} v={t(`Thử việc ${job.contractMonths} tháng${job.renewable ? " · có thể gia hạn" : ""}`, `試用${job.contractMonths}か月${job.renewable ? " · 更新可" : ""}`)} sub={t("Nếu không gia hạn, ViệcNhanh xếp việc tiếp trong 24h.", "更新されない場合、ViệcNhanhが24時間以内に次の仕事を紹介します。")} />}
+            {job.contractMonths && <Fact icon="file-check" k={t("Hợp đồng", "契約")} v={t(`Thử việc ${job.contractMonths} tháng${job.renewable ? " · có thể gia hạn" : ""}`, `試用${job.contractMonths}か月${job.renewable ? " · 更新可" : ""}`)} sub={t("Nếu không gia hạn, KINTRA xếp việc tiếp trong 24h.", "更新されない場合、KINTRAが24時間以内に次の仕事を紹介します。")} />}
           </div>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-5">
             <Fact icon="clock" k={t("Ca làm", "勤務形態")} v={ja ? SHIFT_JA[job.shift] : SHIFT_VI[job.shift]} />
@@ -175,7 +184,7 @@ function JobDetail() {
           <dl className="mt-4 grid gap-2 t-sm">
             <div className="flex justify-between gap-3"><dt className="text-muted">{t("Địa điểm", "所在地")}</dt><dd className="font-medium">{ja ? `愛知県${CITIES[job.city].ja}` : `${CITIES[job.city].vi}, Aichi`}</dd></div>
             <div className="flex justify-between gap-3"><dt className="text-muted">{t("Đang tuyển", "募集人数")}</dt><dd className="font-medium tnum">{t(`${job.headcount} người`, `${job.headcount}名`)}</dd></div>
-            <div className="flex justify-between gap-3"><dt className="text-muted">{t("Xác minh", "確認")}</dt><dd className="font-medium">{job.verified ? t("ViệcNhanh đã xác minh", "ViệcNhanh確認済み") : t("Đang xác minh", "確認中")}</dd></div>
+            <div className="flex justify-between gap-3"><dt className="text-muted">{t("Xác minh", "確認")}</dt><dd className="font-medium">{job.verified ? t("KINTRA đã xác minh", "KINTRA確認済み") : t("Đang xác minh", "確認中")}</dd></div>
           </dl>
           {job.perks.length > 0 && <ul className="mt-3 flex flex-wrap gap-1.5">{job.perks.map((x) => <li key={x} className="badge badge-outline">{x}</li>)}</ul>}
         </section>
@@ -192,7 +201,9 @@ function JobDetail() {
       {/* Sticky decision bar */}
       <div className="fixed lg:sticky bottom-0 inset-x-0 z-20 lg:mt-4 bg-[color-mix(in_oklab,var(--color-bg-canvas)_92%,transparent)] backdrop-blur-xl border-t border-hair">
         <div className="px-5 lg:px-0 py-3 safe-b lg:pb-4 lg:pr-[364px] xl:pr-[404px]">
-          {invited ? (
+          {guest ? (
+            <Button size="lg" block icon="lock-01" onClick={() => router.push(loginThenReturn(`/worker/jobs/${job.id}`))}>{t("Đăng nhập để ứng tuyển · miễn phí", "ログインして応募 · 無料")}</Button>
+          ) : invited ? (
             <Button size="lg" block icon="calendar" onClick={() => router.push("/worker/applications")}>{t("Xem lời mời phỏng vấn", "面接の案内を見る")}</Button>
           ) : mine ? (
             <Button size="lg" block variant="secondary" icon="file-check" onClick={() => router.push("/worker/applications")}>{t("Đã ứng tuyển · xem trạng thái", "応募済み · 状況を見る")}</Button>

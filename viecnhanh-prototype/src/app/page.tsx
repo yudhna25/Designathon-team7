@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-// Trang giới thiệu đã chuyển sang /hub; giữ "/" để link cũ không gãy.
-export default function Root() {
-  redirect("/hub");
+// Preloader, then straight into the jobs. Login is optional until the worker wants to apply.
+export default function Home() {
+  redirect("/worker/jobs");
 }

@@ -2,6 +2,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { SenpaiSheet } from "./SenpaiSheet";
+import { useRouter } from "next/navigation";
+import { loginThenReturn } from "@/lib/store";
 import { PEERS, type Job, type Profile } from "@/lib/data";
 import { SHOWCASE } from "@/lib/showcase";
 import { suggestImprovements, type Chip, type Fit } from "@/lib/scoring";
@@ -14,6 +16,8 @@ export function PeersTile({ jobId, className = "", onSeePeers }: { jobId: string
   const t = useT();
   const data = PEERS[jobId];
   const [ask, setAsk] = useState(false);
+  const router = useRouter();
+  const authed = useApp((s) => !!s.auth && !!s.profile);
   if (!data) {
     return (
       <section className={`card-flat p-4 ${className}`} aria-label={t("Người Việt ở đây", "この職場のベトナム人")}>
@@ -40,11 +44,11 @@ export function PeersTile({ jobId, className = "", onSeePeers }: { jobId: string
         <span className="ml-auto text-[18px] font-bold text-brand tnum shrink-0">{lead.rating.toFixed(1).replace(".", ",")}★</span>
       </div>
       {canAsk && (
-        <button className="btn btn-secondary btn-sm pressable mt-3 w-full" onClick={() => setAsk(true)}>
+        <button className="btn btn-secondary btn-sm pressable mt-3 w-full" onClick={() => (authed ? setAsk(true) : router.push(loginThenReturn(location.pathname)))}>
           <Icon name="message-chat-circle" size={16} />{t("Hỏi Senpai · ẩn danh", "先輩に匿名で質問")}
         </button>
       )}
-      <SenpaiSheet jobId={jobId} open={ask} onClose={() => setAsk(false)} />
+      {authed && <SenpaiSheet jobId={jobId} open={ask} onClose={() => setAsk(false)} />}
     </section>
   );
 }

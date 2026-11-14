@@ -39,7 +39,7 @@ export function legalPath(p: Profile, from: number): PathStep[] {
   const review = DOC_PREP_DAYS + STATUS_CHANGE_DAYS;
   return [
     approve,
-    { key: "docs", label: t("Công ty gửi giấy tờ", "会社が書類を送付"), at: at(DOC_PREP_DAYS), legal: false, note: t("Công ty mới gửi hợp đồng và giấy tờ cần cho đơn. ViệcNhanh nhắc công ty nếu chậm.", "新しい会社が契約書と申請に必要な書類を送ります。遅れる場合はViệcNhanhが会社に連絡します。") },
+    { key: "docs", label: t("Công ty gửi giấy tờ", "会社が書類を送付"), at: at(DOC_PREP_DAYS), legal: false, note: t("Công ty mới gửi hợp đồng và giấy tờ cần cho đơn. KINTRA nhắc công ty nếu chậm.", "新しい会社が契約書と申請に必要な書類を送ります。遅れる場合はKINTRAが会社に連絡します。") },
     { key: "file", label: t("Nộp đơn chuyển đổi tư cách lưu trú", "在留資格変更許可申請を提出"), at: at(DOC_PREP_DAYS), legal: true, note: t("Nộp tại Cục Xuất nhập cảnh Nagoya. Bắt buộc theo luật khi người có Kỹ năng đặc định đổi công ty.", "名古屋出入国在留管理局に提出します。特定技能の方が転職する場合、法律で義務付けられています。") },
     { key: "review", label: t("Cục Xuất nhập cảnh xét đơn", "入管による審査"), at: at(review), legal: true, note: t("Thường 41–64 ngày theo thống kê của Cục. Trong lúc chờ, bạn vẫn làm ở chỗ cũ nếu còn hợp đồng.", "入管の統計では通常41〜64日です。審査中も契約が続く限り現在の職場で働けます。") },
     { key: "card", label: t("Nhận thẻ cư trú mới", "新しい在留カードを受け取る"), at: at(review), legal: true, note: t("Thẻ mới ghi công ty mới. Từ đây bạn được phép đi làm chỗ mới.", "新しいカードには新しい会社が記載されます。ここから新しい職場で働けます。") },

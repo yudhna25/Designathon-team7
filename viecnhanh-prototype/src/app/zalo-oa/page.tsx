@@ -8,7 +8,7 @@ import {
   type GroupMember, type Lang, type OaEvent, type OaJob, type QuestionId, type Recommend, type StatusId, type StatusUpdate,
 } from "@/lib/zalo-oa";
 
-// Màn mô phỏng Zalo OA — BRD "ViệcNhanh Aichi · Cửa vào Zalo OA" v1.0. Không dùng logo Zalo (BR8).
+// Màn mô phỏng Zalo OA — BRD "KINTRA · Cửa vào Zalo OA" v1.0. Không dùng logo Zalo (BR8).
 
 type Scenario = "first" | "status" | "recommend" | "event";
 type StatusTo = Exclude<StatusId, "pending">;
@@ -51,7 +51,7 @@ type WidgetActions = {
 };
 
 /** BR6 + AC5: Toast trước, rồi mở link ngoài ở tab mới. */
-function openWeb(message = t("Đang mở ViệcNhanh…", "Opening ViệcNhanh…")) {
+function openWeb(message = t("Đang mở KINTRA…", "Opening KINTRA…")) {
   toast(message, "arrow-up-right");
   setTimeout(() => window.open(OA_WEB_URL, "_blank", "noopener,noreferrer"), 450);
 }
@@ -113,8 +113,8 @@ export default function ZaloOaPage() {
           <h1 className="t-h1">{t("Có hồ sơ mà không cần mở web", "A profile without opening the web")}</h1>
           <p className="t-lg text-muted mt-3">
             {t(
-              "Lần đầu, người lao động trả lời 3 câu bằng tin nhắn (không cần gửi ảnh) và nhận 3 tiêu chí cùng 3 công ty phù hợp. Lần sau, OA gửi trạng thái đơn và việc mới. Mọi nút “Xem chi tiết” mở website ViệcNhanh.",
-              "On the first visit, workers answer 3 questions by message (no photo needed) and get their 3 criteria plus 3 matching companies. After that, the OA sends application updates and new jobs. Every “View details” button opens the ViệcNhanh website.",
+              "Lần đầu, người lao động trả lời 3 câu bằng tin nhắn (không cần gửi ảnh) và nhận 3 tiêu chí cùng 3 công ty phù hợp. Lần sau, OA gửi trạng thái đơn và việc mới. Mọi nút “Xem chi tiết” mở website KINTRA.",
+              "On the first visit, workers answer 3 questions by message (no photo needed) and get their 3 criteria plus 3 matching companies. After that, the OA sends application updates and new jobs. Every “View details” button opens the KINTRA website.",
             )}
           </p>
         </div>
@@ -255,7 +255,7 @@ function StatusBar() {
   );
 }
 
-/** Avatar OA ViệcNhanh (không dùng logo Zalo — BR8). */
+/** Avatar OA KINTRA (không dùng logo Zalo — BR8). */
 function OaAvatar({ size = 40 }: { size?: number }) {
   return (
     <span className="grid shrink-0 place-items-center rounded-full ink" style={{ width: size, height: size }} aria-hidden>
@@ -275,7 +275,7 @@ function ChatHeader({ typing, onInfo }: { typing: boolean; onInfo?: () => void }
         <span className="rounded-full ring-2 ring-(--chat-header-fg)/30"><OaAvatar /></span>
         <span className="flex min-w-0 flex-col">
           <span className="flex items-center gap-1">
-            <span className="truncate t-lg font-bold">ViệcNhanh Aichi</span>
+            <span className="truncate t-lg font-bold">KINTRA</span>
             <span className="inline-flex shrink-0 text-(--chat-verified)"><Icon name="check-verified" size={16} solid label={t("Official Account đã xác thực", "Verified Official Account")} /></span>
           </span>
           <span key={String(typing)} className="truncate t-sm text-(--chat-header-fg-muted) animate-[zen-fade-in_var(--motion-base)_var(--ease-standard)_both]" data-id="zalo-oa-header-subtitle">
@@ -537,7 +537,7 @@ function OaIntro() {
         <span className="rounded-full ring-4 ring-(--chat-bubble-in-bg)"><OaAvatar size={64} /></span>
         <div>
           <p className="flex items-center justify-center gap-1 t-sub">
-            ViệcNhanh Aichi
+            KINTRA
             <span className="inline-flex text-(--chat-verified)"><Icon name="check-verified" size={18} solid label={t("Official Account đã xác thực", "Verified Official Account")} /></span>
           </p>
           <p className="t-sm text-(--chat-meta)">{t("Official Account · Việc làm cho người Việt tại Aichi", "Official Account · Jobs for Vietnamese workers in Aichi")}</p>
@@ -552,7 +552,7 @@ function OaIntro() {
           ))}
         </ul>
         <Button size="sm" variant={follow ? "secondary" : "primary"} icon={follow ? "check" : "plus"} className="mt-1 min-w-[140px]" aria-pressed={follow}
-          onClick={() => { setFollow((v) => !v); if (!follow) toast(t("Đã quan tâm ViệcNhanh Aichi · bạn sẽ nhận báo việc mới tại đây", "Following ViệcNhanh Aichi · new jobs will arrive here"), "bell-01"); }}>
+          onClick={() => { setFollow((v) => !v); if (!follow) toast(t("Đã quan tâm KINTRA · bạn sẽ nhận báo việc mới tại đây", "Following KINTRA · new jobs will arrive here"), "bell-01"); }}>
           <span key={String(follow)} className="animate-[zen-fade-in_var(--motion-base)_var(--ease-standard)_both]">{follow ? t("Đã quan tâm", "Following") : t("Quan tâm", "Follow")}</span>
         </Button>
       </div>
@@ -587,7 +587,7 @@ function WelcomeCard({ radius, onStart }: { radius: string; onStart?: () => void
       </ol>
       <div className="flex items-center gap-3 rounded-[var(--radius-base)] bg-(--chat-canvas) px-3 py-2.5">
         <Icon name="stars-01" size={18} solid className="text-brand shrink-0" />
-        <p className="t-sm">{t("Bạn nhận lại 3 tiêu chí và 3 công ty phù hợp, bấm “Xem chi tiết” để mở trên ViệcNhanh.", "You get your 3 criteria and 3 matching companies; tap “View details” to open them on ViệcNhanh.")}</p>
+        <p className="t-sm">{t("Bạn nhận lại 3 tiêu chí và 3 công ty phù hợp, bấm “Xem chi tiết” để mở trên KINTRA.", "You get your 3 criteria and 3 matching companies; tap “View details” to open them on KINTRA.")}</p>
       </div>
       <Button block className="t-lg" icon={onStart ? "rocket" : "check"} disabled={!onStart} onClick={onStart}>{onStart ? START() : t("Đã bắt đầu", "Started")}</Button>
     </article>
@@ -768,7 +768,7 @@ function GroupChat({ data, onBack }: { data: Recommend; onBack: () => void }) {
         <span className="truncate"><b>{t("Đã ghim:", "Pinned:")}</b> {t("Phỏng vấn online thứ Tư 18/11, 10:00", "Online interview Wed Nov 18, 10:00")}</span>
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-3">
-        <div role="separator" className="flex justify-center py-3"><span className="rounded-full bg-(--chat-separator-bg) px-3 py-1 t-sm text-(--chat-separator-fg)">{t("Bạn đã tham gia nhóm qua ViệcNhanh Aichi", "You joined via ViệcNhanh Aichi")}</span></div>
+        <div role="separator" className="flex justify-center py-3"><span className="rounded-full bg-(--chat-separator-bg) px-3 py-1 t-sm text-(--chat-separator-fg)">{t("Bạn đã tham gia nhóm qua KINTRA", "You joined via KINTRA")}</span></div>
         {posts.map((p, i) => {
           const admin = D().GROUP_ADMINS[p.by];
           const head = posts[i - 1]?.by !== p.by;
@@ -908,13 +908,13 @@ function OaProfilePanel({ onBack }: { onBack: () => void }) {
   const [hidden, setHidden] = useState(false);
   const [more, setMore] = useState(false);
   return (
-    <aside data-id="zalo-oa-profile" aria-label={t("Hồ sơ ViệcNhanh Aichi", "ViệcNhanh Aichi profile")} className="flex flex-col flex-1 min-h-0 animate-[zen-slide-in-right_var(--motion-slow)_var(--ease-spring)_both]">
+    <aside data-id="zalo-oa-profile" aria-label={t("Hồ sơ KINTRA", "KINTRA profile")} className="flex flex-col flex-1 min-h-0 animate-[zen-slide-in-right_var(--motion-slow)_var(--ease-spring)_both]">
       <PanelHeader title={t("Thông tin", "Info")} onBack={onBack} />
       <div className="flex-1 min-h-0 overflow-y-auto bg-(--chat-canvas) grid content-start gap-2 pb-4">
         <PanelBlock>
           <div className="grid justify-items-center gap-2 px-4 pt-6 pb-4 text-center">
             <OaAvatar size={88} />
-            <h3 className="mt-1 flex items-center gap-1 t-h4">ViệcNhanh Aichi<span className="inline-flex text-(--chat-verified)"><Icon name="check-verified" size={20} solid label={t("Đã xác thực", "Verified")} /></span></h3>
+            <h3 className="mt-1 flex items-center gap-1 t-h4">KINTRA<span className="inline-flex text-(--chat-verified)"><Icon name="check-verified" size={20} solid label={t("Đã xác thực", "Verified")} /></span></h3>
             <span className="badge badge-md bg-(--chat-list-active) text-(--chat-link)">Official Account</span>
             <p className="t-base text-(--chat-meta)">{t("Việc làm · Aichi · 12,4k người quan tâm", "Jobs · Aichi · 12.4k followers")}</p>
             <div className="mt-2 grid w-full grid-cols-2 gap-2">
@@ -935,8 +935,8 @@ function OaProfilePanel({ onBack }: { onBack: () => void }) {
             <p className="t-sub">{t("Giới thiệu", "About")}</p>
             <p key={String(more)} className={`t-base text-muted animate-[zen-fade-in_var(--motion-base)_var(--ease-standard)_both] ${more ? "" : "line-clamp-3"}`}>
               {t(
-                "ViệcNhanh Aichi giúp người Việt ở Aichi tìm việc đúng visa, gần nơi ở. AI chấm mức phù hợp giữa hồ sơ và tin tuyển dụng, nhà máy cam kết trả lời trong 24 giờ. Miễn phí cho người lao động, không thu phí giới thiệu. Nhân viên nói tiếng Việt hỗ trợ 7h–22h mỗi ngày.",
-                "ViệcNhanh Aichi helps Vietnamese workers in Aichi find jobs that match their visa, close to where they live. AI scores the fit between a profile and each job post, and factories commit to replying within 24 hours. Free for workers, with no placement fee. Vietnamese-speaking staff help from 7:00 to 22:00 every day.",
+                "KINTRA giúp người Việt ở Aichi tìm việc đúng visa, gần nơi ở. AI chấm mức phù hợp giữa hồ sơ và tin tuyển dụng, nhà máy cam kết trả lời trong 24 giờ. Miễn phí cho người lao động, không thu phí giới thiệu. Nhân viên nói tiếng Việt hỗ trợ 7h–22h mỗi ngày.",
+                "KINTRA helps Vietnamese workers in Aichi find jobs that match their visa, close to where they live. AI scores the fit between a profile and each job post, and factories commit to replying within 24 hours. Free for workers, with no placement fee. Vietnamese-speaking staff help from 7:00 to 22:00 every day.",
               )}
             </p>
             <button type="button" onClick={() => setMore((v) => !v)} className="pressable justify-self-start t-base font-medium text-(--chat-link)">{more ? t("Thu gọn", "Show less") : t("Xem thêm", "Show more")}</button>
@@ -945,7 +945,7 @@ function OaProfilePanel({ onBack }: { onBack: () => void }) {
         <PanelBlock>
           <PanelRow icon="clock" label={t("Giờ hỗ trợ", "Support hours")} value="7:00–22:00" info />
           <PanelRow icon="marker-pin-02" label={t("Khu vực", "Area")} value={t("Aichi, Nhật Bản", "Aichi, Japan")} info />
-          <PanelRow icon="globe-02" label={t("Website ViệcNhanh", "ViệcNhanh website")} onClick={() => openWeb()} />
+          <PanelRow icon="globe-02" label={t("Website KINTRA", "KINTRA website")} onClick={() => openWeb()} />
         </PanelBlock>
         <PanelBlock>
           <PanelRow icon="image-plus" label={t("Ảnh, file, link", "Photos, files, links")} />
@@ -1211,14 +1211,14 @@ function downloadIcs(e: OaEvent) {
 const greeting = (): NewMsg[] => [
   { kind: "oa-intro" },
   { kind: "day", text: t("Hôm nay", "Today") },
-  { kind: "text", from: "bot", text: t("Xin chào bạn! Mình là trợ lý tìm việc của ViệcNhanh Aichi.", "Hi there! I’m the job assistant of ViệcNhanh Aichi.") },
+  { kind: "text", from: "bot", text: t("Xin chào bạn! Mình là trợ lý tìm việc của KINTRA.", "Hi there! I’m the job assistant of KINTRA.") },
   { kind: "text", from: "bot", text: t("Mình giúp bạn tìm việc đúng visa, gần nơi ở, và báo kết quả ứng tuyển ngay trong Zalo.", "I help you find jobs that match your visa, close to home, and send your application results right here in Zalo.") },
   { kind: "welcome" },
 ];
 
 /** Câu hỏi nhanh trước khi bắt đầu — trả lời các lo lắng thường gặp. */
 const faq = (): Record<string, string[]> => ({
-  [t("Có mất phí không?", "Is it free?")]: [t("Hoàn toàn miễn phí cho người lao động. ViệcNhanh không thu phí giới thiệu.", "It’s completely free for workers. ViệcNhanh charges no placement fee.")],
+  [t("Có mất phí không?", "Is it free?")]: [t("Hoàn toàn miễn phí cho người lao động. KINTRA không thu phí giới thiệu.", "It’s completely free for workers. KINTRA charges no placement fee.")],
   [t("Cần chuẩn bị gì?", "What do I need?")]: [t("Không cần chuẩn bị gì. Bạn chỉ cần biết loại visa của mình (dòng 在留資格 trên thẻ cư trú). Các câu sau bấm chọn hoặc gõ là xong.", "Nothing special. You only need to know your visa type (the 在留資格 line on your residence card). For the other questions, just tap or type.")],
   [t("Hỏi người thật", "Talk to a person")]: [t("Nhân viên nói tiếng Việt trực 7h–22h mỗi ngày. Bạn cứ nhắn ở đây, mình chuyển cho bạn ấy nhé.", "Vietnamese-speaking staff are online 7:00–22:00 every day. Just message here and I’ll pass it on.")],
 });
@@ -1254,7 +1254,7 @@ function FirstRunChat() {
       later(1500, () => {
         push(
           { kind: "assess", answers: a },
-          { kind: "text", from: "bot", text: t("Hồ sơ đã lưu theo tài khoản Zalo của bạn. Mở ViệcNhanh trên web sẽ không phải trả lời lại 3 câu.", "Your profile is saved to your Zalo account. On the ViệcNhanh website you won’t need to answer the 3 questions again.") },
+          { kind: "text", from: "bot", text: t("Hồ sơ đã lưu theo tài khoản Zalo của bạn. Mở KINTRA trên web sẽ không phải trả lời lại 3 câu.", "Your profile is saved to your Zalo account. On the KINTRA website you won’t need to answer the 3 questions again.") },
         );
         setStage("done");
         setBusy(false);
@@ -1280,7 +1280,7 @@ function FirstRunChat() {
       if (viaChip || /bat dau|tim viec|start|begin/.test(norm(text))) return ask("q1");
       return bot([t("Bạn bấm “Bắt đầu tìm việc” hoặc gõ “bắt đầu” để mình hỏi 3 câu nhé.", "Tap “Start job search” or type “start” and I’ll ask you 3 questions.")]);
     }
-    if (stage === "done" || stage === "evaluating") return bot([t("Bấm “Xem chi tiết” ở công ty bạn quan tâm để mở trên ViệcNhanh. Muốn trả lời lại thì chọn “Làm lại từ đầu”.", "Tap “View details” on a company to open it on ViệcNhanh. To answer again, choose “Start over”.")]);
+    if (stage === "done" || stage === "evaluating") return bot([t("Bấm “Xem chi tiết” ở công ty bạn quan tâm để mở trên KINTRA. Muốn trả lời lại thì chọn “Làm lại từ đầu”.", "Tap “View details” on a company to open it on KINTRA. To answer again, choose “Start over”.")]);
 
     const q = stage;
     if (q === "q1" && text === UNSURE()) return bot([t("Không sao. Bạn xem dòng 在留資格 trên thẻ cư trú rồi gõ lại giúp mình, ví dụ “kỹ năng đặc định sản xuất” hoặc “thực tập sinh”.", "No problem. Check the 在留資格 line on your residence card and type it here, e.g. “specified skilled worker manufacturing” or “technical intern”.")]);

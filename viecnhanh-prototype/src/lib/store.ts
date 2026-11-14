@@ -2,7 +2,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useEffect, useState } from "react";
-import { SEED_CANDIDATES, jobById, type Profile } from "./data";
+import { GUEST_PROFILE, SEED_CANDIDATES, jobById, type Profile } from "./data";
 import { DEFAULT_WEIGHTS, scoreMatch, type Weights } from "./scoring";
 import { answerFor, type Thread } from "./senpai";
 
@@ -213,6 +213,24 @@ export function matchOf(a: Application, me: Profile | null, w: Weights, now?: nu
 // --- hooks -----------------------------------------------------------------
 
 /** Rehydrate once on the client and keep tabs in sync (worker tab ↔ HR tab). */
+/** Who is looking: the worker's profile, or the guest profile while browsing logged out. */
+export function useViewer() {
+  const profile = useApp((s) => s.profile);
+  const auth = useApp((s) => s.auth);
+  return { p: profile ?? GUEST_PROFILE, guest: !auth || !profile };
+}
+
+const NEXT_KEY = "kintra-next";
+/** Remember where to return after login (e.g. the job the guest wanted to apply to). */
+export function loginThenReturn(path: string) {
+  try { sessionStorage.setItem(NEXT_KEY, path); } catch {}
+  return "/worker";
+}
+export function takeNext(fallback: string) {
+  try { const n = sessionStorage.getItem(NEXT_KEY); sessionStorage.removeItem(NEXT_KEY); if (n && n.startsWith("/worker/")) return n; } catch {}
+  return fallback;
+}
+
 export function useHydrated() {
   // persist API is absent during SSR, so start false and settle on the client.
   const [ok, setOk] = useState(() => typeof window !== "undefined" && !!useApp.persist?.hasHydrated());

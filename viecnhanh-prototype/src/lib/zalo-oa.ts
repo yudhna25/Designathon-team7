@@ -1,4 +1,4 @@
-// Zalo OA (mô phỏng) — data DỰNG theo BRD "ViệcNhanh Aichi · Cửa vào Zalo OA" v1.0.
+// Zalo OA (mô phỏng) — data DỰNG theo BRD "KINTRA · Cửa vào Zalo OA" v1.0.
 // Không dùng tên nhà máy thật (BR8). Số % là số dựng, không chạy engine chấm điểm.
 
 // ---- Ngôn ngữ (VI mặc định, EN cho bản trình bày quốc tế) --------------------------
@@ -33,7 +33,7 @@ export const GROUP_ADMINS: Admins = {
 };
 export function groupPosts(job: string, factory: string, area: string, km: number, monthly: string, hourly: string): GroupPost[] {
   return [
-    { id: "g1", by: "lead", at: "08:30", up: 24, seen: 96, text: `Chào mừng các bạn đến nhóm tuyển ${job} của ${factory}. Nhóm dùng để thông báo, câu hỏi riêng vui lòng nhắn OA ViệcNhanh.` },
+    { id: "g1", by: "lead", at: "08:30", up: 24, seen: 96, text: `Chào mừng các bạn đến nhóm tuyển ${job} của ${factory}. Nhóm dùng để thông báo, câu hỏi riêng vui lòng nhắn OA KINTRA.` },
     { id: "g2", by: "lead", at: "08:31", up: 31, seen: 94, info: [
       { k: "Lương", v: `${monthly} (${hourly})` },
       { k: "Ca làm", v: "Ca ngày 8:00–17:00, nghỉ T7, CN" },
@@ -182,7 +182,7 @@ export const EVENTS: OaEvent[] = [
     who: "Visa Kỹ năng đặc định hoặc Thực tập sinh", seats: "Còn 12 chỗ", perks: ["Miễn phí", "Xe đưa đón từ ga Toyotashi", "Có phiên dịch"],
   },
   {
-    id: "fair-nagoya", type: "Hội chợ việc làm", jp: "就職フェア", title: "Hội chợ việc làm cho người Việt tại Aichi", host: "ViệcNhanh Aichi",
+    id: "fair-nagoya", type: "Hội chợ việc làm", jp: "就職フェア", title: "Hội chợ việc làm cho người Việt tại Aichi", host: "KINTRA",
     place: "Nagoya", km: 28, date: "Chủ nhật 29/11", badge: "Chủ nhật · 29/11", time: "10:00–16:00", start: "2026-11-29T10:00:00+09:00", end: "2026-11-29T16:00:00+09:00",
     scope: "25 nhà máy sản xuất, phỏng vấn tại chỗ, tư vấn đổi visa", age: "18–40 tuổi",
     who: "Người Việt đang sống ở Aichi", perks: ["Miễn phí", "Phỏng vấn tại chỗ", "Mang theo thẻ cư trú"],
@@ -196,7 +196,7 @@ export function eventIcs(e: OaEvent) {
     "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//ViecNhanh Aichi//Zalo OA demo//VI", "BEGIN:VEVENT",
     `UID:${e.id}@viecnhanh-demo`, `DTSTAMP:${z(new Date().toISOString())}`, `DTSTART:${z(e.start)}`, `DTEND:${z(e.end)}`,
     `SUMMARY:${e.title}`, `LOCATION:${e.place}, Aichi`, `DESCRIPTION:${e.type} (${e.jp}) · ${e.scope}`,
-    "BEGIN:VALARM", "TRIGGER:-P1D", "ACTION:DISPLAY", `DESCRIPTION:${t("Nhắc lịch ViệcNhanh", "ViệcNhanh reminder")}`, "END:VALARM",
+    "BEGIN:VALARM", "TRIGGER:-P1D", "ACTION:DISPLAY", `DESCRIPTION:${t("Nhắc lịch KINTRA", "KINTRA reminder")}`, "END:VALARM",
     "END:VEVENT", "END:VCALENDAR",
   ].join("\r\n");
 }
@@ -209,10 +209,10 @@ export const GROUP_MEMBERS: GroupMember[] = [
   { name: "Chị Linh · Phiên dịch", note: "Phó cộng đồng", admin: "deputy" },
   { name: "Trần Văn Hùng", note: "Tham gia qua link cộng đồng" },
   { name: "Lê Thị Mai", note: "Thêm bởi Chị Sato · HR" },
-  { name: "Phạm Đức Long", note: "Tham gia qua ViệcNhanh Aichi" },
+  { name: "Phạm Đức Long", note: "Tham gia qua KINTRA" },
   { name: "Nguyễn Thu Hà", note: "Tham gia qua link cộng đồng" },
   { name: "Đỗ Quang Vinh", note: "Thêm bởi Anh Minh · Tổ trưởng" },
-  { name: "Bạn", note: "Tham gia qua ViệcNhanh Aichi", me: true },
+  { name: "Bạn", note: "Tham gia qua KINTRA", me: true },
 ];
 
 
@@ -230,7 +230,7 @@ const EN_ADMINS: Admins = {
 };
 function enGroupPosts(job: string, factory: string, area: string, km: number, monthly: string, hourly: string): GroupPost[] {
   return [
-    { id: "g1", by: "lead", at: "08:30", up: 24, seen: 96, text: `Welcome to the ${job} hiring group of ${factory}. This group is for announcements; for personal questions, please message the ViệcNhanh OA.` },
+    { id: "g1", by: "lead", at: "08:30", up: 24, seen: 96, text: `Welcome to the ${job} hiring group of ${factory}. This group is for announcements; for personal questions, please message the KINTRA OA.` },
     { id: "g2", by: "lead", at: "08:31", up: 31, seen: 94, info: [
       { k: "Pay", v: `${monthly} (${hourly})` },
       { k: "Shift", v: "Day shift 8:00–17:00, Sat & Sun off" },
@@ -327,7 +327,7 @@ const EN_EVENTS: OaEvent[] = [
     who: "Specified Skilled Worker or Technical Intern visa", seats: "12 seats left", perks: ["Free", "Shuttle from Toyotashi station", "Interpreter"],
   },
   {
-    id: "fair-nagoya", type: "Job fair", jp: "就職フェア", title: "Job fair for Vietnamese workers in Aichi", host: "ViệcNhanh Aichi",
+    id: "fair-nagoya", type: "Job fair", jp: "就職フェア", title: "Job fair for Vietnamese workers in Aichi", host: "KINTRA",
     place: "Nagoya", km: 28, date: "Sunday, Nov 29", badge: "Sunday · Nov 29", time: "10:00–16:00", start: "2026-11-29T10:00:00+09:00", end: "2026-11-29T16:00:00+09:00",
     scope: "25 manufacturing companies, on-the-spot interviews, visa change advice", age: "Age 18–40",
     who: "Vietnamese people living in Aichi", perks: ["Free", "On-the-spot interviews", "Bring your residence card"],
@@ -340,10 +340,10 @@ const EN_GROUP_MEMBERS: GroupMember[] = [
   { name: "Ms. Linh · Interpreter", note: "Community deputy", admin: "deputy" },
   { name: "Trần Văn Hùng", note: "Joined via community link" },
   { name: "Lê Thị Mai", note: "Added by Ms. Sato · HR" },
-  { name: "Phạm Đức Long", note: "Joined via ViệcNhanh Aichi" },
+  { name: "Phạm Đức Long", note: "Joined via KINTRA" },
   { name: "Nguyễn Thu Hà", note: "Joined via community link" },
   { name: "Đỗ Quang Vinh", note: "Added by Mr. Minh · Team lead" },
-  { name: "You", note: "Joined via ViệcNhanh Aichi", me: true },
+  { name: "You", note: "Joined via KINTRA", me: true },
 ];
 
 const EN_PROFILE: typeof profile = {
