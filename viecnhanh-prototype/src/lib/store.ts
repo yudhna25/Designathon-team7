@@ -37,6 +37,7 @@ export type Config = {
   hrLang: "en" | "ja";
   theme: "system" | "light" | "dark";
   showDemo: boolean;
+  ewaDown: boolean; // demo: wage-advance partner outage (M4 "when one party fails")
 };
 
 export const DEFAULT_CONFIG: Config = {
@@ -49,6 +50,7 @@ export const DEFAULT_CONFIG: Config = {
   hrLang: "en",
   theme: "system",
   showDemo: true,
+  ewaDown: false,
 };
 
 type Auth = { method: "zalo" | "line" | "phone"; name: string };

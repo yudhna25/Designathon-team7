@@ -42,6 +42,7 @@ export default function Wallet() {
 
 function ActiveWallet({ onExit }: { onExit: () => void }) {
   const { withdrawals, withdraw } = useApp();
+  const ewaDown = useApp((s) => s.config.ewaDown);
   const job = JOBS[0];
   const earned = SHIFTS.length * 8 * job.hourly;
   const taken = withdrawals.reduce((t, w) => t + w.amount, 0);
@@ -59,6 +60,13 @@ function ActiveWallet({ onExit }: { onExit: () => void }) {
       <TopBar title="Ví lương mẫu" sub={`${job.company} · dữ liệu mẫu`} />
       <div className="px-5 lg:px-0 max-w-[640px] grid gap-4">
         <div data-reveal><InlineNote icon="info-circle">Bạn đang xem ví mẫu. Ca làm, số dư và lệnh chuyển đều là mô phỏng.</InlineNote></div>
+        {ewaDown && (
+          <div role="alert">
+            <InlineNote icon="alert-triangle" tone="warn">
+              <b>Đối tác ứng lương đang tạm lỗi.</b> Lương tháng của bạn vẫn trả đủ, đúng ngày 25. Ngày công đã ghi nhận không mất. Thử lại sau.
+            </InlineNote>
+          </div>
+        )}
         <section className="ink rounded-[28px] p-6" data-reveal>
           <p className="t-sm muted-ink">Lương đã làm tháng này · {SHIFTS.length} ca đã xác nhận</p>
           <p className="text-[44px] leading-none font-semibold tracking-[-0.045em] mt-2"><Num value={earned} format={yen} /></p>
@@ -86,7 +94,7 @@ function ActiveWallet({ onExit }: { onExit: () => void }) {
             <div className="flex justify-between"><dt className="text-muted">Phí chuyển cố định</dt><dd className="tnum">{yen(FEE)}</dd></div>
             <div className="flex justify-between font-semibold"><dt>Về tài khoản Yucho ••4821</dt><dd className="tnum">{yen(Math.max(0, amt - FEE))}</dd></div>
           </dl>
-          <Button size="lg" block className="mt-5" disabled={amt < 1000} onClick={() => setSheet("confirm")}>Thử nhận {yen(Math.max(0, amt - FEE))}</Button>
+          <Button size="lg" block className="mt-5" disabled={ewaDown || amt < 1000} onClick={() => setSheet("confirm")}>{ewaDown ? "Tạm dừng ứng lương · thử lại sau" : `Thử nhận ${yen(Math.max(0, amt - FEE))}`}</Button>
         </section>
 
         <div data-reveal><InlineNote icon="shield-tick"><b>Đây là lương bạn đã làm, không phải khoản vay.</b> Không lãi suất. Số đã ứng được trừ vào kỳ lương ngày 25, sau khi nhà máy trừ thuế và bảo hiểm.</InlineNote></div>

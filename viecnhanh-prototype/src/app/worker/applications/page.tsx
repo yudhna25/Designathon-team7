@@ -9,6 +9,7 @@ import { takeHome, yen } from "@/lib/pay";
 import { fitOf, scoreMatch, suggestImprovements } from "@/lib/scoring";
 import { deadlineOf, displayStatus, fmtLeft, fmtSlot, useApp, useNow, type Application } from "@/lib/store";
 import { senpaiFor } from "@/lib/senpai";
+import { earliestStart, fmtDate } from "@/lib/start";
 
 export default function Applications() {
   const s = useApp();
@@ -82,7 +83,7 @@ function AppCard({ a, now }: { a: Application; now: number }) {
               <span className={`mono tnum t-h4 ${urgent ? "underline decoration-2 underline-offset-4" : ""}`} aria-label={`Còn ${fmtLeft(left)}`}>{fmtLeft(left)}</span>
             </div>
             <Meter value={Math.max(0, (left / total) * 100)} label={`Thời gian HR còn lại cho ${job.company}`} className="mt-3" />
-            <p className="t-sm text-muted mt-2">Quá hạn, hồ sơ tự đóng và bạn nhận 3 việc khác.</p>
+            <p className="t-sm text-muted mt-2">Nếu HR chưa trả lời trong {s.config.deadlineH} giờ, bạn được gợi ý ngay 3 việc khác. <Link href="/worker/jobs" className="font-semibold underline underline-offset-2">Xem 3 việc khác</Link></p>
           </div>
         </>
       )}
@@ -110,13 +111,17 @@ function Approved({ a }: { a: Application }) {
   const profile = useApp((s) => s.profile);
   const acceptOffer = useApp((s) => s.acceptOffer);
   const senpai = profile ? senpaiFor(profile, a.jobId) : null;
+  const job = jobById(a.jobId)!;
+  const start = profile ? fmtDate(earliestStart(profile, a.decidedAt ?? a.appliedAt).date) : null;
   const iv = a.interview;
   // Order matches reality: invite → interview → (if hired) safety before day 1 → wallet after first shift.
   const steps = [
     { done: true, t: "Nhà máy mời bạn phỏng vấn", d: "Hồ sơ đã qua vòng lọc" },
     { done: false, t: iv ? `Phỏng vấn ${fmtSlot(iv.slot)}` : "Phỏng vấn", d: "Kết quả báo trong app và qua Zalo OA" },
     { done: safety, t: "Nếu đạt: học an toàn trước ngày 1", d: safety ? "Đã hoàn thành" : "8 phút · có thể học trước", href: "/worker/safety" },
+    ...(start ? [{ done: false, t: `Bắt đầu đi làm · ${start} (dự kiến)`, d: "Tính từ ngày HR duyệt và thủ tục lưu trú" }] : []),
     { done: false, t: "Ví lương mở sau ca đầu tiên", d: "Ứng lương đã làm, không phải vay", href: "/worker/wallet" },
+    ...(job.contractMonths ? [{ done: false, t: `Tháng ${job.contractMonths}: đánh giá gia hạn`, d: "Nếu không gia hạn, ViệcNhanh xếp việc tiếp trong 24h" }] : []),
   ];
   return (
     <div className="mt-5">

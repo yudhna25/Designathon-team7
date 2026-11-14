@@ -204,6 +204,7 @@ function Drawer({ onClose }: { onClose: () => void }) {
             <h3 className="t-eyebrow">Hiển thị</h3>
             <Row label="Animation"><Segmented size="sm" label="Animation" value={s.config.motion} onChange={(v) => s.setConfig({ motion: v })} options={[{ value: "normal", label: "Chuẩn" }, { value: "slow", label: "Chậm ×3" }, { value: "off", label: "Tắt" }]} /></Row>
             <Row label="Giao diện"><Segmented size="sm" label="Giao diện" value={s.config.theme} onChange={(v) => s.setConfig({ theme: v })} options={[{ value: "system", label: "Tự động" }, { value: "light", label: "Sáng" }, { value: "dark", label: "Tối" }]} /></Row>
+            <Row label="Đối tác ứng lương"><Segmented size="sm" label="Đối tác ứng lương" value={s.config.ewaDown ? "down" : "ok"} onChange={(v) => s.setConfig({ ewaDown: v === "down" })} options={[{ value: "ok", label: "Bình thường" }, { value: "down", label: "Tạm lỗi" }]} /></Row>
             <Row label="Ngôn ngữ HR"><Segmented size="sm" label="Ngôn ngữ HR" value={s.config.hrLang} onChange={(v) => s.setConfig({ hrLang: v })} options={[{ value: "en", label: "EN" }, { value: "ja", label: "日本語" }]} /></Row>
             <Row label="Nút Demo"><button className="btn btn-xs btn-secondary pressable" onClick={() => { s.setConfig({ showDemo: false }); close(); toast("Đã ẩn · nhấn Shift + D để mở lại", "eye"); }}>Ẩn khi thuyết trình</button></Row>
           </section>
