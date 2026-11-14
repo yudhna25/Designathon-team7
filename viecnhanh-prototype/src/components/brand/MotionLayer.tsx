@@ -79,11 +79,13 @@ export function MotionLayer() {
         pass.style.setProperty("--gy", `${py * 100}%`);
         pass.style.setProperty("--glare", "1");
       }
-      const m = t.closest?.(".btn-primary, [data-magnetic]") as HTMLElement | null;
+      // Opt-in only, and capped: on wide buttons (full-width login/apply) a proportional pull made them jump around.
+      const m = t.closest?.("[data-magnetic]") as HTMLElement | null;
       if (m !== magnet) { reset(magnet, true); magnet = m; }
       if (m) {
         const r = m.getBoundingClientRect();
-        gsap.to(m, { x: (e.clientX - r.left - r.width / 2) * 0.22, y: (e.clientY - r.top - r.height / 2) * 0.3, duration: 0.4, ease: "power3.out" });
+        const clamp = gsap.utils.clamp(-6, 6);
+        gsap.to(m, { x: clamp((e.clientX - r.left - r.width / 2) * 0.22), y: clamp((e.clientY - r.top - r.height / 2) * 0.3), duration: 0.4, ease: "power3.out" });
       }
       const spot = t.closest?.("[data-spotlight], .pillar") as HTMLElement | null;
       if (spot) {
