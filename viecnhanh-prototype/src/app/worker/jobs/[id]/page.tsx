@@ -143,6 +143,15 @@ function JobDetail() {
             <Fact icon="translate" k="Tiếng Nhật" v={`Từ ${JLPT_SHORT[job.jlptMin]}`} />
           </dl>
           {job.perks.length > 0 && <ul className="mt-5 flex flex-wrap gap-1.5">{job.perks.map((x) => <li key={x} className="badge badge-md badge-outline">{x}</li>)}</ul>}
+          {(SHOWCASE.gallery[job.id]?.length ?? 0) > 0 && (
+            <div className="mt-5">
+              <p className="t-sm font-semibold mb-2">Ký túc xá & tiện ích · ảnh minh hoạ</p>
+              <ul className="-mx-6 px-6 flex gap-2 overflow-x-auto no-scrollbar snap-x">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {SHOWCASE.gallery[job.id].map((src, i) => <li key={src} className="snap-start shrink-0 w-[70%] md:w-[48%]"><img src={src} alt={`Tiện ích ${job.company} ${i + 1} (minh hoạ)`} className="w-full aspect-[4/3] object-cover rounded-2xl border border-hair" /></li>)}
+              </ul>
+            </div>
+          )}
         </section>
 
         <div id="nguoi-viet" className="scroll-mt-16" data-reveal><PeersTile jobId={job.id} /></div>

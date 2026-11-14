@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360" role="img" aria-labelledby="title desc"><title id="title">Mikawa — phòng ký túc xá một người</title><desc id="desc">Phòng đơn sáng với một giường, tủ đồ, bàn làm việc và cửa sổ. Không gian minh hoạ, không phải ảnh cơ sở thật.</desc>
+<rect width="640" height="360" fill="#F6F2E9"/><path d="M0 0h640v29H0Z" fill="#E9E4D9"/><path d="M0 252h640v108H0Z" fill="#DACDB5"/><path d="M0 252h640" stroke="#C4B79F" stroke-width="5"/><path d="m56 360 120-108m132 108 40-108m183 108-43-108M0 309h640" stroke="#C8B99D" stroke-width="2"/>
+<path d="M347 28v221" stroke="#E5DDCE" stroke-width="2"/>
+<rect x="374" y="58" width="196" height="120" rx="3" fill="#D6E5E0"/><path d="M385 135h36v34h-36Zm42-23h39v57h-39Zm47 16h43v41h-43Zm51-23h35v64h-35Z" fill="#BACFCA"/><path d="M374 157h196v21H374Z" fill="#ACBFAA"/><path d="M374 57h196v122H374Z" fill="none" stroke="#fff" stroke-width="8"/><path d="M471 59v117" stroke="#fff" stroke-width="6"/><path d="M364 184h217" stroke="#C9BBA5" stroke-width="7"/>
+<path d="M357 49h27v135h-27Zm200 0h29v135h-29Z" fill="#D7DDD1"/><path d="M365 55v121m204-121v121m9-121v121" stroke="#C4CEBF" stroke-width="3"/>
+<path d="M37 70h100v178H37Z" fill="#C8AE87"/><path d="M43 76h88v167H43Z" fill="#E2D0B2"/><path d="M87 77v165" stroke="#BEA482" stroke-width="2"/><path d="M79 143v19m16-19v19" stroke="#9A8263" stroke-width="3" stroke-linecap="round"/>
+<path d="M61 173h22v113H61Z" fill="#987F60"/><rect x="75" y="209" width="277" height="62" rx="7" fill="#C0AB89"/><path d="M84 271v28h17v-28m229 0v28h16v-28" fill="#957A58"/>
+<rect x="77" y="195" width="275" height="39" rx="12" fill="#FFFDF4"/><rect x="88" y="178" width="81" height="29" rx="12" fill="#fff"/><path d="M99 187h57" stroke="#EBE8DD" stroke-width="2" stroke-linecap="round"/>
+<path d="M169 185h173q10 0 10 10v61H164v-61q0-10 5-10Z" fill="#70998C"/><path d="M172 192h167v15H172Z" fill="#9AB9AB"/><path d="M185 215v36m15-36v36m15-36v36m15-36v36m15-36v36m15-36v36m15-36v36m15-36v36m15-36v36m15-36v36" stroke="#82A799" stroke-width="2"/>
+<path d="M383 215h190v10H383Z" fill="#AD9271"/><path d="M393 225h8v63h-8m154-63h8v63h-8" fill="#A78B66"/>
+<path d="M428 206h44v8h-44Z" fill="#E9E3D6"/><path d="M433 200h39v6h-39Z" fill="#6C8D82"/>
+<path d="M507 214v-45h22" fill="none" stroke="#516C65" stroke-width="4" stroke-linecap="round"/><path d="m519 166 20 11h-26Z" fill="#516C65"/>
+<path d="M457 245h53v12h-53Zm5-8v-10q0-8 8-8h27q8 0 8 8v10Z" fill="#587D70"/><path d="M465 257v33m36-33v33" stroke="#789085" stroke-width="6"/>
+<ellipse cx="479" cy="302" rx="63" ry="10" fill="#C6B99F"/><path d="M594 256h-25l4 28h17Z" fill="#B58B6B"/><path d="M581 256v-45m0 25q-23-6-19-21 19 1 19 21Zm0-9q20-1 19-18-18 2-19 18Z" fill="#6B8A65" stroke="#6B8A65" stroke-width="2"/>
+<path d="M160 75h89v56h-89Z" fill="#fff"/><path d="M168 83h73v40h-73Z" fill="#DDE5D8"/><path d="m168 119 24-25 20 16 14-10 15 19Z" fill="#99B4A2"/>
+</svg>

@@ -13,9 +13,35 @@
     "okazaki-nc": "/showcase/covers/okazaki-nc.svg",
     "kariya-mill": "/showcase/covers/kariya-mill.svg",
     "okazaki-weld": "/showcase/covers/okazaki-weld.svg",
-    "anjo-forklift": "/showcase/covers/anjo-forklift.svg"
+    "anjo-forklift": "/showcase/covers/anjo-forklift.svg",
+    "toyohashi-mold": "/showcase/covers/toyohashi-mold.svg",
+    "nagoya-food": "/showcase/covers/nagoya-food.svg"
   },
-  "avatars": {},
-  "gallery": {},
-  "brand": {}
+  "avatars": {
+    "pe1": "/showcase/avatars/pe1.svg",
+    "pe2": "/showcase/avatars/pe2.svg",
+    "pe3": "/showcase/avatars/pe3.svg",
+    "pe4": "/showcase/avatars/pe4.svg",
+    "c1": "/showcase/avatars/c1.svg",
+    "c2": "/showcase/avatars/c2.svg",
+    "c3": "/showcase/avatars/c3.svg",
+    "c4": "/showcase/avatars/c4.svg",
+    "c5": "/showcase/avatars/c5.svg",
+    "c6": "/showcase/avatars/c6.svg",
+    "c7": "/showcase/avatars/c7.svg",
+    "c8": "/showcase/avatars/c8.svg",
+    "x1": "/showcase/avatars/x1.svg",
+    "x2": "/showcase/avatars/x2.svg",
+    "x3": "/showcase/avatars/x3.svg"
+  },
+  "gallery": {
+    "mikawa-cnc": [
+      "/showcase/gallery/mikawa-1.svg",
+      "/showcase/gallery/mikawa-2.svg",
+      "/showcase/gallery/mikawa-3.svg"
+    ]
+  },
+  "brand": {
+    "appIcon": "/showcase/brand/app-icon.svg"
+  }
 }
