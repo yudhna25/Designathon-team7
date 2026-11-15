@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useState } from "react";
 import { CITIES, type Job, type Profile } from "@/lib/data";
 import { SHIFT_JA, SHIFT_VI } from "@/lib/labels";
 import { useLang, useT } from "@/lib/i18n";
@@ -28,10 +29,11 @@ export function JobRow({ job, p, fit, now, applied, guest }: { job: Job; p: Prof
   const ja = useLang() === "ja";
   const saved = useApp((s) => s.saved.includes(job.id));
   const toggleSave = useApp((s) => s.toggleSave);
+  const [pop, setPop] = useState(0);
   const pay = takeHome(job, p.relocate);
   const start = fmtDate(earliestStart(p, now + 864e5).date);
   return (
-    <article className="relative card p-5 flex gap-4 pressable hover:shadow-[var(--shadow-bottom-2)]">
+    <article className="relative card p-5 flex gap-4 pressable">
       <CompanyLogo job={job} />
       <div className="min-w-0 flex-1 py-0.5 pr-12">
         <h3 className="font-semibold leading-snug">
@@ -58,9 +60,10 @@ export function JobRow({ job, p, fit, now, applied, guest }: { job: Job; p: Prof
         className="absolute right-2 top-2 z-10 grid size-11 place-items-center rounded-full hover:bg-subtle pressable"
         aria-pressed={saved}
         aria-label={saved ? t(`Bỏ lưu ${job.title}`, `${job.title}の保存を解除`) : t(`Lưu ${job.title}`, `${job.title}を保存`)}
-        onClick={() => toggleSave(job.id)}
+        onClick={() => { toggleSave(job.id); setPop((n) => n + 1); }}
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden fill={saved ? "#1B22A7" : "none"} stroke={saved ? "#1B22A7" : "currentColor"} strokeWidth="2" strokeLinejoin="round">
+        {/* key remounts the svg so the pop replays on each save, never on page load */}
+        <svg key={pop} width="20" height="20" viewBox="0 0 24 24" aria-hidden fill={saved ? "var(--color-bg-accent-solid)" : "none"} stroke={saved ? "var(--color-bg-accent-solid)" : "currentColor"} strokeWidth="2" strokeLinejoin="round" className={pop && saved ? "animate-[zen-pop_var(--motion-slower)_var(--ease-bounce)]" : undefined}>
           <path d="M12 20s-7-4.35-7-10a4 4 0 0 1 7-2.65A4 4 0 0 1 19 10c0 5.65-7 10-7 10z" />
         </svg>
       </button>
