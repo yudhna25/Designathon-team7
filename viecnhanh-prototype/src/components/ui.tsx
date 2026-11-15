@@ -106,7 +106,15 @@ export function Segmented<T extends string | number>({ options, value, onChange,
   const [thumb, setThumb] = useState<{ left: number; width: number } | null>(null);
   useLayoutEffect(() => {
     const el = wrap.current?.querySelector<HTMLButtonElement>('button[aria-pressed="true"]');
-    if (el) setThumb({ left: el.offsetLeft, width: el.offsetWidth });
+    if (!el) return;
+    const measure = () => {
+      if (el.offsetWidth > 0) setThumb({ left: el.offsetLeft, width: el.offsetWidth });
+    };
+    measure();
+    // Dialog children mount before showModal(), so measure again when they become visible.
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [value, options.length]);
   return (
     <div ref={wrap} className="seg" role="group" aria-label={label}>
