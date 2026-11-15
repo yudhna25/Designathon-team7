@@ -35,7 +35,7 @@ export function BottomNav() {
         )}
         {NAV.map((n, i) => (
           <li key={n.href}>
-            <Link href={n.href} aria-current={i === active ? "page" : undefined} className={`pressable h-full flex flex-col items-center justify-center gap-1 t-sm ${i === active ? "text-fg font-semibold" : "text-muted"}`}>
+            <Link href={n.href} aria-current={i === active ? "page" : undefined} className={`pressable h-full flex flex-col items-center justify-center gap-1 t-sm ${i === active ? "text-[var(--color-content-accent-base)] font-semibold" : "text-[var(--color-content-accent-light)]"}`}>
               <span className="relative">
                 <Icon name={n.icon} size={24} solid={i === active} />
                 {n.href === "/worker/applications" && pending > 0 && (
@@ -208,25 +208,18 @@ function AccountMenu() {
 export function TopBar({ title, back, right, sub }: { title?: ReactNode; back?: string | true; right?: ReactNode; sub?: ReactNode }) {
   const t = useT();
   const router = useRouter();
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const on = () => setScrolled(window.scrollY > 8);
-    on();
-    window.addEventListener("scroll", on, { passive: true });
-    return () => window.removeEventListener("scroll", on);
-  }, []);
   return (
-    <header className={`sticky top-0 lg:top-16 z-20 bg-[color-mix(in_oklab,var(--color-bg-canvas)_92%,transparent)] backdrop-blur-xl transition-[background-color,box-shadow] duration-[var(--motion-base)] ${scrolled ? "shadow-[0_1px_0_var(--color-border-neutral-pale)]" : ""}`}>
-      <div className="h-14 md:h-16 flex items-center gap-1 px-2 md:px-4 lg:px-0">
+    <header className="sticky top-0 lg:top-16 z-20 bg-[color-mix(in_oklab,var(--color-bg-surface)_92%,transparent)] lg:bg-[color-mix(in_oklab,var(--color-bg-canvas)_92%,transparent)] backdrop-blur-xl border-b border-[var(--color-border-neutral-pale)] shadow-[var(--shadow-bottom-1)] mb-4 lg:mb-0 lg:border-0 lg:shadow-none">
+      <div className="h-16 flex items-center gap-2 px-4 lg:px-0">
         {back ? (
           <button className="icon-btn pressable" aria-label={t("Quay lại", "戻る")} onClick={() => (back === true ? router.back() : router.push(back))}>
             <Icon name="arrow-left" />
           </button>
         ) : (
-          <Link href="/worker/jobs" className="px-3 lg:hidden" aria-label={t("Việc làm", "求人")}><Logo compact /></Link>
+          <Link href="/worker/jobs" className="pr-1 lg:hidden" aria-label={t("Việc làm", "求人")}><Logo compact /></Link>
         )}
         <div className="flex-1 min-w-0 px-1">
-          {title && <h1 className="t-sub truncate">{title}</h1>}
+          {title && <h1 className="t-sub truncate text-[var(--color-content-accent-base)]">{title}</h1>}
           {sub && <p className="t-sm text-muted truncate">{sub}</p>}
         </div>
         {right}

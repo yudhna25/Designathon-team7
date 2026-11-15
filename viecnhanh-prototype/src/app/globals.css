@@ -190,6 +190,10 @@ body {
 
 /* ---------- Surfaces ---------- */
 .card { background: var(--color-bg-surface); border-radius: var(--radius-2xl); box-shadow: var(--shadow-container); border: 1px solid var(--color-border-container-subtle); }
+/* Clickable cards lift on hover; border picks up the accent. */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .card.pressable:hover:not(:active) { transform: translateY(-2px); box-shadow: var(--shadow-bottom-2); border-color: color-mix(in oklab, var(--color-bg-accent-solid) 30%, transparent); }
+}
 .card-flat { background: var(--color-bg-surface); border-radius: var(--radius-2xl); border: 1px solid var(--color-border-neutral-pale); }
 .well { background: var(--color-bg-neutral-pale); border-radius: var(--radius-lg); }
 .hair-b { border-bottom: 1px solid var(--color-border-neutral-pale); }
