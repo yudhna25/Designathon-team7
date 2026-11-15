@@ -200,7 +200,7 @@ body {
 /* ---------- Badge / Tag ---------- */
 .badge { display: inline-flex; align-items: center; gap: 4px; height: var(--badge-xs-h, 20px); padding: 0 8px; border-radius: var(--radius-full); font-size: var(--text-badge-s); line-height: 1; font-weight: 500; white-space: nowrap; background: var(--color-bg-neutral-subtle); color: var(--color-content-neutral-strongest); }
 .badge-md { height: var(--badge-sm-h); padding: 0 10px; }
-.badge-solid { background: var(--color-bg-neutral-solid); color: var(--color-content-inverse-strongest); }
+.badge-solid { background: var(--color-bg-accent-solid); color: var(--color-content-on-accent); }
 .badge-outline { background: transparent; box-shadow: inset 0 0 0 1px var(--color-border-neutral-subtle); }
 .badge-dash { background: transparent; box-shadow: none; outline: 1px dashed var(--color-border-neutral-subtle-hover); outline-offset: -1px; }
 

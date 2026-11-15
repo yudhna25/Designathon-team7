@@ -221,7 +221,7 @@ function JobDetail() {
       </div>
 
       <FlightPath p={p} job={job} from={simNow(s.clock, s.config.speed) + 864e5} open={sheet === "path"} onClose={() => setSheet(null)} />
-      <ApplySheet open={sheet === "apply" || sheet === "anyway"} flagged={sheet === "anyway"} onClose={() => setSheet(null)} jobId={job.id} />
+      <ApplySheet key={job.id} open={sheet === "apply" || sheet === "anyway"} flagged={sheet === "anyway"} onClose={() => setSheet(null)} jobId={job.id} />
     </Screen>
   );
 }
@@ -237,8 +237,8 @@ function Fact({ icon, k, v, sub }: { icon: "clock" | "clock-fast-forward" | "hom
 
 function ApplySheet({ open, onClose, jobId, flagged }: { open: boolean; onClose: () => void; jobId: string; flagged: boolean }) {
   const t = useT();
-  const [answers, setAnswers] = useState<Record<string, string>>({});
   const qs = jobById(jobId)?.questions ?? [];
+  const [answers, setAnswers] = useState<Record<string, string>>(() => Object.fromEntries(qs.map((q) => [q.id, q.options[0]?.vi ?? ""])));
   const answered = qs.every((q) => answers[q.id]);
   const s = useApp();
   const needCard = !s.scanned;
@@ -256,7 +256,7 @@ function ApplySheet({ open, onClose, jobId, flagged }: { open: boolean; onClose:
     gsap.from(".ok-ring", { scale: 0.4, autoAlpha: 0, duration: 0.8, ease: "back.out(1.8)" });
   }, { dependencies: [appId] });
 
-  const close = () => { onClose(); setTimeout(() => { setAppId(null); setAnswers({}); }, 400); };
+  const close = () => { onClose(); setTimeout(() => setAppId(null), 400); };
   return (
     <Sheet open={open} onClose={close} title={appId ? t("Đã gửi hồ sơ", "応募しました") : t("Gửi hồ sơ cho nhà máy?", "工場に応募しますか？")}
       footer={appId ? (
@@ -293,6 +293,7 @@ function ApplySheet({ open, onClose, jobId, flagged }: { open: boolean; onClose:
           {qs.length > 0 && (
             <div className="grid gap-4 card-flat p-4">
               <p className="font-semibold flex items-center gap-2"><Icon name="message-chat-circle" />{t(`Nhà máy hỏi thêm ${qs.length} câu`, `工場からの追加質問 ${qs.length}件`)}</p>
+              <p className="t-sm text-muted">{t("Đã chọn sẵn câu trả lời gợi ý. Hãy kiểm tra và đổi nếu chưa đúng với bạn.", "回答例が選択されています。内容を確認し、ご自身に合う回答に変更してください。")}</p>
               {qs.map((q) => (
                 <div key={q.id}>
                   <p className="t-sm mb-2">{q.vi}</p>

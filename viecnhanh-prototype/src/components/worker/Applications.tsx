@@ -1,7 +1,7 @@
 "use client";
 import { flushSync } from "react-dom";
 import Link from "next/link";
-import { Button, FitBadge, Icon, Meter, toast } from "@/components/ui";
+import { Button, FitBadge, Icon, toast } from "@/components/ui";
 import { StatusSteps } from "@/components/worker/Blocks";
 import { CITIES, JOBS, jobById } from "@/lib/data";
 import { REJECT_REASONS, STATUS_VI } from "@/lib/labels";
@@ -28,14 +28,15 @@ export function AppCard({ a, now }: { a: Application; now: number }) {
   const s = useApp();
   const job = jobById(a.jobId)!;
   const st = displayStatus(a, s, now);
-  const left = deadlineOf(a, s) - now;
-  const total = s.config.deadlineH * 36e5;
+  const deadline = deadlineOf(a, s);
+  const left = deadline - now;
+  const [hours, minutes, seconds] = fmtLeft(left).split(":");
   const urgent = left < s.config.reminderH * 36e5;
 
   return (
     <article className={`rounded-[24px] p-5 md:p-6 ${st === "approved" ? "ink" : "card"}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1 basis-48">
           <p className={`t-sm ${st === "approved" ? "muted-ink" : "text-muted"}`}>{job.company} · {CITIES[job.city].vi}</p>
           <h2 className="t-sub">{job.title}</h2>
         </div>
@@ -46,12 +47,24 @@ export function AppCard({ a, now }: { a: Application; now: number }) {
         <>
           <div className="mt-5"><StatusSteps status={st} /></div>
           <div className="mt-5 well p-4">
-            <div className="flex items-baseline justify-between gap-3">
-              <span className="t-sm text-muted">{st === "viewed" ? "HR đang xem hồ sơ · trả lời trước" : "HR phải trả lời trước"}</span>
-              <span className={`mono tnum t-h4 ${urgent ? "underline decoration-2 underline-offset-4" : ""}`} aria-label={`Còn ${fmtLeft(left)}`}>{fmtLeft(left)}</span>
+            <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
+              <div>
+                <p className="t-sm text-muted">{st === "viewed" ? "HR đang xem hồ sơ · phản hồi trước" : "HR phản hồi trước"}</p>
+                <time dateTime={new Date(deadline).toISOString()} className="mt-1 block font-semibold tnum">{new Date(deadline).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</time>
+              </div>
+              <div>
+                <p className={`t-sm mb-1 ${urgent ? "text-brand font-semibold" : "text-muted"}`}>{urgent ? "Sắp tới hạn phản hồi" : "Thời gian còn lại"}</p>
+                <div role="timer" aria-live="off" aria-label={`Còn ${hours} giờ ${minutes} phút ${seconds} giây`} className="flex items-start gap-2">
+                  {[hours, minutes, seconds].map((digits, i) => (
+                    <span key={i} aria-hidden="true" className="flex items-start gap-2">
+                      {i > 0 && <span className="mono t-h3 text-muted">:</span>}
+                      <span className="grid text-center"><span className="mono tnum t-h3 inline-block min-w-[2ch]">{digits}</span><span className="t-sm text-muted">{["giờ", "phút", "giây"][i]}</span></span>
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
-            <Meter value={Math.max(0, (left / total) * 100)} label={`Thời gian HR còn lại cho ${job.company}`} className="mt-3" />
-            <p className="t-sm text-muted mt-2">Nếu HR chưa trả lời trong {s.config.deadlineH} giờ, bạn được gợi ý ngay 3 việc khác. <Link href="/worker/jobs" className="font-semibold underline underline-offset-2">Xem 3 việc khác</Link></p>
+            <p className="t-sm text-muted mt-4 pt-3 hair-t">Nếu HR chưa trả lời trong {s.config.deadlineH} giờ, bạn được gợi ý ngay 3 việc khác. <Link href="/worker/jobs" className="font-semibold underline underline-offset-2">Xem 3 việc khác</Link></p>
           </div>
         </>
       )}
