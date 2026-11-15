@@ -3,8 +3,9 @@ import { flushSync } from "react-dom";
 import Link from "next/link";
 import { Button, FitBadge, Icon, toast } from "@/components/ui";
 import { StatusSteps } from "@/components/worker/Blocks";
-import { CITIES, JOBS, jobById } from "@/lib/data";
-import { REJECT_REASONS, STATUS_VI } from "@/lib/labels";
+import { JOBS, jobById } from "@/lib/data";
+import { REJECT_REASONS, statusLabel } from "@/lib/labels";
+import { cityName, jobTitle, useLang, useT } from "@/lib/i18n";
 import { withViewTransition } from "@/lib/motion";
 import { takeHome, yen } from "@/lib/pay";
 import { fitOf, scoreMatch, suggestImprovements } from "@/lib/scoring";
@@ -25,6 +26,8 @@ export function useMyApps() {
 }
 
 export function AppCard({ a, now }: { a: Application; now: number }) {
+  const lang = useLang();
+  const t = useT();
   const s = useApp();
   const job = jobById(a.jobId)!;
   const st = displayStatus(a, s, now);
@@ -32,15 +35,17 @@ export function AppCard({ a, now }: { a: Application; now: number }) {
   const left = deadline - now;
   const [hours, minutes, seconds] = fmtLeft(left).split(":");
   const urgent = left < s.config.reminderH * 36e5;
+  const units = lang === "ja" ? ["時間", "分", "秒"] : lang === "en" ? ["hrs", "min", "sec"] : ["giờ", "phút", "giây"];
+  const dateLocale = lang === "vi" ? "vi-VN" : lang === "ja" ? "ja-JP" : "en-GB";
 
   return (
     <article className={`rounded-[24px] p-5 md:p-6 ${st === "approved" ? "ink" : "card"}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1 basis-48">
-          <p className={`t-sm ${st === "approved" ? "muted-ink" : "text-muted"}`}>{job.company} · {CITIES[job.city].vi}</p>
-          <h2 className="t-sub">{job.title}</h2>
+          <p className={`t-sm ${st === "approved" ? "muted-ink" : "text-muted"}`}>{job.company} · {cityName(job.city, lang)}</p>
+          <h2 className="t-sub">{jobTitle(job, lang)}</h2>
         </div>
-        <span className={`badge badge-md shrink-0 ${st === "approved" ? "bg-[var(--color-bg-inverse-solid)] text-[var(--color-content-neutral-strongest)]" : st === "expired" || st === "rejected" ? "badge-dash" : "badge-solid"}`}>{STATUS_VI[st]}</span>
+        <span className={`badge badge-md shrink-0 ${st === "approved" ? "bg-[var(--color-bg-inverse-solid)] text-[var(--color-content-neutral-strongest)]" : st === "expired" || st === "rejected" ? "badge-dash" : "badge-solid"}`}>{statusLabel(st, lang)}</span>
       </div>
 
       {(st === "sent" || st === "viewed") && (
@@ -49,22 +54,25 @@ export function AppCard({ a, now }: { a: Application; now: number }) {
           <div className="mt-5 well p-4">
             <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
               <div>
-                <p className="t-sm text-muted">{st === "viewed" ? "HR đang xem hồ sơ · phản hồi trước" : "HR phản hồi trước"}</p>
-                <time dateTime={new Date(deadline).toISOString()} className="mt-1 block font-semibold tnum">{new Date(deadline).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</time>
+                <p className="t-sm text-muted">{st === "viewed" ? t("HR đang xem hồ sơ · phản hồi trước", "HR確認中 · 返信期限", "HR reviewing · replies by") : t("HR phản hồi trước", "HR返信期限", "HR replies by")}</p>
+                <time dateTime={new Date(deadline).toISOString()} className="mt-1 block font-semibold tnum">{new Date(deadline).toLocaleString(dateLocale, { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</time>
               </div>
               <div>
-                <p className={`t-sm mb-1 ${urgent ? "text-brand font-semibold" : "text-muted"}`}>{urgent ? "Sắp tới hạn phản hồi" : "Thời gian còn lại"}</p>
-                <div role="timer" aria-live="off" aria-label={`Còn ${hours} giờ ${minutes} phút ${seconds} giây`} className="flex items-start gap-2">
+                <p className={`t-sm mb-1 ${urgent ? "text-brand font-semibold" : "text-muted"}`}>{urgent ? t("Sắp tới hạn phản hồi", "もうすぐ期限", "Deadline soon") : t("Thời gian còn lại", "残り時間", "Time remaining")}</p>
+                <div role="timer" aria-live="off" aria-label={t(`Còn ${hours} giờ ${minutes} phút ${seconds} giây`, `残り ${hours}時間${minutes}分${seconds}秒`, `${hours}h ${minutes}m ${seconds}s remaining`)} className="flex items-start gap-2">
                   {[hours, minutes, seconds].map((digits, i) => (
                     <span key={i} aria-hidden="true" className="flex items-start gap-2">
                       {i > 0 && <span className="mono t-h3 text-muted">:</span>}
-                      <span className="grid text-center"><span className="mono tnum t-h3 inline-block min-w-[2ch]">{digits}</span><span className="t-sm text-muted">{["giờ", "phút", "giây"][i]}</span></span>
+                      <span className="grid text-center"><span className="mono tnum t-h3 inline-block min-w-[2ch]">{digits}</span><span className="t-sm text-muted">{units[i]}</span></span>
                     </span>
                   ))}
                 </div>
               </div>
             </div>
-            <p className="t-sm text-muted mt-4 pt-3 hair-t">Nếu HR chưa trả lời trong {s.config.deadlineH} giờ, bạn được gợi ý ngay 3 việc khác. <Link href="/worker/jobs" className="font-semibold underline underline-offset-2">Xem 3 việc khác</Link></p>
+            <p className="t-sm text-muted mt-4 pt-3 hair-t">
+              {t(`Nếu HR chưa trả lời trong ${s.config.deadlineH} giờ, bạn được gợi ý ngay 3 việc khác.`, `${s.config.deadlineH}時間以内にHRから返信がない場合、すぐに他の求人を3件ご紹介します。`)}{" "}
+              <Link href="/worker/jobs" className="font-semibold underline underline-offset-2">{t("Xem 3 việc khác", "他の求人を3件見る")}</Link>
+            </p>
           </div>
         </>
       )}
@@ -72,15 +80,24 @@ export function AppCard({ a, now }: { a: Application; now: number }) {
       {st === "approved" && <Approved a={a} />}
       {st === "rejected" && (
         <>
-          <div className="mt-3 well p-4"><p className="t-sm text-muted">Lý do từ nhà máy</p><p className="font-medium">{REJECT_REASONS.find((r) => r.id === a.rejectReason)?.vi ?? "Nhà máy chưa chọn hồ sơ lần này."}</p></div>
+          <div className="mt-3 well p-4">
+            <p className="t-sm text-muted">{t("Lý do từ nhà máy", "工場からの理由", "Feedback from plant")}</p>
+            <p className="font-medium">{REJECT_REASONS.find((r) => r.id === a.rejectReason)?.[lang] ?? t("Nhà máy chưa chọn hồ sơ lần này.", "今回は見送りとなりました。", "The employer went with another candidate this time.")}</p>
+          </div>
           <UpSkill jobId={a.jobId} />
-          <Alternatives exclude={a.jobId} title="Việc khác hợp với bạn" />
+          <Alternatives exclude={a.jobId} title={t("Việc khác hợp với bạn", "あなたに合う他の求人", "Other jobs that fit you")} />
         </>
       )}
       {st === "expired" && (
         <>
-          <p className="mt-3">HR không trả lời trong {s.config.deadlineH} giờ nên hồ sơ đã tự đóng. Bạn không mất gì và có thể ứng tuyển việc khác ngay.</p>
-          <Alternatives exclude={a.jobId} title="3 việc gợi ý thay thế" />
+          <p className="mt-3">
+            {t(
+              `HR không trả lời trong ${s.config.deadlineH} giờ nên hồ sơ đã tự đóng. Bạn không mất gì và có thể ứng tuyển việc khác ngay.`,
+              `${s.config.deadlineH}時間以内にHRから返信がなかったため、応募は自動終了しました。他の求人にすぐ応募できます。`,
+              `HR didn't reply within ${s.config.deadlineH} hours so this application auto-closed. You can apply to other jobs right away.`,
+            )}
+          </p>
+          <Alternatives exclude={a.jobId} title={t("3 việc gợi ý thay thế", "おすすめの代替求人3件", "3 suggested alternatives")} />
         </>
       )}
     </article>
@@ -88,6 +105,8 @@ export function AppCard({ a, now }: { a: Application; now: number }) {
 }
 
 function Approved({ a }: { a: Application }) {
+  const lang = useLang();
+  const t = useT();
   const safety = useApp((s) => s.safetyDone);
   const profile = useApp((s) => s.profile);
   const acceptOffer = useApp((s) => s.acceptOffer);
@@ -97,20 +116,20 @@ function Approved({ a }: { a: Application }) {
   const iv = a.interview;
   // Order matches reality: invite → interview → (if hired) safety before day 1 → wallet after first shift.
   const steps = [
-    { done: true, t: "Nhà máy mời bạn phỏng vấn", d: "Hồ sơ đã qua vòng lọc" },
-    { done: false, t: iv ? `Phỏng vấn ${fmtSlot(iv.slot)}` : "Phỏng vấn", d: "Kết quả báo trong app và qua Zalo OA" },
-    { done: safety, t: "Nếu đạt: học an toàn trước ngày 1", d: safety ? "Đã hoàn thành" : "8 phút · có thể học trước", href: "/worker/safety" },
-    ...(start ? [{ done: false, t: `Bắt đầu đi làm · ${start} (dự kiến)`, d: "Tính từ ngày HR duyệt và thủ tục lưu trú" }] : []),
-    ...(job.contractMonths ? [{ done: false, t: `Tháng ${job.contractMonths}: đánh giá gia hạn`, d: "Nếu không gia hạn, KINTRA xếp việc tiếp trong 24h" }] : []),
+    { done: true, t: t("Nhà máy mời bạn phỏng vấn", "工場から面接の招待", "Employer invited you to interview"), d: t("Hồ sơ đã qua vòng lọc", "書類選考を通過しました", "Passed initial screening") },
+    { done: false, t: iv ? t(`Phỏng vấn ${fmtSlot(iv.slot, lang)}`, `面接 ${fmtSlot(iv.slot, lang)}`, `Interview ${fmtSlot(iv.slot, lang)}`) : t("Phỏng vấn", "面接", "Interview"), d: t("Kết quả báo trong app và qua Zalo OA", "結果はアプリとZalo OAでお知らせします", "Result sent in-app and via Zalo OA") },
+    { done: safety, t: t("Nếu đạt: học an toàn trước ngày 1", "合格後：初出勤前に安全教育", "If hired: safety training before day 1"), d: safety ? t("Đã hoàn thành", "修了済み", "Completed") : t("8 phút · có thể học trước", "8分 · 事前受講も可能", "8 min · can complete early"), href: "/worker/safety" },
+    ...(start ? [{ done: false, t: t(`Bắt đầu đi làm · ${start} (dự kiến)`, `入社予定 · ${start}`, `Start work · ${start} (est.)`), d: t("Tính từ ngày HR duyệt và thủ tục lưu trú", "HR承認と在留手続きの日数から算出", "Based on HR approval & visa paperwork") }] : []),
+    ...(job.contractMonths ? [{ done: false, t: t(`Tháng ${job.contractMonths}: đánh giá gia hạn`, `${job.contractMonths}か月目：更新評価`, `Month ${job.contractMonths}: renewal review`), d: t("Nếu không gia hạn, KINTRA xếp việc tiếp trong 24h", "更新されない場合、KINTRAが24時間以内に次の仕事を紹介", "If not renewed, KINTRA matches your next role within 24h") }] : []),
   ];
   return (
     <div className="mt-5">
-      <p className="t-h3">Bạn được mời phỏng vấn</p>
+      <p className="t-h3">{t("Bạn được mời phỏng vấn", "面接に招待されました", "Interview invitation")}</p>
       {iv && (
         <div className="mt-4 rounded-2xl bg-[var(--color-bg-inverse-solid)] text-[var(--color-content-neutral-strongest)] p-4 grid gap-3">
-          <div className="flex gap-3"><Icon name="calendar-check" /><span><span className="t-sm text-muted block">Lịch phỏng vấn</span><b>{fmtSlot(iv.slot)}</b></span></div>
-          <div className="flex gap-3"><Icon name={iv.mode === "onsite" ? "marker-pin-02" : "phone-call"} /><span><span className="t-sm text-muted block">{iv.mode === "onsite" ? "Tại nhà máy" : "Online"}</span><b>{iv.mode === "onsite" ? `${job.company} · ${CITIES[job.city].vi} (xem cổng vào trong tin nhắn Zalo OA). Mang thẻ cư trú.` : "Gọi video qua Zalo, HR sẽ gọi đúng giờ."}</b></span></div>
-          <Button size="sm" variant="secondary" icon="calendar" onClick={() => toast("Đã thêm vào lịch và nhắc trước 1 giờ qua Zalo OA", "calendar-check")}>Thêm vào lịch</Button>
+          <div className="flex gap-3"><Icon name="calendar-check" /><span><span className="t-sm text-muted block">{t("Lịch phỏng vấn", "面接日時", "Interview time")}</span><b>{fmtSlot(iv.slot, lang)}</b></span></div>
+          <div className="flex gap-3"><Icon name={iv.mode === "onsite" ? "marker-pin-02" : "phone-call"} /><span><span className="t-sm text-muted block">{iv.mode === "onsite" ? t("Tại nhà máy", "工場で対面", "On-site at plant") : t("Online", "オンライン", "Online")}</span><b>{iv.mode === "onsite" ? t(`${job.company} · ${cityName(job.city, lang)} (xem cổng vào trong tin nhắn Zalo OA). Mang thẻ cư trú.`, `${job.company} · ${cityName(job.city, lang)}（正門案内はZalo OA参照）。在留カード持参。`, `${job.company} · ${cityName(job.city, lang)} (gate info in Zalo OA message). Bring residence card.`) : t("Gọi video qua Zalo, HR sẽ gọi đúng giờ.", "Zaloビデオ通話。時間通りにHRから発信します。", "Zalo video call — HR will call at the scheduled time.")}</b></span></div>
+          <Button size="sm" variant="secondary" icon="calendar" onClick={() => toast(t("Đã thêm vào lịch và nhắc trước 1 giờ qua Zalo OA", "カレンダーに追加し、1時間前にZalo OAで通知します", "Added to calendar with a 1h reminder via Zalo OA"), "calendar-check")}>{t("Thêm vào lịch", "カレンダーに追加", "Add to calendar")}</Button>
         </div>
       )}
       <ol className="mt-4 grid gap-1">
@@ -134,7 +153,7 @@ function Approved({ a }: { a: Application }) {
       {a.accepted ? (
         <div className="mt-4 rounded-2xl bg-[var(--color-bg-inverse-solid)] text-[var(--color-content-neutral-strongest)] p-4 flex gap-3" role="status">
           <Icon name="users-check" />
-          <span><b className="block">Đã nhận việc</b><span className="t-sm text-muted">{senpai ? `Zalo OA đã mở hồ sơ hai bên. Senpai ${senpai.name} sẽ đón bạn ngày đầu.` : "Zalo OA sẽ gửi hướng dẫn ngày đầu đi làm."}</span></span>
+          <span><b className="block">{t("Đã nhận việc", "内定を承諾しました", "Offer accepted")}</b><span className="t-sm text-muted">{senpai ? t(`Zalo OA đã mở hồ sơ hai bên. Senpai ${senpai.name} sẽ đón bạn ngày đầu.`, `Zalo OAで双方のプロフィールが公開されました。初日は先輩の${senpai.name}さんが迎えます。`, `Profiles unlocked on Zalo OA. Senpai ${senpai.name} will welcome you on day one.`) : t("Zalo OA sẽ gửi hướng dẫn ngày đầu đi làm.", "初出勤の案内はZalo OAでお送りします。", "Day-one instructions will arrive on Zalo OA.")}</span></span>
         </div>
       ) : (
         <div className="mt-4 grid gap-2">
@@ -149,12 +168,12 @@ function Approved({ a }: { a: Application }) {
                   acceptOffer(a.id);
                 });
               });
-              toast(senpai ? `Đã nhận việc · Zalo OA đã mở hồ sơ hai bên với ${senpai.name}` : "Đã nhận việc", "users-check");
+              toast(senpai ? t(`Đã nhận việc · Zalo OA đã mở hồ sơ hai bên với ${senpai.name}`, `内定承諾 · ${senpai.name}さんとZalo OAで連携しました`, `Offer accepted · profiles unlocked with ${senpai.name} on Zalo OA`) : t("Đã nhận việc", "内定を承諾しました", "Offer accepted"), "users-check");
             }}
           >
-            Nhận việc
+            {t("Nhận việc", "内定を承諾", "Accept offer")}
           </Button>
-          <p className="t-sm muted-ink">Khi bạn nhận việc, tên bạn mới được mở cho Senpai ở nhà máy để hỗ trợ ngày đầu.</p>
+          <p className="t-sm muted-ink">{t("Khi bạn nhận việc, tên bạn mới được mở cho Senpai ở nhà máy để hỗ trợ ngày đầu.", "内定を承諾した後にのみ、工場の先輩にあなたの名前が公開されます。", "Your name is only revealed to the plant Senpai after you accept the offer.")}</p>
         </div>
       )}
     </div>
@@ -162,6 +181,8 @@ function Approved({ a }: { a: Application }) {
 }
 
 function Alternatives({ exclude, title }: { exclude: string; title: string }) {
+  const lang = useLang();
+  const t = useT();
   const s = useApp();
   const p = s.profile!;
   const applied = new Set(s.apps.filter((x) => x.candidateId === "me").map((x) => x.jobId));
@@ -179,19 +200,25 @@ function Alternatives({ exclude, title }: { exclude: string; title: string }) {
           return (
             <li key={j.id}>
               <Link href={`/worker/jobs/${j.id}`} className="flex items-center gap-3 well p-3 pressable">
-                <span className="flex-1 min-w-0"><b className="block truncate">{j.title}</b><span className="t-sm text-muted block">{j.company} · {yen(pay.net)}/tháng ước tính</span><span className="t-sm text-muted block mt-1">{pay.housingNote}</span><span className="mt-1.5 inline-block"><FitBadge level={fitOf(m, s.config.threshold)} /></span></span>
+                <span className="flex-1 min-w-0">
+                  <b className="block truncate">{jobTitle(j, lang)}</b>
+                  <span className="t-sm text-muted block">{j.company} · {yen(pay.net)}{t("/tháng ước tính", "/月目安", "/mo est.")}</span>
+                  <span className="t-sm text-muted block mt-1">{pay.housingNote}</span>
+                  <span className="mt-1.5 inline-block"><FitBadge level={fitOf(m, s.config.threshold)} /></span>
+                </span>
                 <Icon name="chevron-right-01" className="text-faint" />
               </Link>
             </li>
           );
         })}
       </ul>
-      {alts.length === 0 && <Button variant="secondary" onClick={() => location.assign("/worker/jobs")}>Xem tất cả việc</Button>}
+      {alts.length === 0 && <Button variant="secondary" onClick={() => location.assign("/worker/jobs")}>{t("Xem tất cả việc", "すべての求人を見る", "Browse all jobs")}</Button>}
     </div>
   );
 }
 
 function UpSkill({ jobId }: { jobId: string }) {
+  const t = useT();
   const s = useApp();
   const job = jobById(jobId)!;
   const m = scoreMatch(s.profile!, job, s.config.weights);
@@ -200,9 +227,9 @@ function UpSkill({ jobId }: { jobId: string }) {
   if (!ups.length) return null;
   return (
     <div className="mt-4">
-      <p className="t-sm font-semibold mb-2">Gợi ý nâng tay nghề cho lần sau</p>
+      <p className="t-sm font-semibold mb-2">{t("Gợi ý nâng tay nghề cho lần sau", "次回に向けたスキル提案", "Suggestions for next time")}</p>
       <ul className="grid gap-2">{ups.map((u) => <li key={u.id} className="flex gap-3 rounded-2xl bg-brand-soft p-3"><Icon name="trend-up-01" className="text-brand mt-0.5" /><span><b className="block">{u.label}</b><span className="t-sm text-muted">{u.detail}</span></span></li>)}</ul>
-      <Link href={`/worker/improve?job=${jobId}`} className="btn btn-sm btn-secondary pressable mt-2">Cập nhật hồ sơ</Link>
+      <Link href={`/worker/improve?job=${jobId}`} className="btn btn-sm btn-secondary pressable mt-2">{t("Cập nhật hồ sơ", "プロフィールを更新", "Update profile")}</Link>
     </div>
   );
 }
