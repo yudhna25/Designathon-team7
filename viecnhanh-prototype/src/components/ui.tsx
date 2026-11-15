@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { create } from "zustand";
 import { ICONS, type IconName } from "./icons.data";
 import { gsap, useGSAP } from "@/lib/motion";
+import { useLang, useT } from "@/lib/i18n";
 
 type IconBase = IconName extends `${infer B}-${"line" | "solid"}` ? B : never;
 
@@ -179,16 +180,17 @@ export function Sheet({ open, onClose, title, children, footer }: { open: boolea
     { dependencies: [open, mounted], revertOnUpdate: true },
   );
 
+  const t = useT();
   if (!mounted) return null;
   return createPortal(
-    <dialog ref={dialog} className="modal-shell open:flex items-end md:items-center justify-center" aria-modal="true" aria-labelledby={title ? titleId : undefined} aria-label={title ? undefined : "Thông báo"} onKeyDown={containDialogFocus} onCancel={(e) => { e.preventDefault(); onClose(); }}>
+    <dialog ref={dialog} className="modal-shell open:flex items-end md:items-center justify-center" aria-modal="true" aria-labelledby={title ? titleId : undefined} aria-label={title ? undefined : t("Thông báo", "お知らせ", "Dialog")} onKeyDown={containDialogFocus} onCancel={(e) => { e.preventDefault(); onClose(); }}>
       <div ref={scrim} className="absolute inset-0 scrim backdrop-blur-[2px]" onClick={onClose} />
       <div ref={panel} className="relative w-full md:max-w-[480px] max-h-[92dvh] overflow-auto bg-surface rounded-t-[28px] md:rounded-[28px] shadow-[var(--shadow-bottom-4)]">
         <div className="md:hidden mx-auto mt-2 h-1 w-10 rounded-full bg-subtle" aria-hidden />
         {title && (
           <div className="flex items-start justify-between gap-4 px-6 pt-5">
             <h2 id={titleId} className="t-h4">{title}</h2>
-            <button className="icon-btn sm pressable -mr-2 -mt-1" onClick={onClose} aria-label="Đóng"><Icon name="x-medium" /></button>
+            <button className="icon-btn sm pressable -mr-2 -mt-1" onClick={onClose} aria-label={t("Đóng", "閉じる", "Close")}><Icon name="x-medium" /></button>
           </div>
         )}
         <div className="px-6 pt-3 pb-4">{children}</div>
@@ -286,15 +288,20 @@ export function InlineNote({ icon = "info-circle", children, tone = "neutral" }:
 
 // ---- Fit level (words, not %) ------------------------------------------------
 export type FitLevel = "great" | "possible" | "not";
-const FIT_TEXT: Record<FitLevel, string> = { great: "Rất phù hợp", possible: "Có thể phù hợp", not: "Chưa phù hợp" };
+const FIT_TEXT: Record<"vi" | "en" | "ja", Record<FitLevel, string>> = {
+  vi: { great: "Rất phù hợp", possible: "Có thể phù hợp", not: "Chưa phù hợp" },
+  en: { great: "Great fit", possible: "Possible fit", not: "Not a fit yet" },
+  ja: { great: "高い適合", possible: "適合の可能性", not: "現時点で不適合" },
+};
 export function FitBadge({ level, size = "md", label }: { level: FitLevel; size?: "xs" | "sm" | "md" | "lg"; label?: string }) {
+  const lang = useLang();
   const n = level === "great" ? 3 : level === "possible" ? 2 : 1;
   const tone = level === "great" ? "ink" : level === "possible" ? "bg-brand-soft text-brand" : "bg-surface text-muted border border-dashed border-line";
   const box = size === "lg" ? "h-11 pl-3 pr-4 gap-2 t-base" : size === "sm" ? "h-6 pl-2 pr-2.5 gap-1.5 text-[12px] leading-none" : size === "xs" ? "h-4 pl-1 pr-1.5 gap-1 text-[11px] leading-none" : "h-8 pl-2.5 pr-3 gap-2 t-sm";
   return (
     <span className={`inline-flex items-center rounded-full font-semibold whitespace-nowrap ${tone} ${box}`}>
       <Icon name={level === "great" ? "check-verified" : level === "possible" ? "trend-up-01" : "info-circle"} size={size === "lg" ? 20 : size === "sm" ? 14 : size === "xs" ? 11 : 16} solid={level === "great"} />
-      {label ?? FIT_TEXT[level]}
+      {label ?? FIT_TEXT[lang][level]}
       <span className="flex gap-0.5" aria-hidden>
         {[0, 1, 2].map((i) => <i key={i} className={`block rounded-full ${size === "lg" ? "w-1.5 h-3.5" : size === "sm" ? "w-1 h-2.5" : size === "xs" ? "w-[3px] h-1.5" : "w-1.5 h-3"} ${i < n ? "bg-current" : "bg-current opacity-25"}`} />)}
       </span>
@@ -317,24 +324,26 @@ export function MatchChips({ chips, lang = "vi", max }: { chips: { ok: boolean; 
 }
 
 /** ZEN dropdown: trigger like an input, options in a sheet with search (works the same on phone and desktop). */
-export function Picker<T extends string>({ id, label, value, options, onChange, searchable, placeholder = "Chọn…" }: { id: string; label: string; value: T | ""; options: { value: T; label: string; sub?: string }[]; onChange: (v: T) => void; searchable?: boolean; placeholder?: string }) {
+export function Picker<T extends string>({ id, label, value, options, onChange, searchable, placeholder }: { id: string; label: string; value: T | ""; options: { value: T; label: string; sub?: string }[]; onChange: (v: T) => void; searchable?: boolean; placeholder?: string }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const cur = options.find((o) => o.value === value);
   const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").toLowerCase();
   const shown = q ? options.filter((o) => norm(`${o.label} ${o.sub ?? ""}`).includes(norm(q))) : options;
+  const ph = placeholder ?? t("Chọn…", "選択…", "Select…");
   return (
     <>
       <button id={id} type="button" aria-haspopup="dialog" aria-expanded={open} onClick={() => { setQ(""); setOpen(true); }}
         className="input pressable flex items-center gap-3 text-left !pr-4 min-w-0 [contain:inline-size]">
-        <span className="flex-1 min-w-0 truncate">{cur ? <>{cur.label}{cur.sub && <span className="text-muted t-base"> · {cur.sub}</span>}</> : <span className="text-faint">{placeholder}</span>}</span>
+        <span className="flex-1 min-w-0 truncate">{cur ? <>{cur.label}{cur.sub && <span className="text-muted t-base"> · {cur.sub}</span>}</> : <span className="text-faint">{ph}</span>}</span>
         <Icon name="chevron-down" className="text-muted" />
       </button>
       <Sheet open={open} onClose={() => setOpen(false)} title={label}>
         {searchable && (
           <div className="relative mb-3">
             <Icon name="search-md" className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
-            <input autoFocus className="input !pl-12" placeholder="Tìm kiếm…" value={q} onChange={(e) => setQ(e.target.value)} aria-label={`Tìm ${label}`} />
+            <input autoFocus className="input !pl-12" placeholder={t("Tìm kiếm…", "検索…", "Search…")} value={q} onChange={(e) => setQ(e.target.value)} aria-label={t(`Tìm ${label}`, `${label}を検索`, `Search ${label}`)} />
           </div>
         )}
         <ul role="listbox" aria-label={label} className="grid gap-1 max-h-[52dvh] overflow-y-auto -mx-2 px-2 pb-2">
@@ -350,7 +359,7 @@ export function Picker<T extends string>({ id, label, value, options, onChange, 
               </li>
             );
           })}
-          {shown.length === 0 && <li className="px-4 py-6 text-center text-muted">Không tìm thấy “{q}”</li>}
+          {shown.length === 0 && <li className="px-4 py-6 text-center text-muted">{t(`Không tìm thấy “${q}”`, `「${q}」が見つかりません`, `No results for “${q}”`)}</li>}
         </ul>
       </Sheet>
     </>

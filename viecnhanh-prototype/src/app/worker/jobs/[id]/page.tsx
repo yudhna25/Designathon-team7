@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, type CSSProperties, useEffect, useRef, useState } from "react";
-import { Button, FitBadge, Icon, InlineNote, MatchChips, Num, Sheet, Segmented } from "@/components/ui";
+import { Button, FitBadge, Icon, InlineNote, MatchChips, Sheet, Segmented } from "@/components/ui";
 import { Screen, TopBar } from "@/components/worker/Shell";
 import { PayCard, ScoreBreakdown } from "@/components/worker/Blocks";
 import { PeersTile } from "@/components/worker/Bento";
@@ -12,9 +12,9 @@ import { FlightPath } from "@/components/worker/FlightPath";
 import { CITIES, JLPT_SHORT, JOBS, SKILLS, VISAS, distanceKm, jobById } from "@/lib/data";
 import { CompanyLogo, JobRow } from "@/components/worker/JobRow";
 import { SHOWCASE } from "@/lib/showcase";
-import { SHIFT_JA, SHIFT_VI } from "@/lib/labels";
-import { useLang, useT } from "@/lib/i18n";
-import { FIT_JA, FIT_VI, fitOf, matchChips, matchGuidance, scoreMatch, suggestImprovements } from "@/lib/scoring";
+import { shiftLabel } from "@/lib/labels";
+import { cityName, jobTitle, perkLabel, useLang, useT } from "@/lib/i18n";
+import { fitLabel, fitOf, matchChips, matchGuidance, scoreMatch, suggestImprovements } from "@/lib/scoring";
 import { takeHome, yen } from "@/lib/pay";
 import { deadlineOf, fmtLeft, isClosed, loginThenReturn, simNow, useApp, useNow, useViewer } from "@/lib/store";
 import { gsap, resolveViewTransition, useGSAP } from "@/lib/motion";
@@ -25,9 +25,8 @@ export default function Page() {
 
 function JobDetail() {
   const t = useT();
-  const ja = useLang() === "ja";
-  const FIT = ja ? FIT_JA : FIT_VI;
-  const city = (c: keyof typeof CITIES) => (ja ? CITIES[c].ja : CITIES[c].vi);
+  const lang = useLang();
+  const ja = lang === "ja";
   const { id } = useParams<{ id: string }>();
   const from = Number(useSearchParams().get("from")) || undefined;
   const router = useRouter();
@@ -54,10 +53,11 @@ function JobDetail() {
   const best = [...m.criteria].sort((a, b) => b.score - a.score);
   const pay = takeHome(job, dorm);
   const start = earliestStart(p, simNow(s.clock, s.config.speed) + 864e5);
+  const title = jobTitle(job, lang);
 
   return (
     <Screen deps={[id]} className="pb-6 lg:pt-6 lg:pb-0">
-      <div className="lg:hidden"><TopBar back="/worker/jobs" title={job.company} sub={city(job.city)} /></div>
+      <div className="lg:hidden"><TopBar back="/worker/jobs" title={job.company} sub={cityName(job.city, lang)} /></div>
       {/* Màn rộng: khung theo header (1440), cột chính chia 2 cột từ 1280px; ảnh + tóm tắt, ghi chú cuối trải hết bề ngang. */}
       <div className="px-5 lg:px-0 pb-28 lg:pb-6 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_380px] lg:gap-6">
       <div className="grid grid-cols-1 xl:grid-cols-2 xl:items-start gap-4 min-w-0 content-start">
@@ -67,7 +67,7 @@ function JobDetail() {
           <div className="flex flex-col-reverse md:flex-row md:items-start gap-6 justify-between">
             <div className="min-w-0">
               <div className="flex items-center gap-3 mb-2"><CompanyLogo job={job} size={52} /><p className="t-sm text-muted">{job.company} · {job.companyJa}<br />{ja ? `愛知県${CITIES[job.city].ja}` : `${CITIES[job.city].vi}, Aichi`}</p></div>
-              <h1 className="t-h2 mt-1" style={{ viewTransitionName: `pass-title-${job.id}` } as CSSProperties}>{job.title}</h1>
+              <h1 className="t-h2 mt-1" style={{ viewTransitionName: `pass-title-${job.id}` } as CSSProperties}>{title}</h1>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {job.isNewPlant && <span className="badge badge-solid badge-md">{t("Nhà máy mới", "新工場")}</span>}
                 <span className="badge badge-md"><Icon name={job.verified ? "check-verified" : "hourglass"} size={14} />{job.verified ? t("KINTRA đã xác minh", "KINTRA確認済み") : t("Đang xác minh", "確認中")}</span>
@@ -75,8 +75,14 @@ function JobDetail() {
               </div>
             </div>
             <div className="shrink-0 md:text-right">
-              {guest ? <span className="badge badge-md bg-brand-soft text-brand">{t("Đang tuyển", "募集中")}</span> : <FitBadge level={fit} size="lg" label={ja ? FIT_JA[fit] : undefined} />}
-              <p className="t-sm text-muted mt-2">{fromFit ? t(`AI chấm lại: ${FIT_VI[fromFit]} → ${FIT_VI[fit]}`, `AI再評価：${FIT_JA[fromFit]} → ${FIT_JA[fit]}`) : guest ? t("Đăng nhập để AI chấm mức phù hợp", "ログインするとAIが適合度を評価") : t("AI chấm từ hồ sơ của bạn", "あなたのプロフィールからAIが評価")}</p>
+              {guest ? <span className="badge badge-md bg-brand-soft text-brand">{t("Đang tuyển", "募集中")}</span> : <FitBadge level={fit} size="lg" label={fitLabel(fit, lang)} />}
+              <p className="t-sm text-muted mt-2">
+                {fromFit
+                  ? t(`AI chấm lại: ${fitLabel(fromFit, "vi")} → ${fitLabel(fit, "vi")}`, `AI再評価：${fitLabel(fromFit, "ja")} → ${fitLabel(fit, "ja")}`, `AI rescored: ${fitLabel(fromFit, "en")} → ${fitLabel(fit, "en")}`)
+                  : guest
+                    ? t("Đăng nhập để AI chấm mức phù hợp", "ログインするとAIが適合度を評価")
+                    : t("AI chấm từ hồ sơ của bạn", "あなたのプロフィールからAIが評価")}
+              </p>
             </div>
           </div>
           <div className="mt-5 grid grid-cols-2 md:grid-cols-3 gap-2" role="list" aria-label={t("Thông tin chính", "主な情報")}>
@@ -87,7 +93,7 @@ function JobDetail() {
             </div>
             <div role="listitem" className="rounded-2xl bg-subtle p-3 min-w-0">
               <p className="t-sm text-muted">{t("Địa điểm", "勤務地")}</p>
-              <p className="font-semibold mt-1">{city(job.city)}</p>
+              <p className="font-semibold mt-1">{cityName(job.city, lang)}</p>
               <p className="t-sm text-muted truncate">{guest ? "Aichi" : t(`cách ~${Math.round(distanceKm(p.city, job.city))} km`, `約${Math.round(distanceKm(p.city, job.city))}km`)}</p>
             </div>
             <button role="listitem" className="rounded-2xl bg-subtle p-3 min-w-0 text-left pressable" onClick={() => setSheet("path")} aria-label={t(`Bắt đầu sớm nhất ${fmtDate(start.date)}, dự kiến. Xem lộ trình`, `最短開始 ${fmtDate(start.date)}（予定）。流れを見る`)}>
@@ -96,8 +102,8 @@ function JobDetail() {
               <p className="t-sm text-brand font-semibold">{t("dự kiến ›", "予定 ›")}</p>
             </button>
           </div>
-          <p className="t-sm text-muted mt-2">{ja ? "控除の詳細は「給与」をご覧ください" : `${pay.housingNote} · xem chi tiết khấu trừ ở mục Lương`}</p>
-          <div className="mt-5 pt-5 hair-t"><MatchChips chips={matchChips(p, job, m)} lang={ja ? "ja" : "vi"} /></div>
+          <p className="t-sm text-muted mt-2">{t(`${pay.housingNote} · xem chi tiết khấu trừ ở mục Lương`, "控除の詳細は「給与」をご覧ください", `${pay.housingNote} · see Pay section for deductions`)}</p>
+          <div className="mt-5 pt-5 hair-t"><MatchChips chips={matchChips(p, job, m)} lang={lang} /></div>
         </section>
 
         <nav className="sticky top-0 lg:top-16 z-10 -mx-5 lg:mx-0 px-5 lg:px-0 py-2 xl:col-span-2 bg-[color-mix(in_oklab,var(--color-bg-canvas)_92%,transparent)] backdrop-blur-xl flex gap-2 overflow-x-auto no-scrollbar" aria-label={t("Mục trong tin tuyển dụng", "求人内の項目")}>
@@ -125,7 +131,7 @@ function JobDetail() {
                 <li key={u.id} className="flex items-center gap-3 rounded-2xl bg-brand-soft p-3">
                   <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-surface text-brand"><Icon name="trend-up-01" /></span>
                   <span className="flex-1 min-w-0"><b className="block">{u.label}</b><span className="t-sm text-muted">{u.detail}</span></span>
-                  <span className="t-sm font-semibold text-brand whitespace-nowrap">{fitOf({ ...m, total: m.total + u.gain }, s.config.threshold) === "great" ? `→ ${FIT.great}` : t("Tăng mức", "適合度アップ")}</span>
+                  <span className="t-sm font-semibold text-brand whitespace-nowrap">{fitOf({ ...m, total: m.total + u.gain }, s.config.threshold) === "great" ? `→ ${fitLabel("great", lang)}` : t("Tăng mức", "適合度アップ")}</span>
                 </li>
               ))}
             </ul>
@@ -151,13 +157,13 @@ function JobDetail() {
             {job.contractMonths && <Fact icon="file-check" k={t("Hợp đồng", "契約")} v={t(`Thử việc ${job.contractMonths} tháng${job.renewable ? " · có thể gia hạn" : ""}`, `試用${job.contractMonths}か月${job.renewable ? " · 更新可" : ""}`)} sub={t("Nếu không gia hạn, KINTRA xếp việc tiếp trong 24h.", "更新されない場合、KINTRAが24時間以内に次の仕事を紹介します。")} />}
           </div>
           <dl className="grid grid-cols-2 gap-x-4 gap-y-5">
-            <Fact icon="clock" k={t("Ca làm", "勤務形態")} v={ja ? SHIFT_JA[job.shift] : SHIFT_VI[job.shift]} />
+            <Fact icon="clock" k={t("Ca làm", "勤務形態")} v={shiftLabel(job.shift, lang)} />
             <Fact icon="clock-fast-forward" k={t("Tăng ca", "残業")} v={t(`~${job.otHours} giờ/tháng`, `月約${job.otHours}時間`)} />
             <Fact icon="home-02" k={t("Ký túc xá", "寮")} v={job.dorm !== null ? t(`Có · ${yen(job.dorm)}`, `あり · ${yen(job.dorm)}`) : t("Không", "なし")} />
-            <Fact icon="tool-02" k={t("Kỹ năng", "必要スキル")} v={job.required.map((x) => (ja ? SKILLS[x].ja : SKILLS[x].vi)).join(ja ? "、" : ", ")} />
+            <Fact icon="tool-02" k={t("Kỹ năng", "必要スキル")} v={job.required.map((x) => SKILLS[x][lang]).join(ja ? "、" : ", ")} />
             <Fact icon="translate" k={t("Tiếng Nhật", "日本語")} v={t(`Từ ${JLPT_SHORT[job.jlptMin]}`, `${JLPT_SHORT[job.jlptMin]}以上`)} />
           </dl>
-          {job.perks.length > 0 && <ul className="mt-5 flex flex-wrap gap-1.5">{job.perks.map((x) => <li key={x} className="badge badge-md badge-outline">{x}</li>)}</ul>}
+          {job.perks.length > 0 && <ul className="mt-5 flex flex-wrap gap-1.5">{job.perks.map((x) => <li key={x} className="badge badge-md badge-outline">{perkLabel(x, lang)}</li>)}</ul>}
           {(SHOWCASE.gallery[job.id]?.length ?? 0) > 0 && (
             <div className="mt-5">
               <p className="t-sm font-semibold mb-2">{t("Ký túc xá & tiện ích · ảnh minh hoạ", "寮と設備 · イメージ写真")}</p>
@@ -173,7 +179,13 @@ function JobDetail() {
 
         <div data-reveal className="xl:col-span-2">
           <InlineNote icon="shield-tick">
-            {ja ? <><b>初出勤前にベトナム語で8分の安全教育。</b>漢字の標識、機械のルール、5Sを学びます。工場に入る前に修了が必要です。</> : <><b>Học an toàn 8 phút bằng tiếng Việt trước ngày đầu.</b> Biển báo Kanji, quy tắc máy và 5S. Nhà máy cần bạn hoàn thành trước khi vào xưởng.</>}
+            {ja ? (
+              <><b>初出勤前にベトナム語で8分の安全教育。</b>漢字の標識、機械のルール、5Sを学びます。工場に入る前に修了が必要です。</>
+            ) : lang === "en" ? (
+              <><b>8-minute safety training in Vietnamese before day one.</b> Covers Kanji warning signs, machine rules, and 5S — required before entering the floor.</>
+            ) : (
+              <><b>Học an toàn 8 phút bằng tiếng Việt trước ngày đầu.</b> Biển báo Kanji, quy tắc máy và 5S. Nhà máy cần bạn hoàn thành trước khi vào xưởng.</>
+            )}
           </InlineNote>
         </div>
         <p className="t-sm text-muted pb-4 xl:col-span-2" data-reveal>{t("Tư cách lưu trú yêu cầu:", "必要な在留資格：")} {VISAS.ssw1_mfg.short}, {VISAS.ssw2_mfg.short} {t("hoặc", "または")} {VISAS.resident.short}.</p>
@@ -186,7 +198,7 @@ function JobDetail() {
             <div className="flex justify-between gap-3"><dt className="text-muted">{t("Đang tuyển", "募集人数")}</dt><dd className="font-medium tnum">{t(`${job.headcount} người`, `${job.headcount}名`)}</dd></div>
             <div className="flex justify-between gap-3"><dt className="text-muted">{t("Xác minh", "確認")}</dt><dd className="font-medium">{job.verified ? t("KINTRA đã xác minh", "KINTRA確認済み") : t("Đang xác minh", "確認中")}</dd></div>
           </dl>
-          {job.perks.length > 0 && <ul className="mt-3 flex flex-wrap gap-1.5">{job.perks.map((x) => <li key={x} className="badge badge-outline">{x}</li>)}</ul>}
+          {job.perks.length > 0 && <ul className="mt-3 flex flex-wrap gap-1.5">{job.perks.map((x) => <li key={x} className="badge badge-outline">{perkLabel(x, lang)}</li>)}</ul>}
         </section>
         <section aria-label={t("Việc tương tự", "類似の求人")}>
           <h2 className="t-sub mb-3">{t("Việc tương tự", "類似の求人")}</h2>
@@ -237,6 +249,7 @@ function Fact({ icon, k, v, sub }: { icon: "clock" | "clock-fast-forward" | "hom
 
 function ApplySheet({ open, onClose, jobId, flagged }: { open: boolean; onClose: () => void; jobId: string; flagged: boolean }) {
   const t = useT();
+  const lang = useLang();
   const qs = jobById(jobId)?.questions ?? [];
   const [answers, setAnswers] = useState<Record<string, string>>(() => Object.fromEntries(qs.map((q) => [q.id, q.options[0]?.vi ?? ""])));
   const answered = qs.every((q) => answers[q.id]);
@@ -280,7 +293,7 @@ function ApplySheet({ open, onClose, jobId, flagged }: { open: boolean; onClose:
         </div>
       ) : (
         <div className="grid gap-4">
-          <p className="text-muted">{job.title} · {job.company}</p>
+          <p className="text-muted">{jobTitle(job, lang)} · {job.company}</p>
           {needCard && (
             <section className="card-flat p-4 grid gap-3" aria-labelledby="tier-h">
               <p className="t-eyebrow">{t("Xác minh theo tầng", "段階的な確認")}</p>
@@ -296,8 +309,8 @@ function ApplySheet({ open, onClose, jobId, flagged }: { open: boolean; onClose:
               <p className="t-sm text-muted">{t("Đã chọn sẵn câu trả lời gợi ý. Hãy kiểm tra và đổi nếu chưa đúng với bạn.", "回答例が選択されています。内容を確認し、ご自身に合う回答に変更してください。")}</p>
               {qs.map((q) => (
                 <div key={q.id}>
-                  <p className="t-sm mb-2">{q.vi}</p>
-                  <Segmented label={q.vi} value={answers[q.id] ?? ""} onChange={(v) => setAnswers((a) => ({ ...a, [q.id]: v }))} options={q.options.map((o) => ({ value: o.vi, label: o.vi }))} />
+                  <p className="t-sm mb-2">{q[lang]}</p>
+                  <Segmented label={q[lang]} value={answers[q.id] ?? ""} onChange={(v) => setAnswers((a) => ({ ...a, [q.id]: v }))} options={q.options.map((o) => ({ value: o.vi, label: o[lang] }))} />
                 </div>
               ))}
             </div>

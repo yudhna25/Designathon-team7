@@ -9,11 +9,20 @@ import { SHOWCASE } from "@/lib/showcase";
 import { suggestImprovements, type Chip, type Fit } from "@/lib/scoring";
 import { deadlineOf, fmtLeft, isClosed, useApp, useNow, type Application } from "@/lib/store";
 import { Avatar, Icon, MatchChips, ScoreRing } from "../ui";
-import { useLang, useT } from "@/lib/i18n";
+import { useLang, useT, type WLang } from "@/lib/i18n";
+
+const PEER_QUOTES: Record<string, { en: string; ja: string }> = {
+  pe1: { en: "Overtime matches the post, and the dorm is clean.", ja: "残業は募集通りで、寮もきれいです。" },
+  pe2: { en: "Friendly Japanese team lead who teaches patiently.", ja: "日本人の班長が優しく丁寧に教えてくれます。" },
+  pe3: { en: "Night shifts are a bit tiring, but the allowance is great.", ja: "夜勤は少し疲れますが、手当が良いです。" },
+  pe4: { en: "Steady work, slightly less overtime than advertised.", ja: "仕事は安定していて、残業は表記より少なめです。" },
+};
+const quoteText = (id: string, viQuote: string, lang: WLang) => (lang === "vi" ? viQuote : (PEER_QUOTES[id]?.[lang] ?? viQuote));
 
 /** "Người Việt ở đây": social proof + the door to an anonymous hometown senpai. */
 export function PeersTile({ jobId, className = "", onSeePeers }: { jobId: string; className?: string; onSeePeers?: () => void }) {
   const t = useT();
+  const lang = useLang();
   const data = PEERS[jobId];
   const [ask, setAsk] = useState(false);
   const router = useRouter();
@@ -39,9 +48,9 @@ export function PeersTile({ jobId, className = "", onSeePeers }: { jobId: string
         <span className="flex mt-0.5">{data.peers.slice(0, 3).map((x, i) => <span key={x.id} className={i ? "-ml-2" : ""}><Avatar name={x.name} size={32} src={SHOWCASE.avatars[x.id]} /></span>)}</span>
         <div className="min-w-0 flex-1">
           <p className="font-semibold">{t(`${data.count} người Việt đang làm ở đây`, `ベトナム人${data.count}名が在籍`)}</p>
-          <p className="t-sm text-muted line-clamp-2">“{lead.quote}” · {lead.name.split(" ").pop()}</p>
+          <p className="t-sm text-muted line-clamp-2">“{quoteText(lead.id, lead.quote, lang)}” · {lead.name.split(" ").pop()}</p>
         </div>
-        <span className="ml-auto text-[18px] font-bold text-brand tnum shrink-0">{lead.rating.toFixed(1).replace(".", ",")}★</span>
+        <span className="ml-auto text-[18px] font-bold text-brand tnum shrink-0">{lang === "vi" ? lead.rating.toFixed(1).replace(".", ",") : lead.rating.toFixed(1)}★</span>
       </div>
       {canAsk && (
         <button className="btn btn-secondary btn-sm pressable mt-3 w-full" onClick={() => (authed ? setAsk(true) : router.push(loginThenReturn(location.pathname)))}>
@@ -56,7 +65,7 @@ export function PeersTile({ jobId, className = "", onSeePeers }: { jobId: string
 /** Bento under the pass. Tiles change with the pass in view. */
 export function Bento({ job, p, chips, fit, app, onSeePeers }: { job: Job; p: Profile; chips: Chip[]; fit: Fit; app?: Application; onSeePeers?: () => void }) {
   const t = useT();
-  const ja = useLang() === "ja";
+  const lang = useLang();
   const s = useApp();
   const now = useNow();
   const open = app && !isClosed(app, s);
@@ -66,7 +75,7 @@ export function Bento({ job, p, chips, fit, app, onSeePeers }: { job: Job; p: Pr
       <PeersTile key={job.id} jobId={job.id} className="col-span-2" onSeePeers={onSeePeers} />
       <section className="card-flat p-4" aria-label={t("Tiêu chí", "条件")}>
         <p className="t-sm font-semibold text-muted mb-2">{t("Tiêu chí", "条件")}</p>
-        <MatchChips chips={chips} max={4} lang={ja ? "ja" : "vi"} />
+        <MatchChips chips={chips} max={4} lang={lang} />
       </section>
       {open ? (
         <section className="card-flat p-4" aria-label={t("HR còn bao lâu", "HR返信までの時間")}>

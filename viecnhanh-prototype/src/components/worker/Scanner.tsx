@@ -1,5 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
+import { useT } from "@/lib/i18n";
 import { gsap, useGSAP } from "@/lib/motion";
 import { Button, Icon } from "../ui";
 
@@ -10,6 +11,7 @@ export type ScanResult = { name: string; visa: "ssw1_mfg"; cardExpiry: string };
  * scans a clearly-labelled SAMPLE card or a photo the user picks (kept in memory only).
  */
 export function Scanner({ onResult, done }: { onResult: (r: ScanResult) => void; done: boolean }) {
+  const t = useT();
   const [phase, setPhase] = useState<"idle" | "scan" | "done">(done ? "done" : "idle");
   const [photo, setPhoto] = useState<string | null>(null);
   const root = useRef<HTMLDivElement>(null);
@@ -37,7 +39,7 @@ export function Scanner({ onResult, done }: { onResult: (r: ScanResult) => void;
         <div className="relative mx-auto aspect-[1.586] max-w-[380px]">
           {photo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={photo} alt="Ảnh thẻ bạn đã chọn" className="absolute inset-0 size-full object-cover rounded-xl" />
+            <img src={photo} alt={t("Ảnh thẻ bạn đã chọn", "選択したカード写真", "Selected residence card photo")} className="absolute inset-0 size-full object-cover rounded-xl" />
           ) : (
             <SampleCard />
           )}
@@ -51,19 +53,23 @@ export function Scanner({ onResult, done }: { onResult: (r: ScanResult) => void;
           ))}
           {phase === "done" && (
             <span className="absolute right-2 bottom-2 badge badge-md bg-[var(--color-bg-inverse-solid)] text-[var(--color-content-neutral-strongest)] animate-[zen-pop_var(--motion-slow)_var(--ease-bounce)]">
-              <Icon name="check" size={16} />Đã đọc
+              <Icon name="check" size={16} />{t("Đã đọc", "読取済み", "Scanned")}
             </span>
           )}
         </div>
         <p className="text-center t-sm mt-4 muted-ink" aria-live="polite">
-          {phase === "idle" && "Đặt mặt trước thẻ cư trú vào khung"}
-          {phase === "scan" && "Đang đọc tên, tư cách lưu trú và hạn thẻ…"}
-          {phase === "done" && "Đọc xong. Kiểm tra lại thông tin bên dưới."}
+          {phase === "idle" && t("Đặt mặt trước thẻ cư trú vào khung", "在留カードの表を枠に合わせてください", "Place front of residence card in frame")}
+          {phase === "scan" && t("Đang đọc tên, tư cách lưu trú và hạn thẻ…", "氏名・在留資格・有効期限を読み取り中…", "Reading name, visa status & expiry…")}
+          {phase === "done" && t("Đọc xong. Kiểm tra lại thông tin bên dưới.", "読み取り完了。下の情報をご確認ください。", "Scan complete. Review details below.")}
         </p>
       </div>
       <div className="grid grid-cols-2 gap-2 mt-3">
-        <Button variant="secondary" icon="scan" onClick={run} loading={phase === "scan"}>{phase === "done" ? "Quét lại" : "Quét thẻ mẫu"}</Button>
-        <Button variant="tertiary" icon="image-plus" onClick={() => file.current?.click()} disabled={phase === "scan"}>Chọn ảnh</Button>
+        <Button variant="secondary" icon="scan" onClick={run} loading={phase === "scan"}>
+          {phase === "done" ? t("Quét lại", "再スキャン", "Scan again") : t("Quét thẻ mẫu", "サンプルをスキャン", "Scan sample card")}
+        </Button>
+        <Button variant="tertiary" icon="image-plus" onClick={() => file.current?.click()} disabled={phase === "scan"}>
+          {t("Chọn ảnh", "写真を選択", "Choose photo")}
+        </Button>
         <input
           ref={file}
           type="file"
@@ -77,15 +83,19 @@ export function Scanner({ onResult, done }: { onResult: (r: ScanResult) => void;
           }}
         />
       </div>
-      <p className="t-sm text-muted mt-3 flex gap-2"><Icon name="lock-01" size={16} className="mt-0.5" />Ảnh chỉ dùng để đọc thông tin trên máy bạn, không lưu lại. Số thẻ được che.</p>
+      <p className="t-sm text-muted mt-3 flex gap-2">
+        <Icon name="lock-01" size={16} className="mt-0.5" />
+        {t("Ảnh chỉ dùng để đọc thông tin trên máy bạn, không lưu lại. Số thẻ được che.", "写真は端末上での読み取りのみに使用し保存されません。カード番号は隠されます。", "Photo is processed on-device only and never saved. Card number stays hidden.")}
+      </p>
     </div>
   );
 }
 
 /** Stylised, obviously-sample residence card (not a reproduction of the real document). */
 function SampleCard() {
+  const t = useT();
   return (
-    <div className="absolute inset-0 rounded-xl bg-[var(--color-bg-inverse-solid)] text-[var(--color-content-neutral-strongest)] p-[5%] overflow-hidden select-none" aria-label="Thẻ cư trú mẫu">
+    <div className="absolute inset-0 rounded-xl bg-[var(--color-bg-inverse-solid)] text-[var(--color-content-neutral-strongest)] p-[5%] overflow-hidden select-none" aria-label={t("Thẻ cư trú mẫu", "見本在留カード", "Sample residence card")}>
       <div className="flex items-center justify-between">
         <span className="font-semibold text-[clamp(10px,3.4vw,14px)]">在留カード · RESIDENCE CARD</span>
         <span className="mono text-[clamp(8px,2.4vw,10px)] opacity-60">No. ●●●● ●●●● 47</span>

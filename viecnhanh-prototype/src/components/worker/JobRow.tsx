@@ -1,15 +1,14 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
-import { CITIES, type Job, type Profile } from "@/lib/data";
-import { SHIFT_JA, SHIFT_VI } from "@/lib/labels";
-import { useLang, useT } from "@/lib/i18n";
+import { type Job, type Profile } from "@/lib/data";
+import { shiftLabel } from "@/lib/labels";
+import { cityName, jobTitle, useLang, useT } from "@/lib/i18n";
 import { takeHome, yen } from "@/lib/pay";
-import { FIT_JA, FIT_VI, type Fit } from "@/lib/scoring";
+import { fitLabel, type Fit } from "@/lib/scoring";
 import { SHOWCASE } from "@/lib/showcase";
 import { earliestStart, fmtDate } from "@/lib/start";
 import { useApp } from "@/lib/store";
-import { Icon } from "../ui";
 
 /** Company mark: showcase logo when available, otherwise initials on brand tint. */
 export function CompanyLogo({ job, size = 48 }: { job: Job; size?: number }) {
@@ -26,7 +25,8 @@ export function CompanyLogo({ job, size = 48 }: { job: Job; size?: number }) {
 /** Compact TopCV-style job row: scan 4–5 per phone screen. Take-home stays the biggest number on the card. */
 export function JobRow({ job, p, fit, now, applied, guest }: { job: Job; p: Profile; fit: Fit; now: number; applied?: boolean; guest?: boolean }) {
   const t = useT();
-  const ja = useLang() === "ja";
+  const lang = useLang();
+  const title = jobTitle(job, lang);
   const saved = useApp((s) => s.saved.includes(job.id));
   const toggleSave = useApp((s) => s.toggleSave);
   const [pop, setPop] = useState(0);
@@ -37,11 +37,11 @@ export function JobRow({ job, p, fit, now, applied, guest }: { job: Job; p: Prof
       <CompanyLogo job={job} />
       <div className="min-w-0 flex-1 py-0.5 pr-12">
         <h3 className="font-semibold leading-snug">
-          <Link href={`/worker/jobs/${job.id}`} className="after:absolute after:inset-0 after:rounded-[24px]">{job.title}</Link>
+          <Link href={`/worker/jobs/${job.id}`} className="after:absolute after:inset-0 after:rounded-[24px]">{title}</Link>
         </h3>
         <p className="t-sm text-muted truncate">
           {job.company}
-          {!guest && fit === "great" && <span className="text-brand font-semibold"> · {ja ? FIT_JA.great : FIT_VI.great}</span>}
+          {!guest && fit === "great" && <span className="text-brand font-semibold"> · {fitLabel("great", lang)}</span>}
           {applied && <span className="font-semibold text-fg"> · {t("Đã ứng tuyển", "応募済み")}</span>}
         </p>
         <p className="mt-1.5 flex items-baseline gap-1 whitespace-nowrap">
@@ -49,8 +49,8 @@ export function JobRow({ job, p, fit, now, applied, guest }: { job: Job; p: Prof
           <span className="t-sm text-muted">{t("/tháng", "/月")}</span>
         </p>
         <ul className="mt-1.5 flex flex-wrap gap-1.5 t-sm [&>li]:whitespace-nowrap">
-          <li className="rounded-full bg-subtle px-2 py-0.5">{ja ? CITIES[job.city].ja : CITIES[job.city].vi}</li>
-          <li className="rounded-full bg-subtle px-2 py-0.5">{ja ? SHIFT_JA[job.shift] : SHIFT_VI[job.shift]}</li>
+          <li className="rounded-full bg-subtle px-2 py-0.5">{cityName(job.city, lang)}</li>
+          <li className="rounded-full bg-subtle px-2 py-0.5">{shiftLabel(job.shift, lang)}</li>
           {job.dorm !== null && <li className="rounded-full bg-brand-soft text-brand px-2 py-0.5">{t("Có ký túc xá", "寮あり")}</li>}
           {job.contractMonths && <li className="rounded-full bg-subtle px-2 py-0.5">{t(`Thử việc ${job.contractMonths} tháng`, `試用${job.contractMonths}か月`)}</li>}
         </ul>
@@ -59,7 +59,7 @@ export function JobRow({ job, p, fit, now, applied, guest }: { job: Job; p: Prof
       <button
         className="absolute right-2 top-2 z-10 grid size-11 place-items-center rounded-full hover:bg-subtle pressable"
         aria-pressed={saved}
-        aria-label={saved ? t(`Bỏ lưu ${job.title}`, `${job.title}の保存を解除`) : t(`Lưu ${job.title}`, `${job.title}を保存`)}
+        aria-label={saved ? t(`Bỏ lưu ${title}`, `${title}の保存を解除`, `Unsave ${title}`) : t(`Lưu ${title}`, `${title}を保存`, `Save ${title}`)}
         onClick={() => { toggleSave(job.id); setPop((n) => n + 1); }}
       >
         {/* key remounts the svg so the pop replays on each save, never on page load */}
@@ -84,4 +84,3 @@ export function Section({ title, count, children }: { title: string; count?: num
     </section>
   );
 }
-

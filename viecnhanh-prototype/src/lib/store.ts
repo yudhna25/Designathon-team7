@@ -35,7 +35,7 @@ export type Config = {
   speed: number; // simulated seconds per real second
   motion: "normal" | "slow" | "off";
   hrLang: "en" | "ja";
-  workerLang: "vi" | "ja"; // app người lao động: tiếng Việt (mặc định) hoặc tiếng Nhật cho buổi trình bày
+  workerLang: "vi" | "ja" | "en"; // worker app: Vietnamese (default), English, or Japanese for demos
   theme: "system" | "light" | "dark";
   showDemo: boolean;
   ewaDown: boolean; // demo: wage-advance partner outage (M4 "when one party fails")

@@ -27,12 +27,12 @@ export default function JobsLayout({ children }: { children: ReactNode }) {
 }
 
 const FILTERS = [
-  { id: "great", label: "Rất phù hợp", ja: "高い適合" },
-  { id: "dorm", label: "Có ký túc xá", ja: "寮あり" },
-  { id: "day", label: "Ca ngày", ja: "日勤" },
-  { id: "near", label: "Gần tôi", ja: "近い" },
-  { id: "peers", label: "Có người Việt", ja: "ベトナム人在籍" },
-  { id: "pay", label: "Thực nhận > ¥200k", ja: "手取り¥20万以上" },
+  { id: "great", label: "Rất phù hợp", en: "Great fit", ja: "高い適合" },
+  { id: "dorm", label: "Có ký túc xá", en: "Dorm available", ja: "寮あり" },
+  { id: "day", label: "Ca ngày", en: "Day shift", ja: "日勤" },
+  { id: "near", label: "Gần tôi", en: "Near me", ja: "近い" },
+  { id: "peers", label: "Có người Việt", en: "Vietnamese staff", ja: "ベトナム人在籍" },
+  { id: "pay", label: "Thực nhận > ¥200k", en: "Take-home > ¥200k", ja: "手取り¥20万以上" },
 ] as const;
 type FilterId = (typeof FILTERS)[number]["id"];
 const NEAR_KM = 15;
@@ -69,7 +69,7 @@ function JobList() {
     pay: (r) => takeHome(r.j, p.relocate).net > 200000,
   };
   const needle = q.trim().toLowerCase();
-  const matches = legal.filter((r) => on.every((f) => test[f](r)) && (!needle || `${r.j.title} ${r.j.company} ${CITIES[r.j.city].vi}`.toLowerCase().includes(needle)));
+  const matches = legal.filter((r) => on.every((f) => test[f](r)) && (!needle || `${r.j.title} ${r.j.titleEn} ${r.j.titleJa} ${r.j.company} ${CITIES[r.j.city].vi} ${CITIES[r.j.city].ja}`.toLowerCase().includes(needle)));
   const searching = !!needle || on.length > 0;
 
   // Sections: each job appears once, in the first group it fits.
@@ -114,7 +114,7 @@ function JobList() {
             const active = on.includes(f.id);
             return (
               <button key={f.id} className="chip pressable !h-10 !px-4 !gap-1 t-sm shrink-0" aria-pressed={active} onClick={() => setOn((x) => (active ? x.filter((y) => y !== f.id) : [...x, f.id]))}>
-                {active && <Icon name="check" size={14} />}{t(f.label, f.ja)}
+                {active && <Icon name="check" size={14} />}{t(f.label, f.ja, f.en)}
               </button>
             );
           })}

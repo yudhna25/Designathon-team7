@@ -5,14 +5,14 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { CITIES, jobById } from "@/lib/data";
 import { displayStatus, useApp, useNow } from "@/lib/store";
 import { useReveal } from "@/lib/motion";
-import { tNow, useLang, useT } from "@/lib/i18n";
+import { cityName, tNow, useLang, useT } from "@/lib/i18n";
 import { Avatar, Icon, Logo, Segmented, toast } from "../ui";
 
 const NAV = [
-  { href: "/worker/jobs", label: "Việc làm", ja: "求人", icon: "briefcase" },
-  { href: "/worker/applications", label: "Hồ sơ đã gửi", ja: "応募履歴", icon: "file-check" },
+  { href: "/worker/jobs", vi: "Việc làm", en: "Jobs", ja: "求人", icon: "briefcase" },
+  { href: "/worker/applications", vi: "Hồ sơ đã gửi", en: "Applied", ja: "応募履歴", icon: "file-check" },
   // Ví lương (EWA) tạm ẩn khỏi điều hướng; route /worker/wallet vẫn còn để demo trực tiếp.
-  { href: "/worker/profile", label: "Tôi", ja: "マイページ", icon: "user-circle" },
+  { href: "/worker/profile", vi: "Tôi", en: "Me", ja: "マイページ", icon: "user-circle" },
 ] as const;
 
 function usePending() {
@@ -23,7 +23,7 @@ function usePending() {
 
 export function BottomNav() {
   const t = useT();
-  const ja = useLang() === "ja";
+  const lang = useLang();
   const path = usePathname();
   const pending = usePending();
   const active = NAV.findIndex((n) => path.startsWith(n.href));
@@ -42,7 +42,7 @@ export function BottomNav() {
                   <span className="absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-full ink text-[11px] leading-[18px] text-center font-semibold animate-[zen-pop_var(--motion-slow)_var(--ease-bounce)]">{pending}</span>
                 )}
               </span>
-              <span className="text-[12px] leading-none">{ja ? n.ja : n.label}</span>
+              <span className="text-[12px] leading-none">{n[lang]}</span>
             </Link>
           </li>
         ))}
@@ -123,7 +123,7 @@ const LANGS = [
   { id: "ja", label: "日本語" },
 ] as const;
 
-/** Language dropdown: Tiếng Việt (default) and 日本語 switch the worker app; English is not built yet and says so. */
+/** Language dropdown: Tiếng Việt (default), English, and 日本語 switch the worker app. */
 function LangMenu() {
   const t = useT();
   const lang = useLang();
@@ -141,8 +141,7 @@ function LangMenu() {
             <button key={l.id} type="button" role="menuitemradio" aria-checked={l.id === lang} className={ITEM}
               onClick={() => {
                 setOpen(false);
-                if (l.id === "en") toast(t("English: bản demo chưa có tiếng Anh", "English: 英語版はまだありません"), "translate");
-                else setConfig({ workerLang: l.id });
+                setConfig({ workerLang: l.id });
               }}>
               <span className="flex-1">{l.label}</span>
               {l.id === lang && <Icon name="check" size={16} className="text-brand" />}
@@ -157,6 +156,7 @@ function LangMenu() {
 /** Avatar + name. Popover: personal info, manage profile, display mode, sign out. */
 function AccountMenu() {
   const t = useT();
+  const lang = useLang();
   const { open, setOpen, ref, hover } = usePopover();
   const router = useRouter();
   const p = useApp((s) => s.profile);
@@ -165,7 +165,7 @@ function AccountMenu() {
   const setConfig = useApp((s) => s.setConfig);
   const logout = useApp((s) => s.logout);
   if (!p) return null;
-  const city = t(CITIES[p.city]?.vi ?? "", CITIES[p.city]?.ja ?? "");
+  const city = p.city && CITIES[p.city] ? cityName(p.city, lang) : "";
   return (
     <div ref={ref} className="relative shrink-0" {...hover}>
       <button type="button" className="pressable flex h-11 items-center gap-2.5 rounded-full pl-1 pr-3 hover:bg-pale" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
